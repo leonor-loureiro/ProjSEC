@@ -4,7 +4,9 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-
+/**
+ * Class responsible for the message transmission
+ */
 public class Communication{
 
     private ServerSocket serverSocket;
@@ -13,7 +15,13 @@ public class Communication{
     private ObjectInputStream in;
 
 
-    public void listenSocket(IMessageProcess processMessage) throws IOException {
+    /**
+     * Function that receives 1 message through socket and runs the method
+     * process message according to the IMessageProcess's processMessage class
+     * @param processMessage a class that implements a method to process the message
+     * @throws IOException if an error happens during socket connection
+     */
+    public void listenAndProcess(IMessageProcess processMessage) throws IOException {
         clientSocket = serverSocket.accept();
 
         System.out.println("Running socket on port: " + serverSocket.getLocalPort());

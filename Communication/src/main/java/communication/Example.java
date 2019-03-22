@@ -24,7 +24,7 @@ public class Example implements IMessageProcess {
                 Communication server = new Communication();
                 try {
                     server.start(6666);
-                    server.listenSocket(exampleClass);
+                    server.listenAndProcess(exampleClass);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

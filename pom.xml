@@ -13,6 +13,7 @@
         <module>Client</module>
         <module>CommonTypes</module>
         <module>Crypto</module>
+        <module>Communication</module>
     </modules>
 
 
