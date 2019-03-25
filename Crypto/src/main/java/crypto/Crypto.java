@@ -58,7 +58,7 @@ public class Crypto {
 
     /**
      * Verifying the signature
-     * @param signature
+     * @param signature the signature
      * @param data data signed
      * @param key public key
      * @return true if valid, false otherwise
@@ -89,6 +89,7 @@ public class Crypto {
         return generateRSAKeys(2048);
     }
 
+
     public static KeyPair generateRSAKeys(int blockSize) throws CryptoException {
         KeyPairGenerator kpg = null;
         try {
@@ -100,6 +101,7 @@ public class Crypto {
         KeyPair kp = kpg.generateKeyPair();
         return  kp;
     }
+
 
     /**
      * Converts the public key bytes to a PublicKey instance
