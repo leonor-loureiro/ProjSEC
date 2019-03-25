@@ -10,6 +10,12 @@ public class Good implements Serializable {
     String userID;
     boolean onSale;
 
+    public Good(String goodID, String userID, boolean onSale) {
+        this.goodID = goodID;
+        this.userID = userID;
+        this.onSale = onSale;
+    }
+
     public String getGoodID() {
         return goodID;
     }
@@ -32,5 +38,11 @@ public class Good implements Serializable {
 
     public void setOnSale(boolean onSale) {
         this.onSale = onSale;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        Good other = (Good) obj;
+        return goodID.equals(other.goodID) && userID.equals(other.userID) && onSale == other.isOnSale();
     }
 }

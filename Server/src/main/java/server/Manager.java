@@ -14,8 +14,8 @@ import java.util.List;
 
 public class Manager implements IMessageProcess {
 
-    private static final String USERS_GOODS_MAPPING = "../../resources/goods-users-mapping";
-    private static final String USERS_FILE = "../../resources/users";
+    private static final String USERS_GOODS_MAPPING = "../../resources/goods_users";
+    private static final String USERS_FILE = "../../resources/users_keys";
 
     static Manager manager = null;
 
@@ -24,11 +24,15 @@ public class Manager implements IMessageProcess {
 
     public static Manager getInstance(){
         if(manager == null)
-            manager = new Manager(3003);
+            manager = new Manager();
         return manager;
     }
 
-    private Manager(int port){
+
+    private Manager(){
+    }
+
+    public void startServer(int port){
         RequestsReceiver requestReceiver = new RequestsReceiver();
 
         try {
@@ -81,7 +85,7 @@ public class Manager implements IMessageProcess {
      * @param filename file to store the serialized array list
      * @throws IOException
      */
-    public void serializeArrayList(ArrayList<?> arrayList, String filename) throws IOException {
+    public static void serializeArrayList(ArrayList<?> arrayList, String filename) throws IOException {
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
@@ -103,7 +107,7 @@ public class Manager implements IMessageProcess {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    public ArrayList deserializeArrayList( String filename) throws IOException, ClassNotFoundException {
+    public static ArrayList deserializeArrayList( String filename) throws IOException, ClassNotFoundException {
         ArrayList arrayList;
         FileInputStream fis = null;
         ObjectInputStream ois = null;

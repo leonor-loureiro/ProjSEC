@@ -1,3 +1,4 @@
+import commontypes.Good;
 import commontypes.User;
 import org.junit.After;
 import org.junit.Assert;
@@ -17,8 +18,9 @@ import java.util.ArrayList;
 public class SerializationTests {
 
     private ArrayList<User> users;
+    private ArrayList<Good> goods;
     private Manager manager = Manager.getInstance();
-    private static final String FILENAME = "users_keys";
+    private static final String FILENAME = "goods_users";
 
     @Before
     public void setUp() throws NoSuchAlgorithmException {
@@ -36,6 +38,31 @@ public class SerializationTests {
         manager.serializeArrayList(users, FILENAME);
         ArrayList users1 = manager.deserializeArrayList(FILENAME);
         Assert.assertEquals(users1, users);
+    }
+
+    @Test
+    public void serializeGoodsSuccess() throws IOException, ClassNotFoundException {
+        goods = new ArrayList<>();
+        goods.add(new Good("diamond", "alice", false));
+        goods.add(new Good("gold", "bob", false));
+        goods.add(new Good("platinum", "trudy", false));
+        goods.add(new Good("silver", "eve", false));
+        goods.add(new Good("bronze", "alice", false));
+        goods.add(new Good("amethyst", "bob", false));
+        goods.add(new Good("sapphire", "trudy", false));
+        goods.add(new Good("ruby", "eve", false));
+        goods.add(new Good("amber", "alice", false));
+        goods.add(new Good("pearl", "bob", false));
+        goods.add(new Good("jade", "trudy", false));
+        goods.add(new Good("emerald", "eve", false));
+        goods.add(new Good("turquoise", "alice", false));
+        goods.add(new Good("serpentine", "bob", false));
+        goods.add(new Good("quartz", "trudy", false));
+        goods.add(new Good("limestone", "eve", false));
+
+        manager.serializeArrayList(goods, FILENAME);
+        ArrayList goods1 = manager.deserializeArrayList(FILENAME);
+        Assert.assertEquals(goods1, goods);
     }
 
     @After
