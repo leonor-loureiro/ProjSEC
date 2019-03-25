@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class Example implements IMessageProcess {
-    int counter = 0;
+    private int counter = 0;
 
     public Message process(Message message) {
         System.out.println("Processing message " + message.getOperation());
@@ -16,21 +16,7 @@ public class Example implements IMessageProcess {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        final Example exampleClass = new Example();
-
-//        Thread serverThread = new Thread(){
-//            public void run(){
-//                Communication server = new Communication();
-//                try {
-//                    server.start(6666);
-//                    server.listenAndProcess(exampleClass);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        };
-//
-//        serverThread.start();
+        Example exampleClass = new Example();
 
         RequestsReceiver reqRec = new RequestsReceiver();
         reqRec.initializeInNewThread(6666, exampleClass);
