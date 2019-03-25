@@ -9,9 +9,9 @@ public class Example implements IMessageProcess {
 
 
     public Message process(Message message) {
-        System.out.println("Processing message " + message.getContent());
+        System.out.println("Processing message " + message.getOperation());
         Message msg = new Message();
-        msg.setContent("this is the response");
+        msg.setOperation("this is the response");
         return msg;
     }
 
@@ -34,19 +34,14 @@ public class Example implements IMessageProcess {
         serverThread.start();
 
         Message message = new Message();
-        message.setContent("Nice try!");
+        message.setOperation("Nice try!");
 
 
 
         try {
-            Socket kkSocket = new Socket("localhost", 6666);
 
-            ObjectOutputStream out2 = new ObjectOutputStream(kkSocket.getOutputStream());
-            ObjectInputStream in2 = new ObjectInputStream(kkSocket.getInputStream());
-            out2.writeObject(message);
-
-            Message response = (Message) in2.readObject();
-            System.out.println("response was: " + response.getContent());
+            Message response = new Communication().sendMessage("localhost", 6666, message);
+            System.out.println("response was: " + response.getOperation());
 
         } catch (IOException e) {
             e.printStackTrace();
