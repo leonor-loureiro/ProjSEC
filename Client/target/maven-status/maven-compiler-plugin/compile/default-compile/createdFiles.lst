@@ -1,1 +1,7 @@
 client\User.class
+client\ClientApp.class
+client\UserInterface$1.class
+client\CommandExecution.class
+client\UserInterface.class
+client\Command.class
+client\Login.class
