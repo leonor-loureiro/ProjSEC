@@ -27,6 +27,14 @@
     </parent>
 
 
+    <dependencies>
+        <dependency>
+            <groupId>pt.ist.ProjSEC</groupId>
+            <artifactId>Communication</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
 

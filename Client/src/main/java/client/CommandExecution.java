@@ -1,5 +1,7 @@
 package client;
 
+import communication.Communication;
+
 import java.io.Console;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -11,6 +13,7 @@ import static client.UserInterface.commandExec;
 public class CommandExecution {
 
     private User user;
+
 
     public void setUser(User user) {this.user = user; }
 
