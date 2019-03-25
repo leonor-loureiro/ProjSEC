@@ -4,7 +4,9 @@ import commontypes.Good;
 import commontypes.User;
 import communication.IMessageProcess;
 import communication.Message;
+import communication.RequestsReceiver;
 
+import java.io.IOException;
 import java.util.List;
 
 public class Manager implements IMessageProcess {
@@ -14,6 +16,20 @@ public class Manager implements IMessageProcess {
 
     List<User> users;
     List<Good> goods;
+
+
+
+    public Manager(int port){
+        RequestsReceiver requestReceiver = new RequestsReceiver();
+
+        try {
+            requestReceiver.initialize(port, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     public boolean intentionToSell(String goodID){
         return true;

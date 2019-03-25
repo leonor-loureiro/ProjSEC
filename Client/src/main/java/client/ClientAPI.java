@@ -2,8 +2,18 @@ package client;
 
 import communication.*;
 
-public class ClientAPI implements IMessageProcess{
+import java.io.IOException;
 
+public class ClientAPI implements IMessageProcess{
+    private RequestsReceiver requestReceiver;
+
+    public ClientAPI(int port){
+
+        requestReceiver = new RequestsReceiver();
+        try {
+            requestReceiver.initialize(port, this);
+        } catch (IOException e) { e.printStackTrace(); }
+    }
 
     public Message process(Message message) {
 

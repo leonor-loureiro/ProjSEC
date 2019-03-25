@@ -1,7 +1,4 @@
-package server;
-
-import communication.Communication;
-import communication.IMessageProcess;
+package communication;
 
 import java.io.IOException;
 
@@ -19,12 +16,8 @@ public class RequestsReceiver {
 
     public void initialize(int port, IMessageProcess processor) throws IOException {
         Communication server = new Communication();
-        try {
-            server.start(port);
-            server.listenAndProcess(processor);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        server.start(port);
+        server.listenAndProcess(processor);
     }
 
 }
