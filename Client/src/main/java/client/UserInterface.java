@@ -46,37 +46,6 @@ public interface UserInterface {
         System.out.println();
     }
 
-    static Login parseCommandLoginOrRegister() {
-        String command;
-        System.out.println("r for register");
-        System.out.println("log for login");
-
-        command = scan.next();
-        Command c;
-        try{
-            c = Command.valueOf(command);
-            switch(c){
-
-                case r:
-                    return requestLoginOrRegister("register");
-
-                case log:
-                    return requestLoginOrRegister("login");
-
-                default:
-                    System.out.println();
-                    System.out.println("Unknown command");
-                    break;
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-        System.out.println();
-        return null;
-
-    }
-
     public static boolean parseCommand() {
         String command;
         System.out.println("Insert command:");
@@ -117,15 +86,11 @@ public interface UserInterface {
 
     }
 
-    static Login requestLoginOrRegister(String intention){
+    static Login requestLogin() throws Exception {
             //throws InvalidUser, BadArgument, UserAlreadyExists {
         Login login = new Login();
 
         System.out.println();
-        String loginOrRegister = intention;
-
-        if(!(loginOrRegister.equals("login") || loginOrRegister.equals("register")))
-            return null;
 
 
         System.out.println();
@@ -148,16 +113,8 @@ public interface UserInterface {
 
         System.out.println();
 
-        if(loginOrRegister.equals("login"))
-            commandExec.login(login);
-        else{
-            if(login.getPassword().length < 6){
-                System.out.println("Please use a password with 6 or more characters");
-                login.setPassword(requestSensibleInput());
-            }
-            commandExec.register(login);
-        }
-        login.setUsername(username);
+        commandExec.login(login);
+
         return login;
     }
 

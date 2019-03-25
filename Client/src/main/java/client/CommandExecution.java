@@ -1,5 +1,7 @@
 package client;
 
+import communication.Communication;
+
 import java.io.Console;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -11,6 +13,7 @@ import static client.UserInterface.commandExec;
 public class CommandExecution {
 
     private User user;
+
 
     public void setUser(User user) {this.user = user; }
 
@@ -47,7 +50,7 @@ public class CommandExecution {
      * Register the given user to the service and generates his needed private information
      * @param login the login information
      */
-    public void register(Login login) throws Exception{
+    public void register(Login login){
             //throws BadArgument, UserAlreadyExists {
         //Create the user
         User user = new User(login.getUsername(), login.getPassword());

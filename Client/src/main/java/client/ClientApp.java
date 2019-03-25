@@ -5,10 +5,11 @@ public class ClientApp {
 
         boolean logged = false;
 
-        Login login = new Login();
+       //  Login login = new Login();
+           Login login = null;
 
-        login.setUsername("admin");
-        login.setPassword("admin1".toCharArray());
+       // login.setUsername("admin");
+       // login.setPassword("admin1".toCharArray());
 
         while(running) {
             UserInterface.home();
@@ -24,7 +25,7 @@ public class ClientApp {
                         UserInterface.clearScreen();
                     }
                     else{
-                        login = UserInterface.parseCommandLoginOrRegister();
+                        login = UserInterface.requestLogin();
                     }
                 }
 
