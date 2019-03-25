@@ -20,7 +20,6 @@ public class Example implements IMessageProcess {
 
         Thread serverThread = new Thread(){
             public void run(){
-
                 Communication server = new Communication();
                 try {
                     server.start(6666);
