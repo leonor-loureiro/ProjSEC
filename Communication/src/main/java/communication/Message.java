@@ -4,17 +4,19 @@ import java.io.Serializable;
 
 public class Message implements Serializable {
 
-    public String getContent() {
-        return content;
-    }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    private String content;
+    private String operation;
 
     public Message(){
+    }
+
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
     }
 
 }

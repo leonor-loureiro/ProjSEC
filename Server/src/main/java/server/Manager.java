@@ -2,13 +2,17 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import communication.IMessageProcess;
+import communication.Message;
+import communication.RequestsReceiver;
 
-import javax.jws.soap.SOAPBinding;
 import java.io.*;
 import java.util.ArrayList;
+import java.io.IOException;
+
 import java.util.List;
 
-public class Manager{
+public class Manager implements IMessageProcess {
 
     private static final String USERS_GOODS_MAPPING = "../../resources/goods-users-mapping";
     private static final String USERS_FILE = "../../resources/users";
@@ -18,14 +22,22 @@ public class Manager{
     List<User> users;
     List<Good> goods;
 
-    private Manager() {
-    }
-
     public static Manager getInstance(){
         if(manager == null)
-            manager = new Manager();
+            manager = new Manager(3003);
         return manager;
     }
+
+    private Manager(int port){
+        RequestsReceiver requestReceiver = new RequestsReceiver();
+
+        try {
+            requestReceiver.initialize(port, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public boolean intentionToSell(String goodID){
         return true;
@@ -107,8 +119,18 @@ public class Manager{
     }
 
 
+    public Message process(Message message) {
+        switch (message.getOperation()) {
+            case "intentiontosell":
+                // TODO: return intentionToSell(message.getGoodID);, value must be a message
+            case "getstateofgood":
+            case "transfergood":
+            case "findgood":
+            case "finduser":
 
-
-
-
+                default:
+                    System.out.println("Operation Unknown!");
+        }
+        return null;
+    }
 }

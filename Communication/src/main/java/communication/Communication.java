@@ -52,6 +52,16 @@ public class Communication{
 
     }
 
+    public Message sendMessage(String host, int port, Message message) throws IOException, ClassNotFoundException {
+        Socket msgSocket = new Socket(host, port);
+
+        ObjectOutputStream out2 = new ObjectOutputStream(msgSocket.getOutputStream());
+        ObjectInputStream in2 = new ObjectInputStream(msgSocket.getInputStream());
+        out2.writeObject(message);
+
+        return (Message) in2.readObject();
+    }
+
     public void start(int port) throws IOException {
         serverSocket = new ServerSocket(port);
 

@@ -6,53 +6,32 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class Example implements IMessageProcess {
-
+    private int counter = 0;
 
     public Message process(Message message) {
-        System.out.println("Processing message " + message.getContent());
+        System.out.println("Processing message " + message.getOperation());
         Message msg = new Message();
-        msg.setContent("this is the response");
+        msg.setOperation("this is the response " + counter++);
         return msg;
     }
 
-    public static void main(String[] args) {
-        final Example exampleClass = new Example();
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        Example exampleClass = new Example();
 
-        Thread serverThread = new Thread(){
-            public void run(){
-
-                Communication server = new Communication();
-                try {
-                    server.start(6666);
-                    server.listenAndProcess(exampleClass);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        serverThread.start();
+        RequestsReceiver reqRec = new RequestsReceiver();
+        reqRec.initializeInNewThread(6666, exampleClass);
 
         Message message = new Message();
-        message.setContent("Nice try!");
+        message.setOperation("Nice try!");
 
+        Message response = new Communication().sendMessage("localhost", 6666, message);
+        System.out.println("response was: " + response.getOperation());
 
+        response = new Communication().sendMessage("localhost", 6666, message);
+        System.out.println("response was: " + response.getOperation());
 
-        try {
-            Socket kkSocket = new Socket("localhost", 6666);
-
-            ObjectOutputStream out2 = new ObjectOutputStream(kkSocket.getOutputStream());
-            ObjectInputStream in2 = new ObjectInputStream(kkSocket.getInputStream());
-            out2.writeObject(message);
-
-            Message response = (Message) in2.readObject();
-            System.out.println("response was: " + response.getContent());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        response = new Communication().sendMessage("localhost", 6666, message);
+        System.out.println("response was: " + response.getOperation());
 
     }
 }
