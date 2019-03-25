@@ -2,10 +2,12 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import communication.IMessageProcess;
+import communication.Message;
 
 import java.util.List;
 
-public class Manager{
+public class Manager implements IMessageProcess {
 
     private static final String USERS_GOODS_MAPPING = "../../resources/goods-users-mapping";
     private static final String USERS_FILE = "../../resources/users";
@@ -50,8 +52,18 @@ public class Manager{
     }
 
 
+    public Message process(Message message) {
+        switch (message.getOperation()) {
+            case "intentiontosell":
+                // TODO: return intentionToSell(message.getGoodID);, value must be a message
+            case "getstateofgood":
+            case "transfergood":
+            case "findgood":
+            case "finduser":
 
-
-
-
+                default:
+                    System.out.println("Operation Unknown!");
+        }
+        return null;
+    }
 }
