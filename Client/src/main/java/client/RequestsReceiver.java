@@ -24,7 +24,7 @@ public class RequestsReceiver {
                 Communication server = new Communication();
                 try {
                     server.start(port);
-                    server.listenAndProcess(new RequestProcesser());
+                    server.listenAndProcess(new ClientAPI());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
