@@ -10,9 +10,8 @@ public class ClientAPI implements IMessageProcess{
     public ClientAPI(int port){
 
         requestReceiver = new RequestsReceiver();
-        try {
-            requestReceiver.initialize(port, this);
-        } catch (IOException e) { e.printStackTrace(); }
+
+        requestReceiver.initializeInNewThread(port, this);
     }
 
     public Message process(Message message) {
