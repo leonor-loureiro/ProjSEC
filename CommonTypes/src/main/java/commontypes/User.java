@@ -3,6 +3,8 @@ package commontypes;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.security.Key;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 
 /**
@@ -11,14 +13,26 @@ import java.util.Arrays;
 public class User implements Serializable {
     String userID;
     Key publicKey;
+    int port;
 
-    public User(String userID, Key publicKey) {
+
+    public User(String userID, int port) {
+        this.userID = userID;
+        this.port = port;
+    }
+
+    public User(String userID, int port, PublicKey publicKey) {
         this.userID = userID;
         this.publicKey = publicKey;
+        this.port = port;
     }
 
     public String getUserID() {
         return userID;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public void setUserID(String userID) {

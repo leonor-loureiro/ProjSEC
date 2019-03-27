@@ -27,10 +27,10 @@ public class SerializationTests {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
         users = new ArrayList<User>();
-        users.add(new User("alice", keyGen.generateKey()));
+     /*   users.add(new User("alice", keyGen.generateKey()));
         users.add(new User("bob", keyGen.generateKey()));
         users.add(new User("trudy", keyGen.generateKey()));
-        users.add(new User("eve", keyGen.generateKey()));
+        users.add(new User("eve", keyGen.generateKey())); */
     }
 
     @Test
