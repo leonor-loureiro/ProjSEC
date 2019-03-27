@@ -59,7 +59,9 @@ public class Communication{
         ObjectInputStream in2 = new ObjectInputStream(msgSocket.getInputStream());
         out2.writeObject(message);
 
-        return (Message) in2.readObject();
+        Message response = (Message) in2.readObject();
+
+        return response;
     }
 
     public void start(int port) throws IOException {

@@ -37,7 +37,7 @@ public interface UserInterface {
     public static void listCommands() {
         System.out.println();
         System.out.print("Available commands use initial letter of command: " + "\n"
-        + "i for intention so sell" + "\n" + "g for get state of good" + "\n" + "b for buy good" + "\n" + "l for list goods");
+        + "i for intention to sell" + "\n" + "g for get state of good" + "\n" + "b for buy good" + "\n" + "l for list goods");
 
         System.out.print("  ");
        /* EnumSet.allOf(Command.class)
@@ -107,8 +107,8 @@ public interface UserInterface {
         login.setUsername(username);
 
 
-        System.out.println("Password: ");
-        login.setPassword(requestSensibleInput());
+        System.out.println("Port: ");
+        login.setPassword(Integer.parseInt(requestInput()));
 
 
         System.out.println();

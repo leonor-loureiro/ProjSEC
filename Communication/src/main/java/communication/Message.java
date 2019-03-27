@@ -13,6 +13,7 @@ public class Message implements Serializable {
         BUY_GOOD,
         GET_STATE_OF_GOOD,
         TRANSFER_GOOD,
+        LIST_GOODS,
         ERROR
     }
 

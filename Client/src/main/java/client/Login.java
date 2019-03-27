@@ -2,7 +2,7 @@ package client;
 
 public class Login {
     private String username;
-    private char[] password;
+    private int port;
 
     public String getUsername() {
         return username;
@@ -12,11 +12,11 @@ public class Login {
         this.username = username;
     }
 
-    public char[] getPassword() {
-        return password;
+    public int getPort() {
+        return port;
     }
 
-    public void setPassword(char[] password) {
-        this.password = password;
+    public void setPassword(int port) {
+        this.port = port;
     }
 }

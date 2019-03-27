@@ -1,17 +1,21 @@
 package client;
+
+import communication.IMessageProcess;
+import communication.Message;
+import communication.RequestsReceiver;
+
+import java.io.IOException;
+
 public class ClientApp {
     public static void main(String[] args) {
         boolean running = true;
 
-        boolean logged = false;
+        Login login = null;
 
-       //  Login login = new Login();
-           Login login = null;
-
-       // login.setUsername("admin");
-       // login.setPassword("admin1".toCharArray());
+        RequestsReceiver commandReceiver = new RequestsReceiver();
 
         while(running) {
+
             UserInterface.home();
 
             try{
@@ -26,6 +30,7 @@ public class ClientApp {
                     }
                     else{
                         login = UserInterface.requestLogin();
+                        Manager.getInstance().startServer(login.getPort());
                     }
                 }
 
