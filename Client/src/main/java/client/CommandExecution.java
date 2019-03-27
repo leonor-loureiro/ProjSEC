@@ -16,6 +16,7 @@ import static client.UserInterface.requestInput;
 
 public class CommandExecution {
 
+    private static int notaryPort = 8080;
     private User user;
 
     Communication sendRequest = new Communication();
@@ -81,13 +82,13 @@ public class CommandExecution {
     public void intentionToSell() throws IOException, ClassNotFoundException {
         Message msg = new Message();
         msg.setOperation("Intention to Sell");
-        sendRequest.sendMessage("localhost",8081,msg);
+        sendRequest.sendMessage("localhost",notaryPort,msg);
     }
 
     public void getStateOfGood() throws IOException, ClassNotFoundException {
         Message msg = new Message();
         msg.setOperation("getstateofgood");
-        sendRequest.sendMessage("localhost",8081,msg);
+        sendRequest.sendMessage("localhost",notaryPort,msg);
     }
 
     public void buyGood() throws IOException, ClassNotFoundException {
@@ -101,7 +102,7 @@ public class CommandExecution {
     public void listGoods() throws IOException, ClassNotFoundException {
         Message msg = new Message();
         msg.setOperation("List Goods");
-        sendRequest.sendMessage("localhost",8081,msg);
+        sendRequest.sendMessage("localhost",notaryPort,msg);
 
     }
 

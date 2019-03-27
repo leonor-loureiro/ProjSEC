@@ -123,13 +123,16 @@ public class Manager implements IMessageProcess {
             case "intentiontosell":
                 // TODO: return intentionToSell(message.getGoodID);, value must be a message
                 System.out.println("Received intentiontosell");
+                return message;
             case "getstateofgood":
                 System.out.println("Received getstateofgood");
+                return message;
             case "buygood":
                 System.out.println("Received buygood");
                 return message;
             case "finduser":
                 System.out.println("Received finduser");
+                return message;
 
                 default:
                     System.out.println("Operation Unknown!");
