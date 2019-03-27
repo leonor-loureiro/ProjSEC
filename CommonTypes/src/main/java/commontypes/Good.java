@@ -8,12 +8,12 @@ import java.io.Serializable;
 public class Good implements Serializable {
     String goodID;
     String userID;
-    boolean onSale;
+    boolean forSale;
 
     public Good(String goodID, String userID, boolean onSale) {
         this.goodID = goodID;
         this.userID = userID;
-        this.onSale = onSale;
+        this.forSale = onSale;
     }
 
     public String getGoodID() {
@@ -32,17 +32,17 @@ public class Good implements Serializable {
         this.userID = userID;
     }
 
-    public boolean isOnSale() {
-        return onSale;
+    public boolean isForSale() {
+        return forSale;
     }
 
-    public void setOnSale(boolean onSale) {
-        this.onSale = onSale;
+    public void setForSale(boolean forSale) {
+        this.forSale = forSale;
     }
 
     @Override
     public boolean equals(Object obj) {
         Good other = (Good) obj;
-        return goodID.equals(other.goodID) && userID.equals(other.userID) && onSale == other.isOnSale();
+        return goodID.equals(other.goodID) && userID.equals(other.userID) && forSale == other.isForSale();
     }
 }

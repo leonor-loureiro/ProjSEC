@@ -17,7 +17,7 @@ public class ClientAPI implements IMessageProcess{
     public Message process(Message message) {
 
         switch (message.getOperation()){
-            case "buygood":
+            case BUY_GOOD:
 
                 return buyGood(message);
 

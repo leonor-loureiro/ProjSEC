@@ -3,6 +3,7 @@ package commontypes;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.security.Key;
+import java.security.PublicKey;
 import java.util.Arrays;
 
 /**
@@ -10,9 +11,9 @@ import java.util.Arrays;
  */
 public class User implements Serializable {
     String userID;
-    Key publicKey;
+    PublicKey publicKey;
 
-    public User(String userID, Key publicKey) {
+    public User(String userID, PublicKey publicKey) {
         this.userID = userID;
         this.publicKey = publicKey;
     }
@@ -25,11 +26,11 @@ public class User implements Serializable {
         this.userID = userID;
     }
 
-    public Key getPublicKey() {
+    public PublicKey getPublicKey() {
         return publicKey;
     }
 
-    public void setPublicKey(Key publicKey) {
+    public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
     }
 

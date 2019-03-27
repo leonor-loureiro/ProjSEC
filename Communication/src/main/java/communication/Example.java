@@ -11,7 +11,7 @@ public class Example implements IMessageProcess {
     public Message process(Message message) {
         System.out.println("Processing message " + message.getOperation());
         Message msg = new Message();
-        msg.setOperation("this is the response " + counter++);
+       // msg.setOperation("this is the response " + counter++);
         return msg;
     }
 
@@ -22,7 +22,7 @@ public class Example implements IMessageProcess {
         reqRec.initializeInNewThread(6666, exampleClass);
 
         Message message = new Message();
-        message.setOperation("Nice try!");
+        //message.setOperation("Nice try!");
 
         Message response = new Communication().sendMessage("localhost", 6666, message);
         System.out.println("response was: " + response.getOperation());
