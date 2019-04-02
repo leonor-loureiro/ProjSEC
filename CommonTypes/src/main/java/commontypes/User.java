@@ -1,6 +1,7 @@
 package commontypes;
 
 import java.io.Serializable;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 
@@ -10,6 +11,7 @@ import java.util.Arrays;
 public class User implements Serializable {
     String userID;
     PublicKey publicKey;
+    PrivateKey privateKey;
     int port;
 
 
@@ -22,6 +24,13 @@ public class User implements Serializable {
         this.userID = userID;
         this.publicKey = publicKey;
         this.port = port;
+    }
+
+    public User(String userID, int port,PrivateKey privateKey, PublicKey publicKey) {
+        this.userID = userID;
+        this.publicKey = publicKey;
+        this.port = port;
+        this.privateKey = privateKey;
     }
 
     public String getUserID() {
@@ -44,10 +53,18 @@ public class User implements Serializable {
         this.publicKey = publicKey;
     }
 
+    public void setPrivateKey(PrivateKey privateKey) {this.privateKey = privateKey;}
+
+
+    public PrivateKey getPrivateKey() {
+        return privateKey;
+    }
+
     @Override
     public boolean equals(Object obj) {
         User other = (User) obj;
         return obj.getClass().equals(User.class) && userID.equals(other.getUserID()) &&
                 Arrays.equals(publicKey.getEncoded(), other.publicKey.getEncoded());
     }
+
 }
