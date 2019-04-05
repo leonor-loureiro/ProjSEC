@@ -19,7 +19,8 @@ public interface UserInterface {
     /**
      *
      */
-    CommandExecution commandExec = new CommandExecution();
+
+    Manager manager = Manager.getInstance();
 
     public static void welcome(String test_user) {
     }
@@ -52,24 +53,34 @@ public interface UserInterface {
 
         command = scan.next();
         Command c;
+        String goodID;
+        String userName;
         try{
             c = Command.valueOf(command);
             switch(c){
 
                 case i:
-                    commandExec.intentionToSell();
+                    System.out.println("Insert the id  of the Good");
+                    goodID = requestInput();
+                    manager.intentionToSell(goodID);
                     break;
 
                 case g:
-                    commandExec.getStateOfGood();
+                    System.out.println("Insert the id  of the Good");
+                    goodID = requestInput();
+                    manager.getStateOfGood(goodID);
                     break;
 
                 case b:
-                    commandExec.buyGood();
+                    System.out.println("Insert the id  of the Good");
+                    goodID = requestInput();
+                    System.out.println("Insert the name of the owner");
+                    userName = requestInput();
+                    manager.buyGood(goodID,userName);
                     break;
 
                 case l:
-                    commandExec.listGoods();
+                    manager.listGoods();
                     break;
 
                 default:
@@ -113,7 +124,7 @@ public interface UserInterface {
 
         System.out.println();
 
-        commandExec.login(login);
+        manager.login(login);
 
         return login;
     }
@@ -134,25 +145,7 @@ public interface UserInterface {
         return result;
     }
 
-    /**
-     * request the user for input
-     * attempts to use advanced input reading line, if not possible in current console uses the scanner instead
-     * Stores in char[] instead of string due to java's unsafe string storage handling
-     * @return char[] readinput
-     */
-    static char[] requestSensibleInput(){
-        char[] result;
-        try{
-            result = input.readPassword();
-        }catch(NullPointerException np){
-            result = scan.next().toCharArray();
-        }
-        return result;
-    }
 
-    /**
-     * fills the screen with blank spaces
-     */
     static void clearScreen(){
         for(int i = 0; i < 2; i++)
             System.out.println();
