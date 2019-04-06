@@ -45,4 +45,5 @@ public class Good implements Serializable {
         Good other = (Good) obj;
         return goodID.equals(other.goodID) && userID.equals(other.userID) && forSale == other.isForSale();
     }
+
 }

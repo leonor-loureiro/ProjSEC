@@ -148,7 +148,7 @@ public class Manager implements IMessageProcess {
         }
 
         response.setTimestamp(currentTimeMillis());
-        response.setNonce(random.nextInt());
+        response.setNonce(user.getUserID() + random.nextInt());
 
         return true;
     }
@@ -263,7 +263,7 @@ public class Manager implements IMessageProcess {
         }
 
         response.setTimestamp(currentTimeMillis());
-        response.setNonce(random.nextInt());
+        response.setNonce(user.getUserID() + random.nextInt());
 
     }
 
