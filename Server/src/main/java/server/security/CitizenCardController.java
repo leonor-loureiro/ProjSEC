@@ -24,52 +24,58 @@ public class CitizenCardController {
 
     public CitizenCardController(){
         System.loadLibrary("pteidlibj");
+    }
 
-        try {
-            //Initialize the eID lib
-            pteid.Init("");
-            // Don't check the integrity of the ID, address and photo (!)
-            pteid.SetSODChecking(false);
-        } catch (PteidException e) {
-            e.printStackTrace();
-        }
-
+    public void init() throws Exception {
+        initializeLib();
         //Get PKCS11 instance
-        try {
-            Class pkcs11Class = Class.forName("sun.security.pkcs11.wrapper.PKCS11");
+        initializePKCS11Instante();
+        //Open the PKCS11 session
+        openPKCS11Session();
 
-            Method getInstanceMethod = pkcs11Class.getDeclaredMethod("getInstance",
-                    String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class);
-            //new Class[]{String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class});
+    }
 
-            pkcs11 = (PKCS11) getInstanceMethod.invoke(null,
-                    new Object[]{libName, "C_GetFunctionList", null, false});
-
-        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
+    /**
+     * Open the PKCS11 session
+     */
+    private void openPKCS11Session() throws PKCS11Exception {
+        if(pkcs11 == null)
 
         // PKCS11 Reference Guide
         // https://docs.oracle.com/en/java/javase/11/security/pkcs11-reference-guide1.html#GUID-F068390B-EB41-48A0-A713-B4CBCC72285D
         // https://metacpan.org/pod/distribution/Crypt-PKCS11/lib/Crypt/PKCS11/Session.pod
 
-        try {
+        //Open the PKCS11 session
+        p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
+        //Token login
+        pkcs11.C_Login(p11_session, 1, null);
 
-            //Open the PKCS11 session
-            p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
-            //Token login
-            pkcs11.C_Login(p11_session, 1, null);
+        //Get signature key
+        long signatureKey = getSignatureKey();
 
-            //Get signature key
-            long signatureKey = getSignatureKey();
+        // Initialize signature method
+        initializeSignatureMethod(signatureKey);
+    }
 
-            // Initialize signature method
-            initializeSignatureMethod(signatureKey);
+    /**
+     * Initialize the PKCS11 instance
+     */
+    private void initializePKCS11Instante() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Class pkcs11Class = Class.forName("sun.security.pkcs11.wrapper.PKCS11");
 
-        } catch (PKCS11Exception e) {
-            e.printStackTrace();
-        }
+        Method getInstanceMethod = pkcs11Class.getDeclaredMethod("getInstance",
+                String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class);
+        //new Class[]{String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class});
 
+        pkcs11 = (PKCS11) getInstanceMethod.invoke(null,
+                new Object[]{libName, "C_GetFunctionList", null, false});
+    }
+
+    private void initializeLib() throws PteidException {
+        //Initialize the eID lib
+        pteid.Init("");
+        // Don't check the integrity of the ID, address and photo (!)
+        pteid.SetSODChecking(false);
     }
 
 
@@ -133,12 +139,14 @@ public class CitizenCardController {
         try {
             X509Certificate certificate = controller.getAuthenticationCertificate();
             System.out.println(certificate.getSubjectX500Principal());
-            controller.exit();
-
-        } catch (PteidException e) {
+        } catch (PteidException | CertificateException e) {
             e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
+        } finally {
+            try {
+                controller.exit();
+            } catch (PteidException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

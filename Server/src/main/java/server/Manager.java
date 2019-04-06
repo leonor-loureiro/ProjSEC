@@ -8,6 +8,9 @@ import communication.Message;
 import communication.RequestsReceiver;
 import crypto.Crypto;
 import crypto.CryptoException;
+import server.data.AtomicFileManager;
+import server.security.CitizenCardController;
+import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -19,16 +22,26 @@ import static java.lang.System.currentTimeMillis;
 
 public class Manager implements IMessageProcess {
 
+    //Name of the file where the users -> goods mapping is stored
     private static final String USERS_GOODS_MAPPING = "../../resources/goods_users";
+    //Name of the file where the users public keys are stored
     private static final String USERS_FILE = "../../resources/users_keys";
 
+    //Singleton instance
     static Manager manager = null;
 
+    //Handler for the cryptographic operations with the CC
+    CitizenCardController ccController;
+
+    //List of users
     private ArrayList<User> users;
+    //List of goods
     private ArrayList<Good> goods;
+    //Nonces received
+    //TODO: make nonce strings
     private ArrayList<Integer> nonces = new ArrayList<>();
+    //Nonces generator
     private Random random = new Random();
-    private PrivateKey privateKey;
 
     public static Manager getInstance(){
         if(manager == null)
@@ -38,6 +51,13 @@ public class Manager implements IMessageProcess {
 
 
     private Manager(){
+        ccController = new CitizenCardController();
+        try {
+            ccController.init();
+        } catch (Exception e) {
+            //If init failed, not CC available
+            ccController = null;
+        }
     }
 
     /**
@@ -58,7 +78,7 @@ public class Manager implements IMessageProcess {
     /**
      * This method is responsible for processing an intention to sell request
      */
-    public Message intentionToSell(Message message) throws CryptoException, IOException {
+    public Message intentionToSell(Message message) throws CryptoException, IOException, PKCS11Exception {
 
         //Find good
         Good good = findGood(message.getGoodID());
@@ -79,7 +99,8 @@ public class Manager implements IMessageProcess {
 
         //Update the good state
         if(!good.isForSale())
-            updateGood(good, good.getUserID(), true);
+            if(!updateGood(good, good.getUserID(), true))
+                return new Message("Failed to change good state.");
 
         //Build response message
         Message response = new Message(Message.Operation.INTENTION_TO_SELL);
@@ -96,18 +117,25 @@ public class Manager implements IMessageProcess {
      * @param good good to be updated
      * @param userID owner ID
      * @param isForSale whether its for sale or not
+     * @return true if was successful, false otherwise
      */
-    private void updateGood(Good good, String userID, boolean isForSale) throws IOException {
+    private boolean updateGood(Good good, String userID, boolean isForSale) {
         good.setForSale(isForSale);
         good.setUserID(userID);
-        Utils.serializeArrayList(goods, USERS_GOODS_MAPPING);
+        try {
+            AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
+            return true;
+
+        } catch (IOException | ClassNotFoundException e) {
+            return false;
+        }
     }
 
 
     /**
      * This method is responsible for processing a get state of good request
      */
-    private Message getStateOfGood(Message message) throws CryptoException {
+    private Message getStateOfGood(Message message) throws CryptoException, PKCS11Exception {
         Good good = findGood(message.getGoodID());
         if(good == null)
             return new Message("Good does not exist.");
@@ -130,7 +158,7 @@ public class Manager implements IMessageProcess {
     /**
      * This method is responsible for processing a transfer good request
      */
-    private Message transferGood(Message message) throws CryptoException, IOException {
+    private Message transferGood(Message message) throws CryptoException, PKCS11Exception {
         Good good = findGood(message.getGoodID());
         if(good == null)
             return new Message("Good does not exist.");
@@ -155,7 +183,8 @@ public class Manager implements IMessageProcess {
 
 
         //Alter internal mapping of Goods->Users
-        updateGood(good, buyer.getUserID(), false);
+        if(!updateGood(good, buyer.getUserID(), false))
+            return new Message("Failed to update good state");
 
         //Create response message
         Message response = new Message(Message.Operation.TRANSFER_GOOD);
@@ -208,8 +237,12 @@ public class Manager implements IMessageProcess {
      * @return signed message
      * @throws CryptoException
      */
-    private Message signMessage(Message message) throws CryptoException {
-        String signature = Crypto.sign(message.getBytesToSign(), privateKey);
+    private Message signMessage(Message message) throws PKCS11Exception {
+        //CC signature disabled (for test purposes)
+        if(ccController == null)
+            return message;
+
+        String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
         message.setSignature(signature);
         return message;
     }
@@ -241,7 +274,8 @@ public class Manager implements IMessageProcess {
             return new Message("Failed to verify the signature");
         } catch (IOException e) {
             return new Message("Failed to update good state");
-        }
+        } catch (PKCS11Exception e) {
+            return new Message("Failed to sign");        }
         return null;
     }
 }
