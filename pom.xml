@@ -14,7 +14,16 @@
         <module>Client</module>
         <module>CommonTypes</module>
         <module>Crypto</module>
+        <module>ResourcesLoader</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>1.58</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

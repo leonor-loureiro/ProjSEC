@@ -9,9 +9,13 @@ import java.util.Arrays;
  */
 public class User implements Serializable {
     String userID;
+    String address;
     PublicKey publicKey;
     int port;
 
+    public User(String userID) {
+        this.userID = userID;
+    }
 
     public User(String userID, int port) {
         this.userID = userID;
@@ -43,6 +47,15 @@ public class User implements Serializable {
     public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
 
     @Override
     public boolean equals(Object obj) {
