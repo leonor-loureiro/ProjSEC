@@ -1,2 +1,2 @@
-public class Placeholder {
+public class PlaceHolder {
 }
