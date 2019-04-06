@@ -82,7 +82,6 @@ public class AtomicFileManager {
             if(tempFile != null && tempFile.exists())
                 tempFile.delete();
         }
-        //3 - Move the temporary file onto the original.
 
     }
 
