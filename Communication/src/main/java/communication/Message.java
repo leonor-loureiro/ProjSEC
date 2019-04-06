@@ -24,7 +24,7 @@ public class Message implements Serializable {
     private boolean isForSale;
     private String buyerID;
     private long timestamp;
-    private int nonce;
+    private String nonce;
     private String signature;
     private Message intentionToBuy;
 
@@ -64,11 +64,11 @@ public class Message implements Serializable {
         this.intentionToBuy = intentionToBuy;
     }
 
-    public int getNonce() {
+    public String getNonce() {
         return nonce;
     }
 
-    public void setNonce(int nonce) {
+    public void setNonce(String nonce) {
         this.nonce = nonce;
     }
 

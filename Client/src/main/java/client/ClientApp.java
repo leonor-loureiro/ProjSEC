@@ -30,7 +30,7 @@ public class ClientApp {
                     }
                     else{
                         login = UserInterface.requestLogin();
-                        Manager.getInstance().startServer(login.getPort());
+                        Manager.getInstance().startClient(login.getUsername());
                     }
                 }
 

@@ -18,7 +18,7 @@ public class MessageTest {
         message.setGoodID("goodValue");
         message.setBuyerID("buyerValue");
         message.setSellerID("sellerValue");
-        message.setNonce(10);
+        message.setNonce("102ndk");
         message.setSignature("signature");
         message.setIntentionToBuy(new Message());
 
