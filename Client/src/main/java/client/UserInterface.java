@@ -118,10 +118,6 @@ public interface UserInterface {
         login.setUsername(username);
 
 
-        System.out.println("Port: ");
-        login.setPassword(Integer.parseInt(requestInput()));
-
-
         System.out.println();
 
         manager.login(login);
@@ -151,7 +147,4 @@ public interface UserInterface {
             System.out.println();
     }
 
-    static boolean validateInputNames(String input){
-        return false;
-    }
 }

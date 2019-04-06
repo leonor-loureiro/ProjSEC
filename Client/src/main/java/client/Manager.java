@@ -2,6 +2,7 @@ package client;
 
 import commontypes.User;
 import commontypes.Good;
+import commontypes.Utils;
 import communication.Communication;
 import communication.IMessageProcess;
 import communication.Message;
@@ -12,11 +13,11 @@ import crypto.CryptoException;
 import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 
 public class Manager implements IMessageProcess {
@@ -26,18 +27,20 @@ public class Manager implements IMessageProcess {
 
     static Manager manager = null;
 
-    List<User> users;
-    List<Good> goods;
+    List<User> users = Utils.initializeUsers();
+    List<Good> goods = Utils.initializeGoods();
 
     Communication sendRequest = new Communication();
 
     private User user;
 
-    Random random;
+    Random random = new Random();
 
     private static int notaryPort = 8080;
 
     public static Manager getInstance(){
+
+
         if(manager == null)
             manager = new Manager();
         return manager;
@@ -50,31 +53,24 @@ public class Manager implements IMessageProcess {
 
     public void login(Login login){
         //throws BadArgument, InvalidUser {
-        setUser(new User(login.getUsername(), login.getPort()));
+        setUser(findUser(login.getUsername()));
 
-        PublicKey publicKey = null;
-        PrivateKey privateKey = null;
-
-        // Extract public key and private keys
-
-        // set public and private keys
-        user.setPublicKey(publicKey);
     }
 
 
     public void setUser(User user) {this.user = user; }
 
-    public void startServer(int port){
+    public void startClient(String username){
         RequestsReceiver requestReceiver = new RequestsReceiver();
 
-            requestReceiver.initializeInNewThread(port, this);
+            requestReceiver.initializeInNewThread(findUser(username).getPort(), this);
     }
 
 
     public boolean intentionToSell(String goodID){
         Message msg = new Message();
 
-        msg.setBuyerID(user.getUserID());
+        msg.setSellerID(user.getUserID());
 
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
@@ -106,12 +102,10 @@ public class Manager implements IMessageProcess {
             return true;
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
+            System.out.println(response.getErrorMessage());
             return false; // what to do ask collegues
 
         }
-
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce(random.nextInt());
 
         return true;
     }
@@ -122,6 +116,7 @@ public class Manager implements IMessageProcess {
         msg.setBuyerID(user.getUserID());;
         msg.setOperation(Message.Operation.GET_STATE_OF_GOOD);
         Message response = null;
+
 
 
         Good good = findGood(goodID);
@@ -209,6 +204,9 @@ public class Manager implements IMessageProcess {
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
         msg.setGoodID(goodID);
+
+        if(findUser(sellerID) == null)
+            return;
         msg.setSellerID(sellerID);
         msg.setOperation(Message.Operation.BUY_GOOD);
         Message response = null;
@@ -219,8 +217,9 @@ public class Manager implements IMessageProcess {
             e.printStackTrace();
         }
 
+
         try {
-            response = sendRequest.sendMessage("localhost",notaryPort,msg);
+            response = sendRequest.sendMessage("localhost",findUser(sellerID).getPort(),msg);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -233,9 +232,6 @@ public class Manager implements IMessageProcess {
         if(response.getOperation().equals(Message.Operation.ERROR)){
 
         }
-
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce(random.nextInt());
     }
 
     public void listGoods() throws IOException, ClassNotFoundException {
