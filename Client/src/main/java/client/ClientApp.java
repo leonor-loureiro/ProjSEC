@@ -12,8 +12,6 @@ public class ClientApp {
 
         Login login = null;
 
-        RequestsReceiver commandReceiver = new RequestsReceiver();
-
         while(running) {
 
             UserInterface.home();

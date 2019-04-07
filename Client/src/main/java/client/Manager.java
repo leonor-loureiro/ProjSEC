@@ -9,6 +9,7 @@ import communication.Message;
 import communication.RequestsReceiver;
 import crypto.Crypto;
 import crypto.CryptoException;
+import resourcesloader.ResourcesLoader;
 
 import java.io.*;
 import java.security.PrivateKey;
@@ -27,8 +28,8 @@ public class Manager implements IMessageProcess {
 
     static Manager manager = null;
 
-    List<User> users = Utils.initializeUsers();
-    List<Good> goods = Utils.initializeGoods();
+    List<User> users;
+    List<Good> goods;
 
     Communication sendRequest = new Communication();
 
@@ -60,10 +61,18 @@ public class Manager implements IMessageProcess {
 
     public void setUser(User user) {this.user = user; }
 
-    public void startClient(String username){
-        RequestsReceiver requestReceiver = new RequestsReceiver();
+    public void startClient(String username) throws IOException, ClassNotFoundException, CryptoException {
+            RequestsReceiver requestReceiver = new RequestsReceiver();
 
             requestReceiver.initializeInNewThread(findUser(username).getPort(), this);
+
+            users = ResourcesLoader.loadUserList();
+
+            goods = ResourcesLoader.loadGoodsList();
+
+            user = findUser(username);
+
+            user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(username));
     }
 
 

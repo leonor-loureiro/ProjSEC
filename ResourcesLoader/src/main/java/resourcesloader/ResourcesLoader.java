@@ -217,6 +217,26 @@ public class ResourcesLoader {
         }
     }
 
+//    public static Key getPrivateKey(String keystoreFile, String keystorePwd, String alias, String keyPwd) throws CryptoException {
+    public static Key getPrivateKey(String username) throws CryptoException {
+
+        String keystoreFile = resourcesPath+ username + ".jceks";
+        String keystorePwd = "???";
+        String alias = "????";
+        String keyPwd = "????";
+
+        // Get keystore
+        KeyStore keystore = loadKeystore(keystoreFile, keystorePwd);
+
+        // Get the key
+        try {
+            return keystore.getKey(alias, keyPwd.toCharArray());
+
+        } catch (Exception e) {
+            throw new CryptoException("Failed to extract key from keystore.");
+        }
+    }
+
 
 
 
