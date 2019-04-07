@@ -29,6 +29,7 @@ public class ServerApp {
             System.out.println(good.getGoodID());
         }
         rsl.loadUserCertificate("user1","user1user1");
+        rsl.getPrivateKey("user1", "user1user1");
 
         while(running){
             Manager.getInstance().startServer(8080);
