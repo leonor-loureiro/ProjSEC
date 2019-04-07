@@ -52,27 +52,20 @@ public class Manager implements IMessageProcess {
     }
 
 
-    public void login(Login login){
-        //throws BadArgument, InvalidUser {
-        setUser(findUser(login.getUsername()));
 
-    }
-
-
-    public void setUser(User user) {this.user = user; }
-
-    public void startClient(String username) throws IOException, ClassNotFoundException, CryptoException {
-            RequestsReceiver requestReceiver = new RequestsReceiver();
-
-            requestReceiver.initializeInNewThread(findUser(username).getPort(), this);
+    public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException {
 
             users = ResourcesLoader.loadUserList();
 
             goods = ResourcesLoader.loadGoodsList();
 
-            user = findUser(username);
+            user = findUser(login.getUsername());
 
-            user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(username));
+            user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
+
+            RequestsReceiver requestReceiver = new RequestsReceiver();
+
+            requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
     }
 
 
@@ -84,6 +77,8 @@ public class Manager implements IMessageProcess {
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
         Message response = null;
+
+        addFreshness(msg);
 
         //Find good
         Good good = findGood(goodID);
@@ -126,6 +121,7 @@ public class Manager implements IMessageProcess {
         msg.setOperation(Message.Operation.GET_STATE_OF_GOOD);
         Message response = null;
 
+        addFreshness(msg);
 
 
         Good good = findGood(goodID);
@@ -149,15 +145,13 @@ public class Manager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
-            System.out.println("Current owner" + " " + response.getSellerID() + "for sale:" + " " + response.isForSale());
+            System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
 
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
 
         }
 
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce(user.getUserID() + random.nextInt());
 
         return true;
     }
@@ -167,6 +161,9 @@ public class Manager implements IMessageProcess {
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
+
+        addFreshness(msg);
+
         Message response = null;
 
         Message response2 = new Message();
@@ -278,7 +275,7 @@ public class Manager implements IMessageProcess {
 
     private User findUser(String userID){
         for (User user : users)
-            if(user.getUserID().equals(userID))
+            if (user.getUserID().equals(userID))
                 return user;
         return null;
     }
@@ -341,6 +338,11 @@ public class Manager implements IMessageProcess {
         return transferGood(message.getSellerID(), message.getGoodID());
 
 
+    }
+
+    private void addFreshness(Message response) {
+        response.setTimestamp(currentTimeMillis());
+        response.setNonce("server" + random.nextInt());
     }
 
     public Message process(Message message) {

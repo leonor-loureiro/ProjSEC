@@ -120,8 +120,6 @@ public interface UserInterface {
 
         System.out.println();
 
-        manager.login(login);
-
         return login;
     }
 

@@ -8,6 +8,7 @@ import communication.Message;
 import communication.RequestsReceiver;
 import crypto.Crypto;
 import crypto.CryptoException;
+import resourcesloader.ResourcesLoader;
 import server.data.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
@@ -68,14 +69,19 @@ public class Manager implements IMessageProcess {
      * This method is responsible for launching the notary server
      * @param port the port the service runs on
      */
-    public void startServer(int port){
+    public void startServer(int port) throws IOException, ClassNotFoundException {
         RequestsReceiver requestReceiver = new RequestsReceiver();
+
+        users = (ArrayList<User>) ResourcesLoader.loadUserList();
+
+        goods = (ArrayList<Good>) ResourcesLoader.loadGoodsList();
 
         try {
             requestReceiver.initialize(port, this);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
 

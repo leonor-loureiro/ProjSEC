@@ -10,29 +10,34 @@ import java.security.KeyStoreException;
 import java.util.List;
 
 public class ServerApp {
-    public static void main(String args[]) throws IOException, ClassNotFoundException, CryptoException, KeyStoreException {
-        Boolean running = true;
+    public static void main(String args[]) {
 
-        ResourcesLoader rsl = new ResourcesLoader();
+        try {
+            Boolean running = true;
 
-        List<User> list= null;
-        List<Good> goodList = null;
+            ResourcesLoader rsl = new ResourcesLoader();
 
-        list = rsl.loadUserList();
-        goodList = rsl.loadGoodsList();
+            List<User> list = null;
+            List<Good> goodList = null;
 
-        for(User user : list){
-            System.out.println(user.getUserID());
-        }
+            list = rsl.loadUserList();
+            goodList = rsl.loadGoodsList();
 
-        for(Good good : goodList){
-            System.out.println(good.getGoodID());
-        }
-        rsl.loadUserCertificate("user1","user1user1");
-        rsl.getPrivateKey("user1", "user1user1");
+            for (User user : list) {
+                System.out.println(user.getUserID());
+            }
 
-        while(running){
-            Manager.getInstance().startServer(8080);
+            for (Good good : goodList) {
+                System.out.println(good.getGoodID());
+            }
+            rsl.loadUserCertificate("user1", "user1user1");
+            rsl.getPrivateKey("user1", "user1user1");
+
+            while (running) {
+                Manager.getInstance().startServer(8080);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 }

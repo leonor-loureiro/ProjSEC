@@ -28,12 +28,12 @@ public class ClientApp {
                     }
                     else{
                         login = UserInterface.requestLogin();
-                        Manager.getInstance().startClient(login.getUsername());
+                        Manager.getInstance().startClient(login);
                     }
                 }
 
             }catch(Exception e){
-                //e.printStackTrace();
+                e.printStackTrace();
                 System.out.println(e.getMessage());
             }
         }
