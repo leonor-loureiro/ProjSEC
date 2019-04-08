@@ -2,7 +2,6 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
-import commontypes.Utils;
 import communication.IMessageProcess;
 import communication.Message;
 import communication.RequestsReceiver;
@@ -13,8 +12,8 @@ import server.data.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
+import java.io.File;
 import java.io.IOException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
@@ -25,9 +24,9 @@ import static java.lang.System.currentTimeMillis;
 public class Manager implements IMessageProcess {
 
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resources/goods_users";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
     //Name of the file where the users public keys are stored
-    private static final String USERS_FILE = "../resources/users_keys";
+    // private static final String USERS_FILE = "../../resources/users_keys";
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -72,10 +71,13 @@ public class Manager implements IMessageProcess {
     public void startServer(int port) throws IOException, ClassNotFoundException {
         RequestsReceiver requestReceiver = new RequestsReceiver();
 
+
         users = (ArrayList<User>) ResourcesLoader.loadUserList();
 
-        goods = (ArrayList<Good>) ResourcesLoader.loadGoodsList();
-
+        if(new File(USERS_GOODS_MAPPING).exists())
+            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
+        else
+            goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
         try {
             requestReceiver.initialize(port, this);
         } catch (IOException e) {
@@ -198,13 +200,20 @@ public class Manager implements IMessageProcess {
 
         // Validate the intention to buy
         User buyer = findUser(message.getIntentionToBuy().getBuyerID());
+        if(message.getIntentionToBuy() == null)
+            return createErrorMessage("Intention to buy does not exist.");
+
+
         if(!isSignatureValid(message.getIntentionToBuy(), buyer.getPublicKey()))
             return createErrorMessage("Intention to buy validation failed.");
 
         // Validate the intention to sell
         User seller = findUser(message.getSellerID());
+
+
         if(!isSignatureValid(message, seller.getPublicKey()))
             return createErrorMessage("Intention to sell validation failed");
+
 
 
         //Alter internal mapping of Goods->Users

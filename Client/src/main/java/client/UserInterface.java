@@ -1,7 +1,6 @@
 package client;
 
 import java.io.Console;
-import java.util.EnumSet;
 import java.util.Scanner;
 
 public interface UserInterface {
@@ -20,7 +19,7 @@ public interface UserInterface {
      *
      */
 
-    Manager manager = Manager.getInstance();
+    ClientManager CLIENT_MANAGER = ClientManager.getInstance();
 
     public static void welcome(String test_user) {
     }
@@ -62,13 +61,13 @@ public interface UserInterface {
                 case i:
                     System.out.println("Insert the id  of the Good");
                     goodID = requestInput();
-                    manager.intentionToSell(goodID);
+                    CLIENT_MANAGER.intentionToSell(goodID);
                     break;
 
                 case g:
                     System.out.println("Insert the id  of the Good");
                     goodID = requestInput();
-                    manager.getStateOfGood(goodID);
+                    CLIENT_MANAGER.getStateOfGood(goodID);
                     break;
 
                 case b:
@@ -76,11 +75,11 @@ public interface UserInterface {
                     goodID = requestInput();
                     System.out.println("Insert the name of the owner");
                     userName = requestInput();
-                    manager.buyGood(userName,goodID);
+                    CLIENT_MANAGER.buyGood(userName,goodID);
                     break;
 
                 case l:
-                    manager.listGoods();
+                    CLIENT_MANAGER.listGoods();
                     break;
 
                 default:

@@ -105,6 +105,15 @@ public class ResourcesLoader {
         return goods;
     }
 
+    public static List<Good> loadNotaryGoodsList(String path) throws IOException, ClassNotFoundException {
+        // Deserialize the int[]
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
+        List<Good> goods = (List<Good>) in.readObject();
+        in.close();
+
+        return goods;
+    }
+
 
 
     /**

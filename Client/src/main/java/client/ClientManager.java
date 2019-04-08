@@ -2,7 +2,6 @@ package client;
 
 import commontypes.User;
 import commontypes.Good;
-import commontypes.Utils;
 import communication.Communication;
 import communication.IMessageProcess;
 import communication.Message;
@@ -14,6 +13,7 @@ import resourcesloader.ResourcesLoader;
 import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.Random;
 
@@ -21,12 +21,9 @@ import static java.lang.System.currentTimeMillis;
 import static java.lang.System.setOut;
 
 
-public class Manager implements IMessageProcess {
+public class ClientManager implements IMessageProcess {
 
-    private static final String USERS_GOODS_MAPPING = "../../resources/goods_users";
-    private static final String USERS_FILE = "../../resources/users_keys";
-
-    static Manager manager = null;
+    static ClientManager clientManager = null;
 
     List<User> users;
     List<Good> goods;
@@ -39,12 +36,12 @@ public class Manager implements IMessageProcess {
 
     private static int notaryPort = 8080;
 
-    public static Manager getInstance(){
+    public static ClientManager getInstance(){
 
 
-        if(manager == null)
-            manager = new Manager();
-        return manager;
+        if(clientManager == null)
+            clientManager = new ClientManager();
+        return clientManager;
     }
 
 
@@ -64,7 +61,7 @@ public class Manager implements IMessageProcess {
     }
 
 
-    public boolean intentionToSell(String goodID){
+    public void intentionToSell(String goodID){
         Message msg = new Message();
 
         msg.setSellerID(user.getUserID());
@@ -78,7 +75,7 @@ public class Manager implements IMessageProcess {
         //Find good
         Good good = findGood(goodID);
         if(good == null)
-            return false; // should be exception
+            System.out.println("Good does not exist");
 
         msg.setGoodID(goodID);
 
@@ -99,18 +96,13 @@ public class Manager implements IMessageProcess {
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
-            return true;
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
-            return false; // what to do ask collegues
-
         }
-
-        return true;
     }
 
-    public boolean getStateOfGood(String goodID){
+    public void getStateOfGood(String goodID){
 
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());;
@@ -119,10 +111,9 @@ public class Manager implements IMessageProcess {
 
         addFreshness(msg);
 
-
         Good good = findGood(goodID);
         if(good == null)
-            return false; // should be exception
+            System.out.println("Good does not exist");
 
         msg.setGoodID(goodID);
 
@@ -145,35 +136,32 @@ public class Manager implements IMessageProcess {
 
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
-
+            System.out.println(response.getErrorMessage());
         }
-
-
-        return true;
     }
 
-    public Message transferGood(String sellerName, String goodID){
+    public Message transferGood(Message message){
 
         Message msg = new Message();
-        msg.setBuyerID(user.getUserID());
+        msg.setBuyerID(message.getBuyerID());
+        msg.setSellerID(message.getSellerID());
         msg.setOperation(Message.Operation.TRANSFER_GOOD);
 
+        msg.setIntentionToBuy(message);
         addFreshness(msg);
 
         Message response = null;
 
-        Message response2 = new Message();
-
-        User buyer = findUser(sellerName);
+        User buyer = findUser(message.getBuyerID());
 
         if (buyer == null)
             return null;
 
-        Good good = findGood(goodID);
+        Good good = findGood(message.getGoodID());
         if(good == null)
             return null;
 
-        msg.setGoodID(goodID);
+        msg.setGoodID(message.getGoodID());
 
         try {
             signMessage(msg);
@@ -190,17 +178,13 @@ public class Manager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-            response2.setOperation(Message.Operation.BUY_GOOD);
-
+            System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
-            response2.setOperation(Message.Operation.ERROR);
-            response2.setErrorMessage("Transfer Good failed");
-
         }
 
-        return response2;
+        return response;
     }
 
     public void buyGood(String sellerID, String goodID) {
@@ -224,16 +208,17 @@ public class Manager implements IMessageProcess {
 
 
         try {
-            response = sendRequest.sendMessage("localhost",findUser(sellerID).getPort(),msg);
             System.out.println("Sent buygood to " + findUser(sellerID).getPort());
+            response = sendRequest.sendMessage("localhost",findUser(sellerID).getPort(),msg);
+            System.out.println("got response");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
 
-        if(response.getOperation().equals(Message.Operation.BUY_GOOD)){
-            System.out.println("sucessfuly bought good");
+        if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
+            System.out.println("Successfully bought good");
 
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
@@ -304,41 +289,48 @@ public class Manager implements IMessageProcess {
     }
 
 
-    private Message receiveBuyGood(Message message) {
+    private Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
 
-        Message response = new Message();
+        Message response = null;
 
         if(!user.getUserID().equals(message.getSellerID())) {
+            System.out.println("Seller ID does not match current owner.");
             response.setOperation(Message.Operation.ERROR);
             response.setErrorMessage("Seller ID does not match current owner.");
+            return response;
         }
 
         Good good = findGood(message.getGoodID());
         if(good == null) {
+            System.out.println("Good does not exist");
             response.setOperation(Message.Operation.ERROR);
             response.setErrorMessage("Good does not exist.");
+            return response;
         }
 
         if(good.isForSale()) {
+            System.out.println("Good is currently not for sale");
             response.setOperation(Message.Operation.ERROR);
             response.setErrorMessage("Good is currently not for sale.");
+            return response;
         }
-
-        response.setIntentionToBuy(message);
 
         // é necessario fazes mais verificacoes???
 
-        User seller = findUser(message.getSellerID());
-        PublicKey sellerKey = seller.getPublicKey();
+        User buyer = findUser(message.getBuyerID());
+        System.out.println(buyer.getUserID());
+        PublicKey buyerKey = buyer.getPublicKey();
 
-     /*   try {
-            if(!isSignatureValid(message, sellerKey))
+        try {
+            if(!isSignatureValid(message, buyerKey)) {
+                System.out.println("Authentication failed.");
                 return new Message("Authentication failed.");
+            }
         } catch (CryptoException e) {
             e.printStackTrace();
-        } */
+        }
 
-        return transferGood(message.getSellerID(), message.getGoodID());
+        return transferGood(message);
 
 
     }
@@ -348,10 +340,23 @@ public class Manager implements IMessageProcess {
         response.setNonce("server" + random.nextInt());
     }
 
+    private Message createErrorMessage(String errorMsg) throws CryptoException {
+        Message message = new Message(errorMsg);
+        addFreshness(message);
+        return signMessage(message);
+    }
+
     public Message process(Message message) {
         switch (message.getOperation()) {
             case BUY_GOOD:
-                return receiveBuyGood(message);
+                try {
+                    System.out.println("Received buy good");
+                    return receiveBuyGood(message);
+                } catch (CryptoException e) {
+                    e.printStackTrace();
+                } catch (SignatureException e) {
+                    e.printStackTrace();
+                }
             default:
                 System.out.println("Operation Unknown!");
         }

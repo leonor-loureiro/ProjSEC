@@ -14,6 +14,3 @@ start cmd /c "title Client & cd .. & cd Client & mvn exec:java"
 
 rem -- Start FileSystem
 start cmd /c "title Client & cd .. & cd Client & mvn exec:java"
-
-rem -- Start FileSystem
-start cmd /c "title Client & cd .. & cd Client & mvn exec:java"

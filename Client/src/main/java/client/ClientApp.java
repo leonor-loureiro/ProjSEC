@@ -1,11 +1,5 @@
 package client;
 
-import communication.IMessageProcess;
-import communication.Message;
-import communication.RequestsReceiver;
-
-import java.io.IOException;
-
 public class ClientApp {
     public static void main(String[] args) {
         boolean running = true;
@@ -28,7 +22,7 @@ public class ClientApp {
                     }
                     else{
                         login = UserInterface.requestLogin();
-                        Manager.getInstance().startClient(login);
+                        ClientManager.getInstance().startClient(login);
                     }
                 }
 
