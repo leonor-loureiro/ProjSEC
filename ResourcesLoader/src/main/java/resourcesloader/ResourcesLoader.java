@@ -254,15 +254,17 @@ public class ResourcesLoader {
             }
         }
 
-        for(int i = 0; i < itemForSaleCount; i++){
-            rsl.addItemToUser( "good" + i, rsl.users.get(i%usersCount).getUserID(), true);
+        for(int j = 0;j<usersCount;j ++) {
+
+            for (int i = 0; i < itemForSaleCount; i++) {
+                rsl.addItemToUser("good" + i + j, rsl.users.get(j % usersCount).getUserID(), true);
+            }
+
+            for (int i = 0; i < itemNotForSaleCount; i++) {
+                rsl.addItemToUser("good" + (itemForSaleCount + i) + j, rsl.users.get((itemForSaleCount + j) % usersCount).getUserID(), false);
+            }
+
         }
-
-        for(int i = 0; i < itemNotForSaleCount; i++){
-            rsl.addItemToUser( "good" + (itemForSaleCount+ i),rsl.users.get((itemForSaleCount + i)%usersCount ).getUserID(), false);
-        }
-
-
         try {
             ResourcesLoader.storeUserList(rsl.users);
             ResourcesLoader.storeGoods(rsl.goods);

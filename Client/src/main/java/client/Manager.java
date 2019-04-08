@@ -103,6 +103,7 @@ public class Manager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
+            System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
             return true;
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){

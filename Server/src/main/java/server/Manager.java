@@ -25,9 +25,9 @@ import static java.lang.System.currentTimeMillis;
 public class Manager implements IMessageProcess {
 
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../../resources/goods_users";
+    private static final String USERS_GOODS_MAPPING = "../resources/goods_users";
     //Name of the file where the users public keys are stored
-    private static final String USERS_FILE = "../../resources/users_keys";
+    private static final String USERS_FILE = "../resources/users_keys";
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -114,6 +114,9 @@ public class Manager implements IMessageProcess {
 
         //Build response message
         Message response = new Message(Message.Operation.INTENTION_TO_SELL);
+        response.setGoodID(good.getGoodID());
+        response.setForSale(true);
+
         addFreshness(response);
 
         //Sign the response
@@ -147,6 +150,7 @@ public class Manager implements IMessageProcess {
             return true;
 
         } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
             return false;
         }
     }
