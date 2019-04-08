@@ -291,7 +291,7 @@ public class ClientManager implements IMessageProcess {
 
     private Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
 
-        Message response = null;
+        Message response = new Message();
 
         if(!user.getUserID().equals(message.getSellerID())) {
             System.out.println("Seller ID does not match current owner.");
