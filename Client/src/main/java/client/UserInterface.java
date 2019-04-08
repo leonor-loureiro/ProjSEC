@@ -87,7 +87,10 @@ public interface UserInterface {
                     System.out.println("Unknown command");
                     break;
             }
-        } catch (Exception e){
+        } catch(IllegalArgumentException e){
+            System.out.println("Use one of the commands");
+        }
+        catch (Exception e){
             e.printStackTrace();
         }
 

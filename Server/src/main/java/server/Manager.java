@@ -199,9 +199,10 @@ public class Manager implements IMessageProcess {
             return createErrorMessage("Seller ID does not match current owner.");
 
         // Validate the intention to buy
-        User buyer = findUser(message.getIntentionToBuy().getBuyerID());
         if(message.getIntentionToBuy() == null)
             return createErrorMessage("Intention to buy does not exist.");
+
+        User buyer = findUser(message.getIntentionToBuy().getBuyerID());
 
 
         if(!isSignatureValid(message.getIntentionToBuy(), buyer.getPublicKey()))

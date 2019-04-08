@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -188,6 +187,7 @@ public class ClientManager implements IMessageProcess {
     }
 
     public void buyGood(String sellerID, String goodID) {
+
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
         msg.setGoodID(goodID);
@@ -198,7 +198,10 @@ public class ClientManager implements IMessageProcess {
         }
         msg.setSellerID(sellerID);
         msg.setOperation(Message.Operation.BUY_GOOD);
+        //msg.setOperation(Message.Operation.TRANSFER_GOOD);
         Message response = null;
+
+        addFreshness(msg);
 
         try {
             signMessage(msg);
@@ -206,20 +209,18 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
-
         try {
             System.out.println("Sent buygood to " + findUser(sellerID).getPort());
             response = sendRequest.sendMessage("localhost",findUser(sellerID).getPort(),msg);
-            System.out.println("got response");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
+
             e.printStackTrace();
         }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Successfully bought good");
-
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
@@ -227,7 +228,7 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
-    public void listGoods() throws IOException, ClassNotFoundException {
+    public void listGoods() {
 
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
@@ -295,24 +296,18 @@ public class ClientManager implements IMessageProcess {
 
         if(!user.getUserID().equals(message.getSellerID())) {
             System.out.println("Seller ID does not match current owner.");
-            response.setOperation(Message.Operation.ERROR);
-            response.setErrorMessage("Seller ID does not match current owner.");
-            return response;
+            return createErrorMessage("Seller ID does not match current owner.");
         }
 
         Good good = findGood(message.getGoodID());
         if(good == null) {
             System.out.println("Good does not exist");
-            response.setOperation(Message.Operation.ERROR);
-            response.setErrorMessage("Good does not exist.");
-            return response;
+            return createErrorMessage("Good does not exist");
         }
 
         if(good.isForSale()) {
             System.out.println("Good is currently not for sale");
-            response.setOperation(Message.Operation.ERROR);
-            response.setErrorMessage("Good is currently not for sale.");
-            return response;
+            return createErrorMessage("Good is currently not for sale");
         }
 
         // é necessario fazes mais verificacoes???
@@ -361,5 +356,14 @@ public class ClientManager implements IMessageProcess {
                 System.out.println("Operation Unknown!");
         }
         return null;
+    }
+
+    public boolean login(Login login) throws IOException, ClassNotFoundException {
+        users = ResourcesLoader.loadUserList();
+
+        goods = ResourcesLoader.loadGoodsList();
+
+        return findUser(login.getUsername()) != null;
+
     }
 }

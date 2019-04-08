@@ -22,7 +22,12 @@ public class ClientApp {
                     }
                     else{
                         login = UserInterface.requestLogin();
-                        ClientManager.getInstance().startClient(login);
+                        if(ClientManager.getInstance().login(login))
+                            ClientManager.getInstance().startClient(login);
+                        else{
+                            System.out.println("Insert a existing username");
+                            login = null;
+                        }
                     }
                 }
 
