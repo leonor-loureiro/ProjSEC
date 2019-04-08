@@ -76,7 +76,7 @@ public interface UserInterface {
                     goodID = requestInput();
                     System.out.println("Insert the name of the owner");
                     userName = requestInput();
-                    manager.buyGood(goodID,userName);
+                    manager.buyGood(userName,goodID);
                     break;
 
                 case l:

@@ -48,11 +48,6 @@ public class Manager implements IMessageProcess {
     }
 
 
-    private Manager(){
-    }
-
-
-
     public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException {
 
             users = ResourcesLoader.loadUserList();
@@ -161,7 +156,7 @@ public class Manager implements IMessageProcess {
 
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
-        msg.setOperation(Message.Operation.INTENTION_TO_SELL);
+        msg.setOperation(Message.Operation.TRANSFER_GOOD);
 
         addFreshness(msg);
 
@@ -199,6 +194,7 @@ public class Manager implements IMessageProcess {
 
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
+            System.out.println(response.getErrorMessage());
             response2.setOperation(Message.Operation.ERROR);
             response2.setErrorMessage("Transfer Good failed");
 
@@ -212,8 +208,10 @@ public class Manager implements IMessageProcess {
         msg.setBuyerID(user.getUserID());
         msg.setGoodID(goodID);
 
-        if(findUser(sellerID) == null)
+        if(findUser(sellerID) == null) {
+            System.out.println("Didnt find user");
             return;
+        }
         msg.setSellerID(sellerID);
         msg.setOperation(Message.Operation.BUY_GOOD);
         Message response = null;
@@ -227,6 +225,7 @@ public class Manager implements IMessageProcess {
 
         try {
             response = sendRequest.sendMessage("localhost",findUser(sellerID).getPort(),msg);
+            System.out.println("Sent buygood to " + findUser(sellerID).getPort());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -234,9 +233,11 @@ public class Manager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.BUY_GOOD)){
+            System.out.println("sucessfuly bought good");
 
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
+            System.out.println(response.getErrorMessage());
 
         }
     }
@@ -323,18 +324,19 @@ public class Manager implements IMessageProcess {
             response.setErrorMessage("Good is currently not for sale.");
         }
 
+        response.setIntentionToBuy(message);
 
         // é necessario fazes mais verificacoes???
 
         User seller = findUser(message.getSellerID());
         PublicKey sellerKey = seller.getPublicKey();
 
-        try {
+     /*   try {
             if(!isSignatureValid(message, sellerKey))
                 return new Message("Authentication failed.");
         } catch (CryptoException e) {
             e.printStackTrace();
-        }
+        } */
 
         return transferGood(message.getSellerID(), message.getGoodID());
 
@@ -349,9 +351,7 @@ public class Manager implements IMessageProcess {
     public Message process(Message message) {
         switch (message.getOperation()) {
             case BUY_GOOD:
-                System.out.println("Received buygood");
-                receiveBuyGood(message);
-                return message;
+                return receiveBuyGood(message);
             default:
                 System.out.println("Operation Unknown!");
         }
