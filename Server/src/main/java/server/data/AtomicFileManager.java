@@ -35,7 +35,8 @@ public class AtomicFileManager {
         try {
 
             //Create a tmp file
-            tempFile = File.createTempFile(destFilename + "-", ".tmp");
+            // Uses resource directory to avoid issues with multiple drives
+            tempFile = File.createTempFile(destFilename + "-", ".tmp",  new File("../resources/"));
 
             fos = new FileOutputStream(tempFile.getAbsolutePath());
             oos = new ObjectOutputStream(fos);
