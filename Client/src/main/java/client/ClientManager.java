@@ -304,7 +304,7 @@ public class ClientManager implements IMessageProcess {
             System.out.println("Good does not exist");
             return createErrorMessage("Good does not exist");
         }
-        
+
 
         // é necessario fazes mais verificacoes???
 
