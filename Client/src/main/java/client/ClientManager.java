@@ -304,11 +304,7 @@ public class ClientManager implements IMessageProcess {
             System.out.println("Good does not exist");
             return createErrorMessage("Good does not exist");
         }
-
-        if(good.isForSale()) {
-            System.out.println("Good is currently not for sale");
-            return createErrorMessage("Good is currently not for sale");
-        }
+        
 
         // é necessario fazes mais verificacoes???
 
