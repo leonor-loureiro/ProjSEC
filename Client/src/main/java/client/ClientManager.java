@@ -386,8 +386,7 @@ public class ClientManager implements IMessageProcess {
 
 
         // é necessario fazes mais verificacoes???
-
-        User buyer = findUser(message.getBuyerID());
+        
         System.out.println(buyer.getUserID());
         PublicKey buyerKey = buyer.getPublicKey();
 
