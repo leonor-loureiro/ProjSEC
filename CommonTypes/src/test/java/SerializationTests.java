@@ -1,5 +1,4 @@
 import commontypes.Good;
-import commontypes.User;
 import commontypes.Utils;
 import org.junit.After;
 import org.junit.Assert;
@@ -17,32 +16,19 @@ import java.util.ArrayList;
  */
 public class SerializationTests {
 
-    private ArrayList<User> users;
-    private ArrayList<Good> goods;
-
     private static final String FILENAME = "goods_users";
 
     @Before
     public void setUp() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
-        users = new ArrayList<User>();
-        /*users.add(new User("alice", keyGen.generateKey()));
-        users.add(new User("bob", keyGen.generateKey()));
-        users.add(new User("trudy", keyGen.generateKey()));
-        users.add(new User("eve", keyGen.generateKey()));*/
     }
 
-    @Test
-    public void serializeUsersSuccess() throws IOException, ClassNotFoundException {
-        Utils.serializeArrayList(users, FILENAME);
-        ArrayList users1 = Utils.deserializeArrayList(FILENAME);
-        Assert.assertEquals(users1, users);
-    }
+
 
     @Test
     public void serializeGoodsSuccess() throws IOException, ClassNotFoundException {
-        goods = new ArrayList();
+        ArrayList<Good> goods = new ArrayList();
         goods.add(new Good("diamond", "alice", false));
         goods.add(new Good("gold", "bob", false));
         goods.add(new Good("platinum", "trudy", false));

@@ -24,9 +24,7 @@ import static java.lang.System.currentTimeMillis;
 public class Manager implements IMessageProcess {
 
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
-    //Name of the file where the users public keys are stored
-    // private static final String USERS_FILE = "../../resources/users_keys";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/oods_users";
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -86,6 +84,9 @@ public class Manager implements IMessageProcess {
 
     }
 
+    /****************************************************************************************
+     *                      FUNCTIONS THAT PROCESS USER REQUESTS
+     ***************************************************************************************/
 
     /**
      * This method is responsible for processing an intention to sell request
@@ -125,37 +126,6 @@ public class Manager implements IMessageProcess {
         return signMessage(response);
     }
 
-    private void addFreshness(Message response) {
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce("server" + random.nextInt());
-    }
-
-    private Message createErrorMessage(String errorMsg) throws SignatureException {
-        Message message = new Message(errorMsg);
-        addFreshness(message);
-        return signMessage(message);
-    }
-
-    /**
-     * This function is responsible for updating the state of a good
-     * and materializing the changes
-     * @param good good to be updated
-     * @param userID owner ID
-     * @param isForSale whether its for sale or not
-     * @return true if was successful, false otherwise
-     */
-    private boolean updateGood(Good good, String userID, boolean isForSale) {
-        good.setForSale(isForSale);
-        good.setUserID(userID);
-        try {
-            AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
-            return true;
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
 
     /**
@@ -267,25 +237,6 @@ public class Manager implements IMessageProcess {
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
-    /**
-     * This function is responsible for signing a message
-     * @param message
-     * @return signed message
-     */
-    private Message signMessage(Message message) throws SignatureException {
-        //CC signature disabled (for test purposes)
-        if(ccController == null)
-            return message;
-        try {
-            String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
-            message.setSignature(signature);
-            return message;
-        } catch (PKCS11Exception e) {
-            throw new SignatureException();
-        }
-
-    }
-
 
     /**
      * This class is responsible for processing the Notary service requests
@@ -324,4 +275,70 @@ public class Manager implements IMessageProcess {
         }
         return null;
     }
+
+    /****************************************************************************************
+     *                                  AUXILIARY FUNCTIONS
+     ****************************************************************************************/
+
+    /**
+     * Responsible for adding a nonce and a timestamp to a message
+     */
+    private void addFreshness(Message response) {
+        response.setTimestamp(currentTimeMillis());
+        response.setNonce("server" + random.nextInt());
+    }
+
+    /**
+     * This function is responsible for signing a message
+     * @param message
+     * @return signed message
+     */
+    private Message signMessage(Message message) throws SignatureException {
+        //CC signature disabled (for test purposes)
+        if(ccController == null)
+            return message;
+        try {
+            String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
+            message.setSignature(signature);
+            return message;
+        } catch (PKCS11Exception e) {
+            throw new SignatureException();
+        }
+
+    }
+
+    /**
+     * Creates an error message, adds freshness and signs it
+     * @param errorMsg error message text
+     * @return Signed, fresh message with operation set to ERROR,
+     *         and the given error message
+     * @throws SignatureException if the message signature fails
+     */
+    private Message createErrorMessage(String errorMsg) throws SignatureException {
+        Message message = new Message(errorMsg);
+        addFreshness(message);
+        return signMessage(message);
+    }
+
+    /**
+     * This function is responsible for updating the state of a good
+     * and materializing the changes
+     * @param good good to be updated
+     * @param userID owner ID
+     * @param isForSale whether its for sale or not
+     * @return true if was successful, false otherwise
+     */
+    private boolean updateGood(Good good, String userID, boolean isForSale) {
+        good.setForSale(isForSale);
+        good.setUserID(userID);
+        try {
+            AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
+            return true;
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
