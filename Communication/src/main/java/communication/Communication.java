@@ -55,6 +55,11 @@ public class Communication{
     public Message sendMessage(String host, int port, Message message) throws IOException, ClassNotFoundException {
         Socket msgSocket = new Socket(host, port);
 
+        if(host == null || port == 0 || message == null) {
+            System.out.println("Message is not correct");
+            throw new IllegalArgumentException();
+        }
+
         ObjectOutputStream out2 = new ObjectOutputStream(msgSocket.getOutputStream());
         ObjectInputStream in2 = new ObjectInputStream(msgSocket.getInputStream());
         out2.writeObject(message);

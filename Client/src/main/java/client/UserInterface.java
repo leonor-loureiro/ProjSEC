@@ -46,7 +46,7 @@ public interface UserInterface {
         System.out.println();
     }
 
-    public static boolean parseCommand() {
+    static boolean parseCommand() {
         String command;
         System.out.println("Insert command:");
 

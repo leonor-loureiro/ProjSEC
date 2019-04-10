@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -93,11 +94,13 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }catch (IllegalArgumentException e){
+            return;
         }
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
+     /*   if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        }
+        } */
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
@@ -134,12 +137,14 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }catch( IllegalArgumentException e){
+            return;
         }
 
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
+        /* if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        }
+        } */
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
@@ -185,12 +190,14 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }catch(IllegalArgumentException e){
+            return createErrorMessage("One of the arguments was in wrong form");
         }
 
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
+       /* if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        }
+        } */
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
@@ -231,53 +238,45 @@ public class ClientManager implements IMessageProcess {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-
             e.printStackTrace();
+        }catch(IllegalArgumentException e){
+            return;
         }
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-        }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
+             if (!isSignatureValid(response, notaryPublicKey)) {
+                System.out.println("Notary validation failed");
+                return;
+        }
             System.out.println("Successfully bought good");
+
         }
         if(response.getOperation().equals(Message.Operation.ERROR)){
-            System.out.println(response.getErrorMessage());
+
+            if(response.getIntentionToBuy() != null){
+                if (!isSignatureValid(response, findUser(sellerID).getPublicKey())) {
+                    System.out.println("Seller validation failed");
+                    return;
+                }
+                System.out.println(response.getErrorMessage());
+            }
+            else{
+                if (!isSignatureValid(response,notaryPublicKey)) {
+                    System.out.println("Notary validation failed");
+                    return;
+                }
+                System.out.println(response.getErrorMessage());
+            }
 
         }
     }
 
     public void listGoods() {
-
-        Message msg = new Message();
-        msg.setBuyerID(user.getUserID());
-        msg.setOperation(Message.Operation.LIST_GOODS);
-        Message response = null;
-
-        try {
-            signMessage(msg);
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            response = sendRequest.sendMessage("localhost",notaryPort,msg);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        if(response.getOperation().equals(Message.Operation.LIST_GOODS)){
-
-        }
-        if(response.getOperation().equals(Message.Operation.ERROR)){
-
-        }
-
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce(user.getUserID() + random.nextInt());
+        System.out.println("Goods in the system:");
+        System.out.println();
+        for (int i=0;i < goods.size();i++)
+            System.out.println(goods.get(i).getGoodID());
 
     }
 
@@ -312,7 +311,7 @@ public class ClientManager implements IMessageProcess {
 
     private Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
 
-        Message response = new Message();
+        Message response;
 
         if(!user.getUserID().equals(message.getSellerID())) {
             System.out.println("Seller ID does not match current owner.");
@@ -334,19 +333,25 @@ public class ClientManager implements IMessageProcess {
 
         try {
             if(!isSignatureValid(message, buyerKey)) {
-                System.out.println("Authentication failed.");
-                return new Message("Authentication failed.");
+                System.out.println("Authentication Failed.");
+                response = createErrorMessage("Authentication Failed");
+                response.setIntentionToBuy(message);
+                return response;
             }
         } catch (CryptoException e) {
             e.printStackTrace();
+        }catch (IllegalArgumentException e){
+            response = createErrorMessage("Wrong arguments");
+            response.setIntentionToBuy(message);
+            return response;
         }
 
         response = transferGood(message);
 
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
+        /* if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        }
+        } */
 
         return response;
 
