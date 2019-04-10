@@ -3,10 +3,14 @@ package client;
 public class ClientApp {
     public static void main(String[] args) {
 
-        // variable to control running of app
+        /*
+         variable to control running of app
+         */
         boolean running = true;
 
-        //username of client
+        /*
+        Login info of the client
+         */
         Login login = null;
 
         while(running) {
@@ -20,7 +24,7 @@ public class ClientApp {
                     //if we already have a login ask for input
                     if(login !=null) {
                         UserInterface.listCommands();
-                        running = UserInterface.parseCommand();
+                        UserInterface.parseCommand();
                         UserInterface.clearScreen();
                     }
                     else{
