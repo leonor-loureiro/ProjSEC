@@ -3,17 +3,10 @@ import commontypes.User;
 import communication.Message;
 import crypto.Crypto;
 import crypto.CryptoException;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import pteidlib.PteidException;
-import server.Manager;
 
 import java.security.KeyPair;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -22,28 +15,8 @@ import static java.lang.System.currentTimeMillis;
  * This class tests the process of an intention to sell
  * request received by the notary server
  */
-public class IntentionToSellTests {
+public class IntentionToSellTests extends NotaryServerTests{
 
-    private Manager notary = Manager.getInstance();
-
-    private ArrayList<User> users;
-    private ArrayList<Good> goods;
-
-    private Random random = new Random();
-
-    private PublicKey notaryPublicKey;
-
-    private String userID = "dummyUser";
-    private String goodID = "dummyGood";
-
-    @Before
-    public void setUp() throws Exception {
-        users = new ArrayList<>();
-        goods = new ArrayList<>();
-        notaryPublicKey = Crypto.getPublicKey(
-                "SEC-Keystore","notary","password".toCharArray()
-        );
-    }
 
     /**
      * The user that owns the good sends an authenticated, fresh request
@@ -232,6 +205,8 @@ public class IntentionToSellTests {
     }
 
 
+
+
     private Message createIntentionToSellRequest() {
         Message request = new Message();
         request.setOperation(Message.Operation.INTENTION_TO_SELL);
@@ -243,8 +218,4 @@ public class IntentionToSellTests {
     }
 
 
-    @After
-    public void cleanUp() throws PteidException {
-        notary.closeServer();
-    }
 }
