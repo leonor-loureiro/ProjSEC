@@ -13,6 +13,7 @@ import resourcesloader.ResourcesLoader;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -22,6 +23,9 @@ import static java.lang.System.currentTimeMillis;
 public class ClientManager implements IMessageProcess {
 
     static ClientManager clientManager = null;
+
+    //Validity time
+    private static final int VALIDITY = 900000;
 
     /*
     list of users in the system
@@ -50,6 +54,7 @@ public class ClientManager implements IMessageProcess {
     private static int notaryPort = 8080;
 
     private PublicKey notaryPublicKey;
+    private ArrayList<String> nonces = new ArrayList<>();
 
 
     public static ClientManager getInstance(){
@@ -408,9 +413,16 @@ public class ClientManager implements IMessageProcess {
      * @return
      */
     public Message process(Message message) {
+        String nonce = message.getNonce();
+
         switch (message.getOperation()) {
             case BUY_GOOD:
                 try {
+                    if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
+                            nonces.contains(nonce))
+                        return createErrorMessage("Request is not fresh");
+                    nonces.add(nonce);
+
                     System.out.println("Received buy good");
                     return receiveBuyGood(message);
                 } catch (CryptoException e) {
