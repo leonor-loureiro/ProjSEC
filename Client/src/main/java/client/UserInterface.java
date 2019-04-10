@@ -21,10 +21,8 @@ public interface UserInterface {
 
     ClientManager CLIENT_MANAGER = ClientManager.getInstance();
 
-    public static void welcome(String test_user) {
-    }
 
-    public static void home() {
+    static void home() {
         System.out.println("\n" +
                 "    __  ______  _____    _   __      __                  \n" +
                 "   / / / / __ \\/ ___/   / | / /___  / /_____ ________  __\n" +
@@ -34,14 +32,10 @@ public interface UserInterface {
                 "                                                /____/   \n".replace("\\", "\\\\"));
     }
 
-    public static void listCommands() {
+    static void listCommands() {
         System.out.println();
         System.out.print("Available commands use initial letter of command: " + "\n"
         + "i for intention to sell" + "\n" + "g for get state of good" + "\n" + "b for buy good" + "\n" + "l for list goods");
-
-        System.out.print("  ");
-       /* EnumSet.allOf(Command.class)
-                .forEach(command -> System.out.print(" " + command)); */
 
         System.out.println();
     }
@@ -51,12 +45,12 @@ public interface UserInterface {
         System.out.println("Insert command:");
 
         command = scan.next();
-        Command c;
+        Command valueOfCommand;
         String goodID;
         String userName;
         try{
-            c = Command.valueOf(command);
-            switch(c){
+            valueOfCommand = Command.valueOf(command);
+            switch(valueOfCommand){
 
                 case i:
                     System.out.println("Insert the id  of the Good");
@@ -88,7 +82,7 @@ public interface UserInterface {
                     break;
             }
         } catch(IllegalArgumentException e){
-            System.out.println("Use one of the commands");
+            System.out.println("Use one of the commands available");
         }
         catch (Exception e){
             e.printStackTrace();
@@ -99,14 +93,16 @@ public interface UserInterface {
 
     }
 
-    static Login requestLogin() throws Exception {
+    /**
+     * asks the user for his username
+     * @return
+     */
+    static Login requestLogin(){
             //throws InvalidUser, BadArgument, UserAlreadyExists {
         Login login = new Login();
 
         System.out.println();
 
-
-        System.out.println();
         System.out.println("Please insert your information:");
 
         System.out.println("Username: ");
@@ -117,8 +113,13 @@ public interface UserInterface {
             System.out.println("A username can only contain letters and numbers");
             return null;
         }
-        login.setUsername(username);
 
+        System.out.println("password: ");
+
+        char[] password = requestSensibleInput();
+
+        login.setUsername(username);
+        login.setPassword(password);
 
         System.out.println();
 
@@ -141,6 +142,16 @@ public interface UserInterface {
         return result;
     }
 
+
+    static char[] requestSensibleInput(){
+        char[] result;
+        try{
+            result = input.readPassword();
+        }catch(NullPointerException np){
+            result = scan.next().toCharArray();
+        }
+        return result;
+    }
 
     static void clearScreen(){
         for(int i = 0; i < 2; i++)

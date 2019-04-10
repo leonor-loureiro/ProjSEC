@@ -2,6 +2,7 @@ package crypto;
 
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -116,6 +117,24 @@ public class Crypto {
 
         Certificate cer = ks.getCertificate(alias);
         return cer.getPublicKey();
+    }
+
+    public static boolean checkPassword(String keystoreFileName,char[] passwordArray)  {
+
+        try {
+            KeyStore ks = KeyStore.getInstance("jceks");
+            ks.load(new FileInputStream("../resources/" +keystoreFileName +".jceks"), passwordArray);
+        } catch (IOException e) {
+            System.out.println("Please insert the correct password");
+            return false;
+        } catch (CertificateException e) {
+            return false;
+        } catch (NoSuchAlgorithmException e) {
+            return false;
+        } catch (KeyStoreException e) {
+            return false;
+        }
+        return true;
     }
 
 

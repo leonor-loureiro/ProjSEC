@@ -1,8 +1,11 @@
 package client;
 
 public class Login {
-    private String username;
-    private int port;
+    String username;
+    char[] password;
+
+    public Login(){
+    }
 
     public String getUsername() {
         return username;
@@ -12,11 +15,11 @@ public class Login {
         this.username = username;
     }
 
-    public int getPort() {
-        return port;
+    public char[] getPassword() {
+        return password;
     }
 
-    public void setPassword(int port) {
-        this.port = port;
+    public void setPassword(char[] password) {
+        this.password = password;
     }
 }

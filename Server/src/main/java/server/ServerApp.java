@@ -9,26 +9,19 @@ public class ServerApp {
     public static void main(String args[]) {
 
         try {
+            System.out.println("\n" + "\n" +
+                    "  _   _   ____    ____      _   _           _                            \n" +
+                    " | | | | |  _ \\  / ___|    | \\ | |   ___   | |_    __ _   _ __   _   _   \n" +
+                    " | |_| | | | | | \\___ \\    |  \\| |  / _ \\  | __|  / _` | | '__| | | | |  \n" +
+                    " |  _  | | |_| |  ___) |   | |\\  | | (_) | | |_  | (_| | | |    | |_| |  \n" +
+                    " |_| |_| |____/  |____/    |_| \\_|  \\___/   \\__|  \\__,_| |_|     \\__, |  \n" +
+                    "          ____                                                   |___/   \n" +
+                    "         / ___|    ___   _ __  __   __   ___   _ __                      \n" +
+                    "         \\___ \\   / _ \\ | '__| \\ \\ / /  / _ \\ | '__|                     \n" +
+                    "          ___) | |  __/ | |     \\ V /  |  __/ | |                        \n" +
+                    "         |____/   \\___| |_|      \\_/    \\___| |_|                        \n" +
+                    "                                                                         \n".replace("\\", "\\\\"));
             Boolean running = true;
-
-            ResourcesLoader rsl = new ResourcesLoader();
-
-            List<User> list = null;
-            List<Good> goodList = null;
-
-            list = rsl.loadUserList();
-            goodList = rsl.loadGoodsList();
-
-            for (User user : list) {
-                System.out.println(user.getUserID());
-            }
-
-            for (Good good : goodList) {
-                System.out.println(good.getGoodID());
-            }
-            rsl.loadUserCertificate("user1", "user1user1");
-            rsl.getPrivateKey("user1", "user1user1");
-
             while (running) {
                 Manager.getInstance().startServer(8080);
             }
