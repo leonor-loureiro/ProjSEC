@@ -1,10 +1,14 @@
 package crypto;
 
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.security.cert.Certificate;
 
 public class Crypto {
 
@@ -100,6 +104,18 @@ public class Crypto {
         kpg.initialize(blockSize);
         KeyPair kp = kpg.generateKeyPair();
         return  kp;
+    }
+
+
+    public static PublicKey getPublicKey(String keystoreFileName, String alias, char[] passwordArray)
+            throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
+
+        //Load the keystore
+        KeyStore ks = KeyStore.getInstance("jks");
+        ks.load(new FileInputStream(keystoreFileName), passwordArray);
+
+        Certificate cer = ks.getCertificate(alias);
+        return cer.getPublicKey();
     }
 
 

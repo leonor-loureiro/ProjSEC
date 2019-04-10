@@ -1,7 +1,7 @@
 package client;
 
-import commontypes.User;
 import commontypes.Good;
+import commontypes.User;
 import communication.Communication;
 import communication.IMessageProcess;
 import communication.Message;
@@ -10,10 +10,9 @@ import crypto.Crypto;
 import crypto.CryptoException;
 import resourcesloader.ResourcesLoader;
 
-import java.io.*;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SignatureException;
+import java.io.IOException;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Random;
 
@@ -34,6 +33,7 @@ public class ClientManager implements IMessageProcess {
     Random random = new Random();
 
     private static int notaryPort = 8080;
+    private PublicKey notaryPublicKey;
 
     public static ClientManager getInstance(){
 
@@ -44,7 +44,7 @@ public class ClientManager implements IMessageProcess {
     }
 
 
-    public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException {
+    public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
             users = ResourcesLoader.loadUserList();
 
@@ -54,13 +54,15 @@ public class ClientManager implements IMessageProcess {
 
             user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
 
+            notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
+
             RequestsReceiver requestReceiver = new RequestsReceiver();
 
             requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
     }
 
 
-    public void intentionToSell(String goodID){
+    public void intentionToSell(String goodID) throws CryptoException {
         Message msg = new Message();
 
         msg.setSellerID(user.getUserID());
@@ -93,6 +95,10 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
+        if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
+        }
+
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
         }
@@ -101,7 +107,7 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
-    public void getStateOfGood(String goodID){
+    public void getStateOfGood(String goodID) throws CryptoException {
 
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());;
@@ -130,6 +136,11 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
+
+        if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
+        }
+
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
 
@@ -139,7 +150,7 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
-    public Message transferGood(Message message){
+    public Message transferGood(Message message) throws CryptoException {
 
         Message msg = new Message();
         msg.setBuyerID(message.getBuyerID());
@@ -176,6 +187,11 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
+
+        if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
+        }
+
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
         }
@@ -186,7 +202,7 @@ public class ClientManager implements IMessageProcess {
         return response;
     }
 
-    public void buyGood(String sellerID, String goodID) {
+    public void buyGood(String sellerID, String goodID) throws CryptoException {
 
         Message msg = new Message();
         msg.setBuyerID(user.getUserID());
@@ -217,6 +233,10 @@ public class ClientManager implements IMessageProcess {
         } catch (ClassNotFoundException e) {
 
             e.printStackTrace();
+        }
+
+        if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
         }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
@@ -321,7 +341,14 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
-        return transferGood(message);
+        response = transferGood(message);
+
+
+        if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
+        }
+
+        return response;
 
 
     }
