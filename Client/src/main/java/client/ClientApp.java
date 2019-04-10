@@ -2,8 +2,11 @@ package client;
 
 public class ClientApp {
     public static void main(String[] args) {
+
+        // variable to control running of app
         boolean running = true;
 
+        //username of client
         Login login = null;
 
         while(running) {
@@ -12,20 +15,25 @@ public class ClientApp {
 
             try{
 
-                UserInterface.welcome("TEST USER");
-
                 while (running) {
+
+                    //if we already have a login ask for input
                     if(login !=null) {
                         UserInterface.listCommands();
                         running = UserInterface.parseCommand();
                         UserInterface.clearScreen();
                     }
                     else{
+                        // while we dont have a elegible login ask for another one
                         login = UserInterface.requestLogin();
-                        if(ClientManager.getInstance().login(login))
+
+                        // if we had a correct login we cant initiliaze the client
+                        if(ClientManager.getInstance().login(login)) {
+                            System.out.println("Sucessful login");
                             ClientManager.getInstance().startClient(login);
+                        }
                         else{
-                            System.out.println("Insert a existing username");
+                            System.out.println("Insert correct information");
                             login = null;
                         }
                     }

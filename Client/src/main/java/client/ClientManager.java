@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -46,8 +45,6 @@ public class ClientManager implements IMessageProcess {
 
 
     public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
-
-            users = ResourcesLoader.loadUserList();
 
             goods = ResourcesLoader.loadGoodsList();
 
@@ -191,13 +188,13 @@ public class ClientManager implements IMessageProcess {
 
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-             if (!isSignatureValid(response, notaryPublicKey)) {
+           /*  if (!isSignatureValid(response, notaryPublicKey)) {
                 System.out.println("Notary validation failed");
                 return;
+                }*/
         }
             System.out.println("Successfully bought good");
 
-        }
         if(response.getOperation().equals(Message.Operation.ERROR)){
 
             if(response.getIntentionToBuy() != null){
@@ -387,11 +384,19 @@ public class ClientManager implements IMessageProcess {
     }
 
     public boolean login(Login login) throws IOException, ClassNotFoundException {
+
         users = ResourcesLoader.loadUserList();
 
-        goods = ResourcesLoader.loadGoodsList();
+        if (findUser(login.getUsername()) == null) {
+            System.out.println("The username does not exist");
+            return false;
+        }
+        if(!Crypto.checkPassword(login.getUsername(),login.getPassword())){
+            return false;
+        }
 
-        return findUser(login.getUsername()) != null;
+        return true;
 
     }
+
 }
