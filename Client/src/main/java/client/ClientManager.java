@@ -155,60 +155,6 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
-    public Message transferGood(Message message) throws CryptoException {
-
-        Message msg = new Message();
-        msg.setBuyerID(message.getBuyerID());
-        msg.setSellerID(message.getSellerID());
-        msg.setOperation(Message.Operation.TRANSFER_GOOD);
-
-        msg.setIntentionToBuy(message);
-        addFreshness(msg);
-
-        Message response = null;
-
-        User buyer = findUser(message.getBuyerID());
-
-        if (buyer == null)
-            return null;
-
-        Good good = findGood(message.getGoodID());
-        if(good == null)
-            return null;
-
-        msg.setGoodID(message.getGoodID());
-
-        try {
-            signMessage(msg);
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            response = sendRequest.sendMessage("localhost",notaryPort,msg);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }catch(IllegalArgumentException e){
-            return createErrorMessage("One of the arguments was in wrong form");
-        }
-
-
-       /* if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-        } */
-
-        if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-            System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
-        }
-        if(response.getOperation().equals(Message.Operation.ERROR)){
-            System.out.println(response.getErrorMessage());
-        }
-
-        return response;
-    }
-
     public void buyGood(String sellerID, String goodID) throws CryptoException {
 
         Message msg = new Message();
@@ -272,40 +218,66 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
+    public Message transferGood(Message message) throws CryptoException {
+
+        Message msg = new Message();
+        msg.setBuyerID(message.getBuyerID());
+        msg.setSellerID(message.getSellerID());
+        msg.setOperation(Message.Operation.TRANSFER_GOOD);
+
+        msg.setIntentionToBuy(message);
+        addFreshness(msg);
+
+        Message response = null;
+
+        User buyer = findUser(message.getBuyerID());
+
+        if (buyer == null)
+            return null;
+
+        Good good = findGood(message.getGoodID());
+        if(good == null)
+            return null;
+
+        msg.setGoodID(message.getGoodID());
+
+        try {
+            signMessage(msg);
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            response = sendRequest.sendMessage("localhost",notaryPort,msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }catch(IllegalArgumentException e){
+            return createErrorMessage("One of the arguments was in wrong form");
+        }
+
+
+       /* if (!isSignatureValid(response, notaryPublicKey)) {
+            System.out.println("Notary validation failed");
+        } */
+
+        if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
+            System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
+        }
+        if(response.getOperation().equals(Message.Operation.ERROR)){
+            System.out.println(response.getErrorMessage());
+        }
+
+        return response;
+    }
+
     public void listGoods() {
         System.out.println("Goods in the system:");
         System.out.println();
         for (int i=0;i < goods.size();i++)
             System.out.println(goods.get(i).getGoodID());
 
-    }
-
-    private User findUser(String userID){
-        for (User user : users)
-            if (user.getUserID().equals(userID))
-                return user;
-        return null;
-    }
-
-    private Good findGood(String goodID){
-        for(Good good : goods)
-            if(good.getGoodID().equals(goodID))
-                return good;
-        return null;
-    }
-
-
-    private Message signMessage(Message message) throws CryptoException {
-        String signature = Crypto.sign(message.getBytesToSign(), user.getPrivateKey());
-        message.setSignature(signature);
-        return message;
-    }
-
-    private boolean isSignatureValid(Message message, PublicKey  publicKey)
-            throws CryptoException {
-        if(message.getSignature() == null)
-            return false;
-        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
 
@@ -358,17 +330,6 @@ public class ClientManager implements IMessageProcess {
 
     }
 
-    private void addFreshness(Message response) {
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce("server" + random.nextInt());
-    }
-
-    private Message createErrorMessage(String errorMsg) throws CryptoException {
-        Message message = new Message(errorMsg);
-        addFreshness(message);
-        return signMessage(message);
-    }
-
     public Message process(Message message) {
         switch (message.getOperation()) {
             case BUY_GOOD:
@@ -384,6 +345,45 @@ public class ClientManager implements IMessageProcess {
                 System.out.println("Operation Unknown!");
         }
         return null;
+    }
+
+    private User findUser(String userID){
+        for (User user : users)
+            if (user.getUserID().equals(userID))
+                return user;
+        return null;
+    }
+
+    private Good findGood(String goodID){
+        for(Good good : goods)
+            if(good.getGoodID().equals(goodID))
+                return good;
+        return null;
+    }
+
+
+    private Message signMessage(Message message) throws CryptoException {
+        String signature = Crypto.sign(message.getBytesToSign(), user.getPrivateKey());
+        message.setSignature(signature);
+        return message;
+    }
+
+    private boolean isSignatureValid(Message message, PublicKey  publicKey)
+            throws CryptoException {
+        if(message.getSignature() == null)
+            return false;
+        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+    }
+
+    private void addFreshness(Message response) {
+        response.setTimestamp(currentTimeMillis());
+        response.setNonce("server" + random.nextInt());
+    }
+
+    private Message createErrorMessage(String errorMsg) throws CryptoException {
+        Message message = new Message(errorMsg);
+        addFreshness(message);
+        return signMessage(message);
     }
 
     public boolean login(Login login) throws IOException, ClassNotFoundException {
