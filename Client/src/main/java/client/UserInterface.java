@@ -15,10 +15,9 @@ public interface UserInterface {
      */
     Scanner scan = new Scanner(System.in);
 
-    /**
-     *
+    /*
+    Class that handles client operations
      */
-
     ClientManager CLIENT_MANAGER = ClientManager.getInstance();
 
 
@@ -32,6 +31,9 @@ public interface UserInterface {
                 "                                                /____/   \n".replace("\\", "\\\\"));
     }
 
+    /**
+     * list the commands available for the user
+     */
     static void listCommands() {
         System.out.println();
         System.out.print("Available commands use initial letter of command: " + "\n"
@@ -40,8 +42,15 @@ public interface UserInterface {
         System.out.println();
     }
 
-    static boolean parseCommand() {
+    /*
+     * parses the commands that the user receives
+     */
+    static void parseCommand() {
+        /*
+        command inserted by the user
+         */
         String command;
+
         System.out.println("Insert command:");
 
         command = scan.next();
@@ -89,16 +98,14 @@ public interface UserInterface {
         }
 
         System.out.println();
-        return true;
 
     }
 
     /**
-     * asks the user for his username
+     * asks the user for the login information
      * @return
      */
     static Login requestLogin(){
-            //throws InvalidUser, BadArgument, UserAlreadyExists {
         Login login = new Login();
 
         System.out.println();
@@ -121,8 +128,6 @@ public interface UserInterface {
         login.setUsername(username);
         login.setPassword(password);
 
-        System.out.println();
-
         return login;
     }
 
@@ -142,7 +147,12 @@ public interface UserInterface {
         return result;
     }
 
-
+    /**
+     * request the user for input
+     * attempts to use advanced input reading line, if not possible in current console uses the scanner instead
+     * Stores in char[] instead of string due to java's unsafe string storage handling
+     * @return char[] readinput
+     */
     static char[] requestSensibleInput(){
         char[] result;
         try{
@@ -152,6 +162,7 @@ public interface UserInterface {
         }
         return result;
     }
+
 
     static void clearScreen(){
         for(int i = 0; i < 2; i++)
