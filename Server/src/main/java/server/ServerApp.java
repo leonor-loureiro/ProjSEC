@@ -3,13 +3,16 @@ package server;
 import commontypes.Good;
 import commontypes.User;
 import resourcesloader.ResourcesLoader;
+
+import java.io.Console;
 import java.util.List;
 
 public class ServerApp {
     public static void main(String args[]) {
 
         try {
-            System.out.println("\n" + "\n" +
+            System.out.println(
+                    "\n" + "\n" +
                     "  _   _   ____    ____      _   _           _                            \n" +
                     " | | | | |  _ \\  / ___|    | \\ | |   ___   | |_    __ _   _ __   _   _   \n" +
                     " | |_| | | | | | \\___ \\    |  \\| |  / _ \\  | __|  / _` | | '__| | | | |  \n" +
@@ -20,11 +23,14 @@ public class ServerApp {
                     "         \\___ \\   / _ \\ | '__| \\ \\ / /  / _ \\ | '__|                     \n" +
                     "          ___) | |  __/ | |     \\ V /  |  __/ | |                        \n" +
                     "         |____/   \\___| |_|      \\_/    \\___| |_|                        \n" +
-                    "                                                                         \n".replace("\\", "\\\\"));
-            Boolean running = true;
-            while (running) {
-                Manager.getInstance().startServer(8080);
-            }
+                    "                                                                         \n"
+            .replace("\\", "\\\\"));
+
+            Console input = System.console();
+
+            Manager.getInstance().startServer(8080);
+
+            Manager.getInstance().closeServer();
         }catch(Exception e){
             e.printStackTrace();
         }

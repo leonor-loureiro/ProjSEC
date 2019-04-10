@@ -30,7 +30,12 @@ public class User implements Serializable {
         this.port = port;
     }
 
-    public User(String userID, int port,PrivateKey privateKey, PublicKey publicKey) {
+    public User(String userID, PublicKey publicKey) {
+        this.userID = userID;
+        this.publicKey = publicKey;
+    }
+
+    public User(String userID, int port, PrivateKey privateKey, PublicKey publicKey) {
         this.userID = userID;
         this.publicKey = publicKey;
         this.port = port;

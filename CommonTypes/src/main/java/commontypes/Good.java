@@ -1,11 +1,12 @@
 package commontypes;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * This class represents a good
  */
-public class Good implements Serializable {
+public class Good extends ArrayList<Good> implements Serializable {
     String goodID;
     String userID;
     boolean forSale;

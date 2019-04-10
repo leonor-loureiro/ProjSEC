@@ -27,12 +27,18 @@ public class CitizenCardController {
     }
 
     public void init() throws Exception {
-        initializeLib();
-        //Get PKCS11 instance
-        initializePKCS11Instante();
-        //Open the PKCS11 session
-        openPKCS11Session();
+        try {
 
+            initializeLib();
+            //Get PKCS11 instance
+            initializePKCS11Instante();
+            //Open the PKCS11 session
+            openPKCS11Session();
+
+        }catch (Exception e){
+            exit();
+            throw e;
+        }
     }
 
     /**

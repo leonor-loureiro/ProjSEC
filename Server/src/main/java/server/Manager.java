@@ -7,6 +7,7 @@ import communication.Message;
 import communication.RequestsReceiver;
 import crypto.Crypto;
 import crypto.CryptoException;
+import pteidlib.PteidException;
 import resourcesloader.ResourcesLoader;
 import server.data.AtomicFileManager;
 import server.security.CitizenCardController;
@@ -17,14 +18,19 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 public class Manager implements IMessageProcess {
 
+    //Testing mode (does not update real mapping)
+    private static boolean TESTING_ON = false;
+
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resourcesServer/oods_users";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -69,13 +75,8 @@ public class Manager implements IMessageProcess {
     public void startServer(int port) throws IOException, ClassNotFoundException {
         RequestsReceiver requestReceiver = new RequestsReceiver();
 
+        loadResources();
 
-        users = (ArrayList<User>) ResourcesLoader.loadUserList();
-
-        if(new File(USERS_GOODS_MAPPING).exists())
-            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
-        else
-            goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
         try {
             requestReceiver.initialize(port, this);
         } catch (IOException e) {
@@ -84,9 +85,26 @@ public class Manager implements IMessageProcess {
 
     }
 
-    /****************************************************************************************
+    public void closeServer() throws PteidException {
+        if(ccController != null)
+            ccController.exit();
+    }
+
+    /**
+     * Responsible for loading the user's list and the goods -> user's mapping
+     */
+    public void loadResources() throws IOException, ClassNotFoundException {
+        users = (ArrayList<User>) ResourcesLoader.loadUserList();
+
+        if(new File(USERS_GOODS_MAPPING).exists())
+            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
+        else
+            goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
+    }
+
+    /* **************************************************************************************
      *                      FUNCTIONS THAT PROCESS USER REQUESTS
-     ***************************************************************************************/
+     * ************************************************************************************/
 
     /**
      * This method is responsible for processing an intention to sell request
@@ -104,6 +122,8 @@ public class Manager implements IMessageProcess {
 
         //Find seller
         User seller = findUser(message.getSellerID());
+        if(seller == null)
+            return createErrorMessage("User does not exist");
         PublicKey sellerKey = seller.getPublicKey();
 
         //Check if the message signature is valid
@@ -276,9 +296,9 @@ public class Manager implements IMessageProcess {
         return null;
     }
 
-    /****************************************************************************************
+    /* ***************************************************************************************
      *                                  AUXILIARY FUNCTIONS
-     ****************************************************************************************/
+     * ***************************************************************************************/
 
     /**
      * Responsible for adding a nonce and a timestamp to a message
@@ -331,6 +351,11 @@ public class Manager implements IMessageProcess {
     private boolean updateGood(Good good, String userID, boolean isForSale) {
         good.setForSale(isForSale);
         good.setUserID(userID);
+
+        //For tests, don't update mapping
+        if(TESTING_ON)
+            return true;
+
         try {
             AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
             return true;
@@ -339,6 +364,17 @@ public class Manager implements IMessageProcess {
             e.printStackTrace();
             return false;
         }
+    }
+
+
+    /* *************************************************************************************
+     *                              AUX FUNCTIONS FOR TESTS
+     * *************************************************************************************/
+
+    public void dummyPopulate(ArrayList<User> users, ArrayList<Good> goods){
+        TESTING_ON = true;
+        this.users = users;
+        this.goods = goods;
     }
 
 }
