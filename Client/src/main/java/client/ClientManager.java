@@ -293,9 +293,6 @@ public class ClientManager implements IMessageProcess {
      */
     public Message transferGood(Message message) throws CryptoException {
 
-        User buyer = findUser(message.getBuyerID());
-        Good good = findGood(message.getGoodID());
-
         Message msg = new Message();
         msg.setBuyerID(message.getBuyerID());
         msg.setSellerID(message.getSellerID());
@@ -360,6 +357,20 @@ public class ClientManager implements IMessageProcess {
     private Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
 
         Message response;
+
+        User buyer = findUser(message.getBuyerID());
+
+        if(buyer == null){
+            System.out.println("Buyer user does not exist");
+            return createErrorMessage("Buyer user does not exist");
+        }
+
+        User seller = findUser(message.getSellerID());
+
+        if(seller == null){
+            System.out.println("Seller user does not exist");
+            return createErrorMessage("Seller user does not exist");
+        }
 
 
         if(!user.getUserID().equals(message.getSellerID())) {
