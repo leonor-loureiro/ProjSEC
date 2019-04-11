@@ -33,10 +33,5 @@ public class ClientTests {
         );
     }
 
-    @After
-    public void cleanUp()  {
-        clientManager.closeClient();
-    }
-
 
 }

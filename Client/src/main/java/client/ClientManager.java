@@ -131,6 +131,7 @@ public class ClientManager implements IMessageProcess {
 
         if( response.getSellerID() == null || !response.getSellerID().equals(user.getUserID())){
             System.out.println("Invalid response");
+            return;
         }
 
         if(!isFresh(response)){
@@ -189,6 +190,7 @@ public class ClientManager implements IMessageProcess {
 
         if(response.getBuyerID() == null || !response.getBuyerID().equals(user.getUserID())){
             System.out.println("Invalid response");
+            return;
         }
 
         if(!isFresh(response)){
@@ -252,6 +254,7 @@ public class ClientManager implements IMessageProcess {
 
         if(response.getBuyerID() == null ||!response.getBuyerID().equals(user.getUserID())){
             System.out.println("Invalid response");
+            return;
         }
 
         if(!isFresh(response)){
@@ -281,6 +284,7 @@ public class ClientManager implements IMessageProcess {
             else{
                 if (!isSignatureValid(response, notaryPublicKey)) {
                     System.out.println("Notary validation failed");
+                    return;
                 }
             }
             System.out.println(response.getErrorMessage());
@@ -318,6 +322,7 @@ public class ClientManager implements IMessageProcess {
 
         if(!response.getSellerID().equals(user.getUserID())){
             System.out.println("Invalid response");
+            return response;
         }
 
         if(!isFresh(response)){
@@ -328,13 +333,19 @@ public class ClientManager implements IMessageProcess {
 
         else if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
+            return response;
+
         }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Successfully transferred good " + message.getGoodID() + " to " + message.getBuyerID());
+            return response;
+
 
         } else if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
+            return response;
+
         }
 
         return response;
@@ -457,6 +468,10 @@ public class ClientManager implements IMessageProcess {
     }
 
 
+    /**
+     * This method checks if a message is fresh
+     * @param message message to be verified
+     */
     private boolean isFresh(Message message) throws SaveNonceException {
         String nonce = message.getNonce();
         //Check freshness
@@ -551,7 +566,7 @@ public class ClientManager implements IMessageProcess {
 
     /**
      * Receives user information and atempts to login the user
-     * @param login
+     * @param login information of an attempted login
      * @return a boolean correspondent to the sucess of the operations
      */
     public boolean login(Login login) throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
@@ -601,14 +616,7 @@ public class ClientManager implements IMessageProcess {
         this.goods = goods;
     }
 
-    public void closeClient() {
-    }
-
     public User getUser() {
         return user;
-    }
-
-    public void addNonce(String repeatednonce) {
-        nonces.add(repeatednonce);
     }
 }

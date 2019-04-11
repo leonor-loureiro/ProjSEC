@@ -95,7 +95,7 @@ public class ReceiveBuyGoodTest extends ClientTests{
         Message response = clientManager.process(message);
 
         Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);
-        Assert.assertEquals(response.getErrorMessage(),"Seller ID does not match current owner.");
+        Assert.assertEquals(response.getErrorMessage(),"Seller ID does not match my ID");
 
     }
     @Test
@@ -106,14 +106,16 @@ public class ReceiveBuyGoodTest extends ClientTests{
     public void NotFreshMessageRepeatedNonce() {
 
         Message message = generateBuyGoodMessage(userID,userID2,goodID);
-        Message response = clientManager.process(message);
 
         clientManager.addFreshness(message);
-        clientManager.addNonce("repeatednonce");
-        message.setNonce("repeatednonce");
 
-        Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);
-        Assert.assertEquals(response.getErrorMessage(),"Request is not fresh");
+        Message response = clientManager.process(message);
+
+        Message response2 = clientManager.process(message);
+
+
+        Assert.assertEquals(response2.getOperation(),Message.Operation.ERROR);
+        Assert.assertEquals(response2.getErrorMessage(),"Request is not fresh");
 
     }
 
@@ -138,7 +140,7 @@ public class ReceiveBuyGoodTest extends ClientTests{
 
     @Test
     public void NotSignedMessage(){
-        Message message = generateBuyGoodMessage(userID,userID2,"goodID");
+        Message message = generateBuyGoodMessage(userID,userID2,goodID);
         clientManager.addFreshness(message);
         Message response = clientManager.process(message);
 
