@@ -26,6 +26,8 @@ import static java.lang.System.setOut;
 
 public class Manager implements IMessageProcess {
 
+    private RequestsReceiver requestReceiver = new RequestsReceiver();
+
     //Testing mode (does not update real mapping)
     private static boolean TESTING_ON = false;
 
@@ -59,6 +61,7 @@ public class Manager implements IMessageProcess {
 
 
     private Manager(){
+        System.out.println("Started server shutdown...");
         ccController = new CitizenCardController();
         try {
             ccController.init();
@@ -73,21 +76,17 @@ public class Manager implements IMessageProcess {
      * @param port the port the service runs on
      */
     public void startServer(int port) throws IOException, ClassNotFoundException {
-        RequestsReceiver requestReceiver = new RequestsReceiver();
 
         loadResources();
-
-        try {
-            requestReceiver.initialize(port, this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        requestReceiver.initializeInNewThread(port, this);
     }
 
     public void closeServer() throws PteidException {
         if(ccController != null)
             ccController.exit();
+
+        // stops running thread that's receiving requests
+        requestReceiver.stop();
     }
 
     /**

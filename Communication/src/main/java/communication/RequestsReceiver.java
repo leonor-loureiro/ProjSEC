@@ -1,6 +1,7 @@
 package communication;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -9,9 +10,12 @@ import java.io.IOException;
 public class RequestsReceiver{
 
     private Communication server;
-    private boolean running;
-    private Thread thread = null;
+    private static boolean running;
 
+    /**
+     * Simple constructor that sets values
+     * To start the requests reception, go to {@link #initialize(int, IMessageProcess)}method
+     */
     public RequestsReceiver(){
         server = new Communication();
         running = false;
@@ -26,17 +30,16 @@ public class RequestsReceiver{
     public void initialize(int port, IMessageProcess processor) throws IOException {
         running = true;
 
-            Communication server = new Communication();
-            server.start(port);
+        server.start(port);
         while (running){
             server.listenAndProcess(processor);
         }
     }
 
     /**
-     *
-     * @param port
-     * @param processor
+     * runs the function {@link #initialize(int, IMessageProcess)}  in a new thread
+     * @param port the port to run initialize the request receiver on
+     * @param processor the function which processes the messages
      */
     public void initializeInNewThread(int port,IMessageProcess processor){
         Runnable r = new RequestsReceiverRunnable(this, port, processor);
@@ -47,6 +50,18 @@ public class RequestsReceiver{
      * stops the reception of messages
      */
     public void stop(){
+        System.out.println("Turning down requests reception...");
+
+        // Allow server start before starting shutodnw
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) { e.printStackTrace(); }
+
+        // break message reception loop
         running = false;
+
+        try {
+            server.stop();
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

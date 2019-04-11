@@ -4,7 +4,9 @@ import commontypes.Good;
 import commontypes.User;
 import resourcesloader.ResourcesLoader;
 
+import java.io.BufferedReader;
 import java.io.Console;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class ServerApp {
@@ -26,11 +28,16 @@ public class ServerApp {
                     "                                                                         \n"
             .replace("\\", "\\\\"));
 
-            Console input = System.console();
-
             Manager.getInstance().startServer(8080);
 
+
+            BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("press <enter> to shutdown");
+            reader.readLine();
+
+            // initializes server shutdown
             Manager.getInstance().closeServer();
+
         }catch(Exception e){
             e.printStackTrace();
         }
