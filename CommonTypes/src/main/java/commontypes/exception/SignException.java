@@ -1,4 +1,4 @@
-package server.exception;
+package commontypes.exception;
 
 public class SignException extends Exception {
 }
