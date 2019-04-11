@@ -7,11 +7,17 @@
 + a Citizen Card and a Card Reader
 
 
+
+
+
 ## Setup:
 Go to the project's root directory and execute the following commands
 + mvn clean install -DskipTests
 + cd ResourcesLoader/
 + mvn exec:java
+
+
+
 
 
 ## Executing
@@ -20,7 +26,7 @@ The following instructions are to start a 2 clients and 1 server
 Travel back to root directory
 
 ### Option 1: Script (Windows only)
-execute the script ProjSEC/run.bat
+execute the script ProjSEC/scripts/run.bat
 
 
 ### Option 2: Non script version
