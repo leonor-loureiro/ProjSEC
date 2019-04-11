@@ -454,7 +454,7 @@ public class ClientManager implements IMessageProcess {
     /**
      * This method returns the good with given good ID
      */
-    
+
     private Good findGood(String goodID){
         for(Good good : goods)
             if(good.getGoodID().equals(goodID))
