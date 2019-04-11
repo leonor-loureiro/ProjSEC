@@ -2,6 +2,7 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import commontypes.exception.SaveNonceException;
 import communication.IMessageProcess;
 import communication.Message;
 import communication.RequestsReceiver;
@@ -9,7 +10,7 @@ import crypto.Crypto;
 import crypto.CryptoException;
 import pteidlib.PteidException;
 import resourcesloader.ResourcesLoader;
-import server.data.AtomicFileManager;
+import commontypes.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
@@ -31,6 +33,7 @@ public class Manager implements IMessageProcess {
 
     //Name of the file where the users -> goods mapping is stored
     private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
+    private static final String NONCES = "../resourcesServer/nonces";
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -102,6 +105,12 @@ public class Manager implements IMessageProcess {
             goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
         else
             goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
+
+        if(new File(NONCES).exists()) {
+            nonces = (ArrayList<String>) ResourcesLoader.loadNonces(NONCES);
+            System.out.println("Nonces exist = " + nonces.size());
+        }else
+            nonces = new ArrayList<>();
     }
 
     /* **************************************************************************************
@@ -177,7 +186,7 @@ public class Manager implements IMessageProcess {
     /**
      * This method is responsible for processing a transfer good request
      */
-    private Message transferGood(Message message) throws CryptoException, SignatureException {
+    private Message transferGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
         Good good = findGood(message.getGoodID());
         if(good == null)
             return createErrorMessage("Good does not exist.");
@@ -297,6 +306,8 @@ public class Manager implements IMessageProcess {
                 }
             } catch (CryptoException e) {
                 return createErrorMessage("Failed to verify the signature");
+            } catch (SaveNonceException e) {
+                return createErrorMessage("Failed to process request");
             }
         }catch (SignatureException e) {
             return new Message("Failed to sign the message");
@@ -304,7 +315,7 @@ public class Manager implements IMessageProcess {
         return null;
     }
 
-    public boolean isFresh(Message message) throws SignatureException {
+    public boolean isFresh(Message message) throws SaveNonceException {
         String nonce = message.getNonce();
 
         //Check if request is fresh
@@ -313,6 +324,15 @@ public class Manager implements IMessageProcess {
             return false;
 
         nonces.add(nonce);
+        try {
+            if(!TESTING_ON)
+                AtomicFileManager.atomicWriteObjectToFile(NONCES, nonces);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            System.out.println("Failed to persistently store nonce");
+            throw new SaveNonceException();
+        }
+
         return true;
     }
 

@@ -1,4 +1,4 @@
-package server.data;
+package commontypes;
 
 import commontypes.Good;
 
@@ -18,7 +18,7 @@ public class AtomicFileManager {
         Files.move(sourcePath, destinationPath, StandardCopyOption.ATOMIC_MOVE);
     }
 
-    public static void atomicWriteObjectToFile(String destFilename, ArrayList<Good> content)
+    public static void atomicWriteObjectToFile(String destFilename, ArrayList<?> content)
             throws IOException, ClassNotFoundException {
 
         //Temp file

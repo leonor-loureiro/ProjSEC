@@ -97,7 +97,6 @@ public class ResourcesLoader {
     }
 
     public static List<Good> loadGoodsList() throws IOException, ClassNotFoundException {
-        // Deserialize the int[]
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(resourcesPath+"goodsList.ser"));
         List<Good> goods = (List<Good>) in.readObject();
         in.close();
@@ -106,12 +105,26 @@ public class ResourcesLoader {
     }
 
     public static List<Good> loadNotaryGoodsList(String path) throws IOException, ClassNotFoundException {
-        // Deserialize the int[]
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
         List<Good> goods = (List<Good>) in.readObject();
         in.close();
 
         return goods;
+    }
+
+    public static List<String> loadNonces (String path) throws IOException, ClassNotFoundException {
+        ObjectInputStream in = null;
+        List<String> nonces = new ArrayList<>();
+        try{
+            in = new ObjectInputStream(new FileInputStream(path));
+            nonces = (List<String>) in.readObject();
+
+        }finally {
+            if(in != null){
+                in.close();
+            }
+        }
+        return nonces;
     }
 
 

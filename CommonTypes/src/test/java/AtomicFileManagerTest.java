@@ -3,9 +3,8 @@ import commontypes.Utils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
-import server.data.AtomicFileManager;
+import commontypes.AtomicFileManager;
 
-import javax.rmi.CORBA.Util;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
