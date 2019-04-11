@@ -315,6 +315,11 @@ public class Manager implements IMessageProcess {
         return null;
     }
 
+
+    /* ***************************************************************************************
+     *                                  AUXILIARY FUNCTIONS
+     * ***************************************************************************************/
+
     public boolean isFresh(Message message) throws SaveNonceException {
         String nonce = message.getNonce();
 
@@ -335,10 +340,6 @@ public class Manager implements IMessageProcess {
 
         return true;
     }
-
-    /* ***************************************************************************************
-     *                                  AUXILIARY FUNCTIONS
-     * ***************************************************************************************/
 
     /**
      * Responsible for adding a nonce and a timestamp to a message

@@ -1,9 +1,11 @@
 package client;
 
+import commontypes.AtomicFileManager;
 import commontypes.Good;
 import commontypes.User;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
+import commontypes.exception.SaveNonceException;
 import commontypes.exception.UserNotExistException;
 import communication.Communication;
 import communication.IMessageProcess;
@@ -13,7 +15,7 @@ import crypto.Crypto;
 import crypto.CryptoException;
 import resourcesloader.ResourcesLoader;
 
-import javax.jws.soap.SOAPBinding;
+import java.io.File;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -22,16 +24,19 @@ import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
 
+    public static final String HOST = "localhost";
     private static boolean TESTING_ON = false;
     static ClientManager clientManager = null;
+    private static String NONCES_PREFIX = "../resources/nonces_";
 
     //Validity time
     private static final int VALIDITY = 900000;
+
+    private String noncesFile = null;
 
     /*
     list of users in the system
@@ -73,12 +78,6 @@ public class ClientManager implements IMessageProcess {
 
     /**
      * initializes a client based on the login information
-     * @param login
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws CertificateException
-     * @throws NoSuchAlgorithmException
-     * @throws KeyStoreException
      */
     public void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
@@ -98,9 +97,8 @@ public class ClientManager implements IMessageProcess {
     /**
      * executes the intention to sell
      * @param goodID id of the good inserted by the user
-     * @throws CryptoException
      */
-    public void intentionToSell(String goodID) throws CryptoException, GoodNotExistsException {
+    public void intentionToSell(String goodID) throws CryptoException, GoodNotExistsException, SaveNonceException {
 
         //creates new message
         Message msg = new Message();
@@ -119,8 +117,6 @@ public class ClientManager implements IMessageProcess {
 
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
-        //object to receive response
-        Message response = null;
 
         addFreshness(msg);
 
@@ -130,10 +126,14 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
-        response = sendMessage(msg, "localhost", notaryPort);
+        Message response = sendMessage(msg, HOST, notaryPort);
         if(response == null)
             return;
 
+        if(!isFresh(response)){
+            System.out.println("Notary response is not fresh");
+            return;
+        }
 
         if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
@@ -148,23 +148,12 @@ public class ClientManager implements IMessageProcess {
         }
     }
 
-    public Message sendMessage(Message msg, String host, int port) {
-        try {
-            return sendRequest.sendMessage(host, port, msg);
 
-        } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-            System.out.println("Send request failed");
-        }
-        return null;
-    }
 
     /**
      * executes the getstateofgood operation
-     * @param goodID
-     * @throws CryptoException
      */
-    public void getStateOfGood(String goodID) throws CryptoException, GoodNotExistsException {
+    public void getStateOfGood(String goodID) throws CryptoException, GoodNotExistsException, SaveNonceException {
 
         Message msg = new Message();
 
@@ -190,10 +179,14 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-        response = sendMessage(msg, "localhost", notaryPort);
+        response = sendMessage(msg, HOST, notaryPort);
         if(response == null)
             return;
 
+        if(!isFresh(response)){
+            System.out.println("Notary response is not fresh");
+            return;
+        }
 
          if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
@@ -210,10 +203,10 @@ public class ClientManager implements IMessageProcess {
     /**
      * executes the buygood operation
      * @param sellerID user that owns the good
-     * @param goodID
+     * @param goodID good we w
      * @throws CryptoException
      */
-    public void buyGood(String sellerID, String goodID) throws CryptoException, GoodNotExistsException, UserNotExistException {
+    public void buyGood(String sellerID, String goodID) throws CryptoException, GoodNotExistsException, UserNotExistException, SaveNonceException {
 
         Message msg = new Message();
 
@@ -245,9 +238,14 @@ public class ClientManager implements IMessageProcess {
 
 
         System.out.println("Sent buy good to " + seller.getPort());
-        response = sendMessage(msg, "localhost", seller.getPort());
+        response = sendMessage(msg, HOST, seller.getPort());
         if(response == null)
             return;
+
+        if(!isFresh(response)){
+            System.out.println("Response is not fresh");
+            return;
+        }
 
 
         //if the code is transfer good it means the operation was successfull
@@ -271,7 +269,6 @@ public class ClientManager implements IMessageProcess {
             else{
                 if (!isSignatureValid(response, notaryPublicKey)) {
                     System.out.println("Notary validation failed");
-                    return;
                 }
             }
         }
@@ -283,7 +280,7 @@ public class ClientManager implements IMessageProcess {
      * @return the response from the server, or a error message generated in the client.
      * @throws CryptoException
      */
-    public Message transferGood(Message message) throws CryptoException {
+    public Message transferGood(Message message) throws CryptoException, SaveNonceException {
 
         Message msg = new Message();
         msg.setBuyerID(message.getBuyerID());
@@ -303,13 +300,17 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-        response = sendMessage(msg, "localhost", notaryPort);
+        response = sendMessage(msg, HOST, notaryPort);
         if(response == null)
             return createErrorMessage("Failed to send request to Notary");
 
+        if(!isFresh(response)){
+            System.out.println("Notary response is not fresh");
+            return response;
+        }
 
 
-        if (!isSignatureValid(response, notaryPublicKey)) {
+        else if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
         }
 
@@ -342,7 +343,7 @@ public class ClientManager implements IMessageProcess {
      * @throws CryptoException
      * @throws SignatureException
      */
-    public Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
+    public Message receiveBuyGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
 
         Message response;
 
@@ -386,41 +387,35 @@ public class ClientManager implements IMessageProcess {
             e.printStackTrace();
         }
 
-        response = transferGood(message);
-
-
-        if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-        }
-
-        return response;
+        return transferGood(message);
     }
 
     /**
      * processes the received messages
-     * @param message
-     * @return
      */
     public Message process(Message message) {
-        String nonce = message.getNonce();
 
         if(message.getOperation().equals(Message.Operation.BUY_GOOD)) {
+            try {
                 try {
-                    if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
-                            nonces.contains(nonce))
+                    if (!isFresh(message))
                         return createErrorMessage("Request is not fresh");
-                    nonces.add(nonce);
-                    System.out.println("Received buy good");
 
+                    //execute operation
+                    System.out.println("Received buy good");
                     return receiveBuyGood(message);
 
-                } catch (CryptoException | SignatureException e) {
-                    e.printStackTrace();
+                } catch (SaveNonceException e) {
+                    return createErrorMessage("Failed to process request");
                 }
+            } catch (CryptoException | SignatureException e) {
+                e.printStackTrace();
+            }
         }
         System.out.println("Operation Unknown!");
         return null;
     }
+
 
     /* ***************************************************************************************
      *                                  AUXILIARY FUNCTIONS
@@ -448,9 +443,49 @@ public class ClientManager implements IMessageProcess {
     }
 
 
+    private boolean isFresh(Message message) throws SaveNonceException {
+        String nonce = message.getNonce();
+        //Check freshness
+        if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
+                nonces.contains(nonce))
+            return false;
+        nonces.add(nonce);
+
+        //Store nonce
+        if(!TESTING_ON) {
+            System.out.println("Storing nonce " + noncesFile);
+            try {
+                AtomicFileManager.atomicWriteObjectToFile(noncesFile, nonces);
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                throw new SaveNonceException();
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * This method sends a request to the port at the host
+     * @param msg request message
+     * @param host host address
+     * @param port port number
+     * @return response
+     */
+    private Message sendMessage(Message msg, String host, int port) {
+        try {
+            return sendRequest.sendMessage(host, port, msg);
+
+        } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
+            e.printStackTrace();
+            System.out.println("Send request failed");
+        }
+        return null;
+    }
+
     /**
      * This function is responsible for signing a message
-     * @param message
+     * @param message message to be signed
      * @return signed message
      */
     private Message signMessage(Message message) throws CryptoException {
@@ -463,8 +498,6 @@ public class ClientManager implements IMessageProcess {
      * This method is responsible for validating whether a message signature is valid
      * @param message signed message
      * @param publicKey public key
-     * @return
-     * @throws CryptoException
      */
 
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
@@ -506,30 +539,39 @@ public class ClientManager implements IMessageProcess {
      * Receives user information and atempts to login the user
      * @param login
      * @return a boolean correspondent to the sucess of the operations
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws CryptoException
-     * @throws UserNotExistException
-     * @throws PasswordIsWrongException
      */
     public boolean login(Login login) throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
 
+        //Load users
         if(!TESTING_ON)
             users = ResourcesLoader.loadUserList();
 
-        if (findUser(login.getUsername()) == null) {
+        //Check if user exists
+        user = findUser(login.getUsername());
+        if (user == null) {
             System.out.println("The username does not exist");
             throw new UserNotExistException();
         }
+
+        //Check if keystore password is valid
         if(!Crypto.checkPassword(login.getUsername(),login.getPassword())){
             throw new PasswordIsWrongException();
         }
 
-        user = findUser(login.getUsername());
+        //Retrieve user's private key
+        user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(
+                login.getUsername(),login.getUsername() + login.getUsername())
+        );
 
-        user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
-
-
+        noncesFile = NONCES_PREFIX + user.getUserID();
+        //Load nonces
+        if(!TESTING_ON){
+            if(new File(noncesFile).exists()) {
+                nonces = (ArrayList<String>) ResourcesLoader.loadNonces(noncesFile);
+                System.out.println("Nonces exist = " + nonces.size());
+            }else
+                nonces = new ArrayList<>();
+        }
         return true;
 
     }

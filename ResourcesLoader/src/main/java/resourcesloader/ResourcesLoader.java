@@ -31,6 +31,10 @@ import java.security.cert.CertificateException;
 import java.util.Calendar;
 import java.util.Date;
 
+
+/**
+ * Class responsible for loading resources and auto generating the static information
+ */
 public class ResourcesLoader {
 
     public static final String KEYSTORE_TYPE = "JCEKS";
@@ -42,7 +46,15 @@ public class ResourcesLoader {
     List<Good> goods = new ArrayList<Good>();
 
 
-    public void createUser(String userID, int port, String address) throws IOException {
+    /**
+     * Creates a user and adds it to the list
+     * When a user is created a keystore is generated with his name containing his public and private key
+     * @param userID user's unique identifier
+     * @param port user's port where it will run
+     * @param address link or url where the user is found
+     * @throws IOException if there are issues with creating a keystore for the use
+     */
+    private void createUser(String userID, int port, String address) throws IOException {
         User user = new User (userID, port);
         user.setAddress(address);
         users.add(user);
@@ -68,11 +80,22 @@ public class ResourcesLoader {
 
     }
 
-    public void addItemToUser(String goodID, String userID, boolean onSale){
+    /**
+     * adds an good/item to a user
+     * @param goodID the id of the good to be added
+     * @param userID the user who will own the good
+     * @param onSale information of whether the good starts for sale or not
+     */
+    private void addItemToUser(String goodID, String userID, boolean onSale){
         Good good = new Good(goodID, userID, onSale);
         goods.add(good);
     }
 
+    /**
+     * Serializes and stores the userlist so it can be loaded when needed
+     * @param users the list of users to be stored
+     * @throws IOException when serializing the userlist is impossible
+     */
     public static void storeUserList(List<User> users) throws IOException {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(resourcesPath+"userList.ser"));
         out.writeObject(users);
@@ -80,8 +103,14 @@ public class ResourcesLoader {
         out.close();
     }
 
+    /**
+     * loads the userList previously serialized and store
+     * @return the user list
+     * @throws IOException if the file doesn't exist or an issue happened while loading
+     * @throws ClassNotFoundException if the serialized class doesn't match user
+     */
     public static List<User> loadUserList() throws IOException, ClassNotFoundException {
-        // Deserialize the int[]
+        // Deserialize
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(resourcesPath+"userList.ser"));
         List<User> users = (List<User>) in.readObject();
         in.close();
@@ -89,6 +118,11 @@ public class ResourcesLoader {
         return users;
     }
 
+    /**
+     * Serializes and stores the goodsList so it can be loaded when needed
+     * @param goods the list of goods
+     * @throws IOException when issues arise with the list's storage
+     */
     public static void storeGoods(List<Good> goods) throws IOException {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(resourcesPath+"goodsList.ser"));
         out.writeObject(goods);
@@ -96,7 +130,14 @@ public class ResourcesLoader {
         out.close();
     }
 
+    /**
+     * loads the previously store goods list
+     * @return the list previously stored
+     * @throws IOException when IO exception turns upon loading the list
+     * @throws ClassNotFoundException when the class loaded has issues or doesn't match Good class
+     */
     public static List<Good> loadGoodsList() throws IOException, ClassNotFoundException {
+
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(resourcesPath+"goodsList.ser"));
         List<Good> goods = (List<Good>) in.readObject();
         in.close();
@@ -104,7 +145,15 @@ public class ResourcesLoader {
         return goods;
     }
 
+    /**
+     * Loads the serielized list of the notary's good
+     * @param path to the notary's goodsList
+     * @return the list of goods
+     * @throws IOException if error arises while loading
+     * @throws ClassNotFoundException if error arises when converting class'
+     */
     public static List<Good> loadNotaryGoodsList(String path) throws IOException, ClassNotFoundException {
+
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
         List<Good> goods = (List<Good>) in.readObject();
         in.close();
