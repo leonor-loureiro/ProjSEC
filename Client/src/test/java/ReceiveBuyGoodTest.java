@@ -39,6 +39,10 @@ public class ReceiveBuyGoodTest extends ClientTests{
         clientManager.login(login);
 
     }
+
+    /**
+     * User sends a buygood request fails due to the good not existing
+     */
     @Test
     public void GoodDoesNotExist()  {
         Message message = generateBuyGoodMessage(userID,userID2,"wrong good");
@@ -49,6 +53,10 @@ public class ReceiveBuyGoodTest extends ClientTests{
         Assert.assertEquals(response.getErrorMessage(),"Good does not exist");
 
     }
+
+    /**
+     * User sends a buygood request fails due to the buyer not existing
+     */
     @Test
     public void BuyerDoesNotExist() {
 
@@ -60,6 +68,10 @@ public class ReceiveBuyGoodTest extends ClientTests{
         Assert.assertEquals(response.getErrorMessage(),"Buyer user does not exist");
 
     }
+
+    /**
+     * User sends a buygood requests fails due to the seller not existing
+     */
     @Test
     public void SellerDoesNotExist() {
 
@@ -72,6 +84,9 @@ public class ReceiveBuyGoodTest extends ClientTests{
 
     }
 
+    /**
+     * User sends a buygood request fails due to the seller and receiving user not matching.
+     */
     @Test
     public void SellerDoesNotMath() {
 
@@ -84,6 +99,10 @@ public class ReceiveBuyGoodTest extends ClientTests{
 
     }
     @Test
+
+    /**
+     * User sends a not fresh message and is refused by the other client.
+     */
     public void NotFreshMessageRepeatedNonce() {
 
         Message message = generateBuyGoodMessage(userID,userID2,goodID);
@@ -97,6 +116,10 @@ public class ReceiveBuyGoodTest extends ClientTests{
         Assert.assertEquals(response.getErrorMessage(),"Request is not fresh");
 
     }
+
+    /**
+     * User sends a not fresh message and is refused by the other client.
+     */
 
     @Test
     public void NotFreshMessageBadTimestamp() {
@@ -113,6 +136,24 @@ public class ReceiveBuyGoodTest extends ClientTests{
 
     }
 
+    @Test
+    public void NotSignedMessage(){
+        Message message = generateBuyGoodMessage(userID,userID2,"goodID");
+        clientManager.addFreshness(message);
+        Message response = clientManager.process(message);
+
+        Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);
+        Assert.assertEquals(response.getErrorMessage(),"Authentication Failed");
+    }
+
+
+    /**
+     * generates a buygood message
+     * @param userid
+     * @param userid2
+     * @param goodid
+     * @return
+     */
     private Message generateBuyGoodMessage(String userid,String userid2,String goodid) {
         Message message = new Message();
         message.setBuyerID(userid2);

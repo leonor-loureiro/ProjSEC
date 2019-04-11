@@ -13,27 +13,15 @@ import java.security.KeyPair;
 
 public class GetStateOfGoodTest extends ClientTests{
 
-    @Test
-    public void sucess() throws ClassNotFoundException, PasswordIsWrongException, CryptoException, UserNotExistException, IOException, GoodNotExistsException {
-     /*   KeyPair keyPair = Crypto.generateRSAKeys();
-
-        users.add(
-                new User(userID, keyPair.getPublic())
-        );
-
-        goods.add(
-                new Good(goodID, userID, false)
-        );
-
-        Login login = new Login();
-
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
-        clientManager.login(login);
-
-        clientManager.getStateOfGood(goodID); */
-
-    }
+    /**
+     * The get state of good request isnt sent due to the fact the user inserted a good that does not exist.
+     * @throws ClassNotFoundException
+     * @throws PasswordIsWrongException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws IOException
+     * @throws GoodNotExistsException
+     */
     @Test (expected = GoodNotExistsException.class)
     public void goodDoesNotExist() throws ClassNotFoundException, PasswordIsWrongException, CryptoException, UserNotExistException, IOException, GoodNotExistsException {
        KeyPair keyPair = Crypto.generateRSAKeys();
