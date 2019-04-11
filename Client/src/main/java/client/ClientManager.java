@@ -30,8 +30,7 @@ public class ClientManager implements IMessageProcess {
 
     public static final String HOST = "localhost";
     private static boolean TESTING_ON = false;
-    static ClientManager clientManager = null;
-    private static String NONCES_PREFIX = "../resources/nonces_";
+    private static ClientManager clientManager = null;
 
     //Validity time
     private static final int VALIDITY = 900000;
@@ -79,7 +78,7 @@ public class ClientManager implements IMessageProcess {
     /**
      * initializes a client based on the login information
      */
-    public void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
             //loads the goods from a file
             goods = ResourcesLoader.loadGoodsList();
@@ -130,6 +129,10 @@ public class ClientManager implements IMessageProcess {
         if(response == null)
             return;
 
+        if( response.getSellerID() == null || !response.getSellerID().equals(user.getUserID())){
+            System.out.println("Invalid response");
+        }
+
         if(!isFresh(response)){
             System.out.println("Notary response is not fresh");
             return;
@@ -141,7 +144,8 @@ public class ClientManager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
-            System.out.println("Good " + response.getGoodID() + " is now " + (response.isForSale()? "for sale." : "not for sale"));
+            System.out.println("Good " + response.getGoodID() + " is now " +
+                    (response.isForSale()? "for sale." : "not for sale"));
         }
         else if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
@@ -183,6 +187,10 @@ public class ClientManager implements IMessageProcess {
         if(response == null)
             return;
 
+        if(response.getBuyerID() == null || !response.getBuyerID().equals(user.getUserID())){
+            System.out.println("Invalid response");
+        }
+
         if(!isFresh(response)){
             System.out.println("Notary response is not fresh");
             return;
@@ -195,6 +203,7 @@ public class ClientManager implements IMessageProcess {
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
+
         }else if(response.getOperation().equals(Message.Operation.ERROR)){
             System.out.println(response.getErrorMessage());
         }
@@ -204,7 +213,6 @@ public class ClientManager implements IMessageProcess {
      * executes the buygood operation
      * @param sellerID user that owns the good
      * @param goodID good we w
-     * @throws CryptoException
      */
     public void buyGood(String sellerID, String goodID) throws CryptoException, GoodNotExistsException, UserNotExistException, SaveNonceException {
 
@@ -242,6 +250,10 @@ public class ClientManager implements IMessageProcess {
         if(response == null)
             return;
 
+        if(response.getBuyerID() == null ||!response.getBuyerID().equals(user.getUserID())){
+            System.out.println("Invalid response");
+        }
+
         if(!isFresh(response)){
             System.out.println("Response is not fresh");
             return;
@@ -256,7 +268,8 @@ public class ClientManager implements IMessageProcess {
             }
             System.out.println("Successfully bought good");
 
-        //if it failed it could have failed in the client that received the buy good operation or the notary that received the transfergood
+        // if it failed it could have failed in the client that received the buy good operation or the notary that
+        // received the transfer good
         }else if(response.getOperation().equals(Message.Operation.ERROR)){
             //if the intention to buy isn't null, it means it failed on the other client
             if(response.getIntentionToBuy() != null){
@@ -264,13 +277,13 @@ public class ClientManager implements IMessageProcess {
                     System.out.println("Seller validation failed");
                     return;
                 }
-                System.out.println(response.getErrorMessage());
             }
             else{
                 if (!isSignatureValid(response, notaryPublicKey)) {
                     System.out.println("Notary validation failed");
                 }
             }
+            System.out.println(response.getErrorMessage());
         }
     }
 
@@ -278,9 +291,8 @@ public class ClientManager implements IMessageProcess {
      * executes the transfergood operation based on a previous buygood
      * @param message the received buygood
      * @return the response from the server, or a error message generated in the client.
-     * @throws CryptoException
      */
-    public Message transferGood(Message message) throws CryptoException, SaveNonceException {
+    private Message transferGood(Message message) throws CryptoException, SaveNonceException {
 
         Message msg = new Message();
         msg.setBuyerID(message.getBuyerID());
@@ -302,7 +314,11 @@ public class ClientManager implements IMessageProcess {
 
         response = sendMessage(msg, HOST, notaryPort);
         if(response == null)
-            return createErrorMessage("Failed to send request to Notary");
+            return createErrorMessage("Failed to send request to Notary", message.getBuyerID());
+
+        if(!response.getSellerID().equals(user.getUserID())){
+            System.out.println("Invalid response");
+        }
 
         if(!isFresh(response)){
             System.out.println("Notary response is not fresh");
@@ -327,11 +343,11 @@ public class ClientManager implements IMessageProcess {
     /**
      * list the goods in the system
      */
-    public void listGoods() {
+    void listGoods() {
         System.out.println("Goods in the system:");
         System.out.println();
-        for (int i=0;i < goods.size();i++)
-            System.out.println(goods.get(i).getGoodID());
+        for (Good good : goods)
+            System.out.println(good.getGoodID());
 
     }
 
@@ -340,10 +356,8 @@ public class ClientManager implements IMessageProcess {
      * function to receive the buygood operation from other clients
      * @param message the buygood message sent by another client
      * @return the result of the server execution, or a error message
-     * @throws CryptoException
-     * @throws SignatureException
      */
-    public Message receiveBuyGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
+    private Message receiveBuyGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
 
         Message response;
 
@@ -351,26 +365,26 @@ public class ClientManager implements IMessageProcess {
 
         if(buyer == null){
             System.out.println("Buyer user does not exist");
-            return createErrorMessage("Buyer user does not exist");
+            return createErrorMessage("Buyer user does not exist", message.getBuyerID());
         }
 
         User seller = findUser(message.getSellerID());
 
         if(seller == null){
             System.out.println("Seller user does not exist");
-            return createErrorMessage("Seller user does not exist");
+            return createErrorMessage("Seller user does not exist", message.getBuyerID());
         }
 
 
         if(!user.getUserID().equals(message.getSellerID())) {
-            System.out.println("Seller ID does not match current owner.");
-            return createErrorMessage("Seller ID does not match current owner.");
+            System.out.println("Seller ID does not match my ID");
+            return createErrorMessage("Seller ID does not match my ID", message.getBuyerID());
         }
 
         Good good = findGood(message.getGoodID());
         if(good == null) {
             System.out.println("Good does not exist");
-            return createErrorMessage("Good does not exist");
+            return createErrorMessage("Good does not exist", message.getBuyerID());
         }
 
         System.out.println(buyer.getUserID());
@@ -379,7 +393,7 @@ public class ClientManager implements IMessageProcess {
         try {
             if(!isSignatureValid(message, buyerKey)) {
                 System.out.println("Authentication Failed.");
-                response = createErrorMessage("Authentication Failed");
+                response = createErrorMessage("Authentication Failed", message.getBuyerID());
                 response.setIntentionToBuy(message);
                 return response;
             }
@@ -399,14 +413,14 @@ public class ClientManager implements IMessageProcess {
             try {
                 try {
                     if (!isFresh(message))
-                        return createErrorMessage("Request is not fresh");
+                        return createErrorMessage("Request is not fresh", message.getBuyerID());
 
                     //execute operation
                     System.out.println("Received buy good");
                     return receiveBuyGood(message);
 
                 } catch (SaveNonceException e) {
-                    return createErrorMessage("Failed to process request");
+                    return createErrorMessage("Failed to process request", message.getBuyerID());
                 }
             } catch (CryptoException | SignatureException e) {
                 e.printStackTrace();
@@ -529,8 +543,8 @@ public class ClientManager implements IMessageProcess {
      *         and the given error message
      * @throws SignatureException if the message signature fails
      */
-    private Message createErrorMessage(String errorMsg) throws CryptoException {
-        Message message = new Message(errorMsg);
+    private Message createErrorMessage(String errorMsg, String  buyerID) throws CryptoException {
+        Message message = new Message(errorMsg, null, buyerID);
         addFreshness(message);
         return signMessage(message);
     }
@@ -563,6 +577,7 @@ public class ClientManager implements IMessageProcess {
                 login.getUsername(),login.getUsername() + login.getUsername())
         );
 
+        String NONCES_PREFIX = "../resources/nonces_";
         noncesFile = NONCES_PREFIX + user.getUserID();
         //Load nonces
         if(!TESTING_ON){

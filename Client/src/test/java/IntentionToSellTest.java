@@ -3,6 +3,7 @@ import commontypes.Good;
 import commontypes.User;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
+import commontypes.exception.SaveNonceException;
 import commontypes.exception.UserNotExistException;
 import crypto.Crypto;
 import crypto.CryptoException;
@@ -17,15 +18,9 @@ public class IntentionToSellTest extends ClientTests {
 
     /**
      * The intentiontosell request isnt sent due to the fact the user inserted a good that does not exist.
-     * @throws CryptoException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws GoodNotExistsException
-     * @throws UserNotExistException
-     * @throws PasswordIsWrongException
      */
     @Test (expected= GoodNotExistsException.class)
-    public void goodDoesnotExist() throws CryptoException, IOException, ClassNotFoundException, GoodNotExistsException, UserNotExistException, PasswordIsWrongException {
+    public void goodDoesnotExist() throws Exception{
        KeyPair keyPair = Crypto.generateRSAKeys();
 
         users.add(

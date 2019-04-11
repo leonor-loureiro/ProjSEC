@@ -10,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 public class ClientApp {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CryptoException {
 
         /*
          variable to control running of app
@@ -43,28 +43,16 @@ public class ClientApp {
                         // if we had a correct login we can initiliaze the client
                         try {
                             ClientManager.getInstance().login(login);
-                            System.out.println("Sucessful login");
+                            System.out.println("Successful login");
                             ClientManager.getInstance().startClient(login);
-                        }catch (PasswordIsWrongException e){
-                            System.out.println("Insert correct information");
-                            login = null;
-                        } catch (UserNotExistException e) {
+                        }catch (PasswordIsWrongException | UserNotExistException e){
                             System.out.println("Insert correct information");
                             login = null;
                         }
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (CertificateException e) {
-                e.printStackTrace();
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (KeyStoreException e) {
-                e.printStackTrace();
-            } catch (CryptoException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (IOException | CertificateException | KeyStoreException |
+                    NoSuchAlgorithmException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
