@@ -409,8 +409,6 @@ public class ClientManager implements IMessageProcess {
         } */
 
         return response;
-
-
     }
 
     /**
@@ -439,6 +437,13 @@ public class ClientManager implements IMessageProcess {
         return null;
     }
 
+    /* ***************************************************************************************
+     *                                  AUXILIARY FUNCTIONS
+     * ***************************************************************************************/
+
+    /**
+     * This method returns the user with given user ID
+     * */
     private User findUser(String userID){
         for (User user : users)
             if (user.getUserID().equals(userID))
@@ -446,6 +451,10 @@ public class ClientManager implements IMessageProcess {
         return null;
     }
 
+    /**
+     * This method returns the good with given good ID
+     */
+    
     private Good findGood(String goodID){
         for(Good good : goods)
             if(good.getGoodID().equals(goodID))
@@ -454,11 +463,24 @@ public class ClientManager implements IMessageProcess {
     }
 
 
+    /**
+     * This function is responsible for signing a message
+     * @param message
+     * @return signed message
+     */
     private Message signMessage(Message message) throws CryptoException {
         String signature = Crypto.sign(message.getBytesToSign(), user.getPrivateKey());
         message.setSignature(signature);
         return message;
     }
+
+    /**
+     * This method is responsible for validating whether a message signature is valid
+     * @param message signed message
+     * @param publicKey public key
+     * @return
+     * @throws CryptoException
+     */
 
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
@@ -467,17 +489,37 @@ public class ClientManager implements IMessageProcess {
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
+    /**
+     * Responsible for adding a nonce and a timestamp to a message
+     */
+
     public void addFreshness(Message response) {
         response.setTimestamp(currentTimeMillis());
         response.setNonce("server" + random.nextInt());
     }
-
+    /**
+     * Creates an error message, adds freshness and signs it
+     * @param errorMsg error message text
+     * @return Signed, fresh message with operation set to ERROR,
+     *         and the given error message
+     * @throws SignatureException if the message signature fails
+     */
     private Message createErrorMessage(String errorMsg) throws CryptoException {
         Message message = new Message(errorMsg);
         addFreshness(message);
         return signMessage(message);
     }
 
+    /**
+     * Receives user information and atempts to login the user
+     * @param login
+     * @return a boolean correspondent to the sucess of the operations
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
     public boolean login(Login login) throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
 
         if(!TESTING_ON)
