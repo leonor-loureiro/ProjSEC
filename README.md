@@ -19,10 +19,11 @@ The following instructions are to start a 2 clients and 1 server
 
 Travel back to root directory
 
-#### Option 1: Script (Windows only)
+### Option 1: Script (Windows only)
 execute the script ProjSEC/run.bat
 
-#### Option 2: Non script version
+
+### Option 2: Non script version
 Open 3 terminals at the project's root
 1st terminal:
 + cd Server/
