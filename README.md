@@ -49,7 +49,7 @@ For every request sent to the server, a window will open asking you to insert th
 The system has the following users:
 + user0 (password: user0user0)
 + user1 (password: user1user1)
-+ user2 (passowrd: user2user2)
++ user2 (password: user2user2)
 
 To see the list of goods in the system, run the command (l) list goods in the client application.
 
