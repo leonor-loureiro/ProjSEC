@@ -2,6 +2,9 @@ package client;
 
 import commontypes.Good;
 import commontypes.User;
+import commontypes.exception.GoodNotExistsException;
+import commontypes.exception.PasswordIsWrongException;
+import commontypes.exception.UserNotExistException;
 import communication.Communication;
 import communication.IMessageProcess;
 import communication.Message;
@@ -22,6 +25,7 @@ import static java.lang.System.currentTimeMillis;
 
 public class ClientManager implements IMessageProcess {
 
+    private static boolean TESTING_ON = false;
     static ClientManager clientManager = null;
 
     //Validity time
@@ -70,22 +74,16 @@ public class ClientManager implements IMessageProcess {
      * @param login
      * @throws IOException
      * @throws ClassNotFoundException
-     * @throws CryptoException
      * @throws CertificateException
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
      */
-    public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    public void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
             //loads the goods from a file
             goods = ResourcesLoader.loadGoodsList();
 
-            // sets the current user
-            user = findUser(login.getUsername());
-
             //(sets the current privatekey of the user
-            user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
-
             notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
 
             RequestsReceiver requestReceiver = new RequestsReceiver();
@@ -100,7 +98,7 @@ public class ClientManager implements IMessageProcess {
      * @param goodID id of the good inserted by the user
      * @throws CryptoException
      */
-    public void intentionToSell(String goodID) throws CryptoException {
+    public void intentionToSell(String goodID) throws CryptoException, GoodNotExistsException {
 
         //creates new message
         Message msg = new Message();
@@ -109,7 +107,7 @@ public class ClientManager implements IMessageProcess {
         Good good = findGood(goodID);
         if(good == null) {
             System.out.println("Good does not exist");
-            return;
+            throw new GoodNotExistsException(goodID);
         }
         msg.setGoodID(goodID);
 
@@ -141,9 +139,9 @@ public class ClientManager implements IMessageProcess {
             return;
         }
 
-     /*   if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
@@ -158,14 +156,14 @@ public class ClientManager implements IMessageProcess {
      * @param goodID
      * @throws CryptoException
      */
-    public void getStateOfGood(String goodID) throws CryptoException {
+    public void getStateOfGood(String goodID) throws CryptoException, GoodNotExistsException {
 
         Message msg = new Message();
 
         Good good = findGood(goodID);
         if(good == null) {
             System.out.println("Good does not exist");
-            return;
+            throw new GoodNotExistsException(goodID);
         }
 
         msg.setGoodID(goodID);
@@ -194,9 +192,9 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-        /* if (!isSignatureValid(response, notaryPublicKey)) {
+         if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
@@ -214,21 +212,21 @@ public class ClientManager implements IMessageProcess {
      * @param goodID
      * @throws CryptoException
      */
-    public void buyGood(String sellerID, String goodID) throws CryptoException {
+    public void buyGood(String sellerID, String goodID) throws CryptoException, GoodNotExistsException, UserNotExistException {
 
         Message msg = new Message();
 
         Good good = findGood(goodID);
         if(good == null) {
             System.out.println("Good does not exist");
-            return;
+            throw new GoodNotExistsException(goodID);
         }
         msg.setGoodID(goodID);
 
         if(findUser(sellerID) == null) {
             System.out.println("User does not exist");
-            return;
-        }
+            throw new UserNotExistException()
+;        }
         msg.setSellerID(sellerID);
 
         msg.setBuyerID(user.getUserID());
@@ -257,10 +255,10 @@ public class ClientManager implements IMessageProcess {
 
         //if the code is transfer good it means the operation was sucessfull
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-           /*  if (!isSignatureValid(response, notaryPublicKey)) {
+             if (!isSignatureValid(response, notaryPublicKey)) {
                 System.out.println("Notary validation failed");
                 return;
-                }*/
+             }
         }
             System.out.println("Successfully bought good");
 
@@ -276,11 +274,11 @@ public class ClientManager implements IMessageProcess {
                 System.out.println(response.getErrorMessage());
             }
             else{
-                /*if (!isSignatureValid(response,notaryPublicKey)) {
+                if (!isSignatureValid(response,notaryPublicKey)) {
                     System.out.println("Notary validation failed");
                     return;
-                    }*/
                 }
+            }
                 System.out.println(response.getErrorMessage());
         }
     }
@@ -321,9 +319,9 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-       /* if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
@@ -354,7 +352,7 @@ public class ClientManager implements IMessageProcess {
      * @throws CryptoException
      * @throws SignatureException
      */
-    private Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
+    public Message receiveBuyGood(Message message) throws CryptoException, SignatureException {
 
         Message response;
 
@@ -384,9 +382,6 @@ public class ClientManager implements IMessageProcess {
             return createErrorMessage("Good does not exist");
         }
 
-
-        // é necessario fazes mais verificacoes???
-        
         System.out.println(buyer.getUserID());
         PublicKey buyerKey = buyer.getPublicKey();
 
@@ -408,13 +403,11 @@ public class ClientManager implements IMessageProcess {
         response = transferGood(message);
 
 
-        /* if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         return response;
-
-
     }
 
     /**
@@ -425,14 +418,12 @@ public class ClientManager implements IMessageProcess {
     public Message process(Message message) {
         String nonce = message.getNonce();
 
-        switch (message.getOperation()) {
-            case BUY_GOOD:
+        if(message.getOperation().equals(Message.Operation.BUY_GOOD)) {
                 try {
                     if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
                             nonces.contains(nonce))
                         return createErrorMessage("Request is not fresh");
                     nonces.add(nonce);
-
                     System.out.println("Received buy good");
                     return receiveBuyGood(message);
                 } catch (CryptoException e) {
@@ -440,18 +431,28 @@ public class ClientManager implements IMessageProcess {
                 } catch (SignatureException e) {
                     e.printStackTrace();
                 }
-            default:
-                System.out.println("Operation Unknown!");
         }
+        System.out.println("Operation Unknown!");
         return null;
     }
 
+    /* ***************************************************************************************
+     *                                  AUXILIARY FUNCTIONS
+     * ***************************************************************************************/
+
+    /**
+     * This method returns the user with given user ID
+     * */
     private User findUser(String userID){
         for (User user : users)
             if (user.getUserID().equals(userID))
                 return user;
         return null;
     }
+
+    /**
+     * This method returns the good with given good ID
+     */
 
     private Good findGood(String goodID){
         for(Good good : goods)
@@ -461,11 +462,24 @@ public class ClientManager implements IMessageProcess {
     }
 
 
+    /**
+     * This function is responsible for signing a message
+     * @param message
+     * @return signed message
+     */
     private Message signMessage(Message message) throws CryptoException {
         String signature = Crypto.sign(message.getBytesToSign(), user.getPrivateKey());
         message.setSignature(signature);
         return message;
     }
+
+    /**
+     * This method is responsible for validating whether a message signature is valid
+     * @param message signed message
+     * @param publicKey public key
+     * @return
+     * @throws CryptoException
+     */
 
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
@@ -474,31 +488,77 @@ public class ClientManager implements IMessageProcess {
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
-    private void addFreshness(Message response) {
+    /**
+     * Responsible for adding a nonce and a timestamp to a message
+     */
+
+    public void addFreshness(Message response) {
         response.setTimestamp(currentTimeMillis());
         response.setNonce("server" + random.nextInt());
     }
-
+    /**
+     * Creates an error message, adds freshness and signs it
+     * @param errorMsg error message text
+     * @return Signed, fresh message with operation set to ERROR,
+     *         and the given error message
+     * @throws SignatureException if the message signature fails
+     */
     private Message createErrorMessage(String errorMsg) throws CryptoException {
         Message message = new Message(errorMsg);
         addFreshness(message);
         return signMessage(message);
     }
 
-    public boolean login(Login login) throws IOException, ClassNotFoundException {
+    /**
+     * Receives user information and atempts to login the user
+     * @param login
+     * @return a boolean correspondent to the sucess of the operations
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
+    public boolean login(Login login) throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
 
-        users = ResourcesLoader.loadUserList();
+        if(!TESTING_ON)
+            users = ResourcesLoader.loadUserList();
 
         if (findUser(login.getUsername()) == null) {
             System.out.println("The username does not exist");
-            return false;
+            throw new UserNotExistException();
         }
         if(!Crypto.checkPassword(login.getUsername(),login.getPassword())){
-            return false;
+            throw new PasswordIsWrongException();
         }
+
+        user = findUser(login.getUsername());
+
+        user.setPrivateKey((PrivateKey) ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
+
 
         return true;
 
     }
 
+    /* *************************************************************************************
+     *                              AUX FUNCTIONS FOR TESTS
+     * *************************************************************************************/
+
+    public void dummyPopulate(ArrayList<User> users, ArrayList<Good> goods){
+        TESTING_ON = true;
+        this.users = users;
+        this.goods = goods;
+    }
+
+    public void closeClient() {
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void addNonce(String repeatednonce) {
+        nonces.add(repeatednonce);
+    }
 }

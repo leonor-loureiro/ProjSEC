@@ -84,7 +84,6 @@ public interface UserInterface {
                 case l:
                     CLIENT_MANAGER.listGoods();
                     break;
-
                 default:
                     System.out.println();
                     System.out.println("Unknown command");

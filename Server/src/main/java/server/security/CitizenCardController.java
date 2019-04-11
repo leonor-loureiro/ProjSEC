@@ -6,7 +6,6 @@ import sun.security.pkcs11.wrapper.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -23,71 +22,51 @@ public class CitizenCardController {
 
 
     public CitizenCardController(){
-        System.loadLibrary("pteidlibj");
     }
 
     public void init() throws Exception {
+        System.loadLibrary("pteidlibj");
+
         try {
+            //Initialize the eID lib
+            pteid.Init("");
+            // Don't check the integrity of the ID, address and photo (!)
+            pteid.SetSODChecking(false);
 
-            initializeLib();
-            //Get PKCS11 instance
-            initializePKCS11Instante();
-            //Open the PKCS11 session
-            openPKCS11Session();
 
-        }catch (Exception e){
-            exit();
-            throw e;
-        }
-    }
+        //Get PKCS11 instance
 
-    /**
-     * Open the PKCS11 session
-     */
-    private void openPKCS11Session() throws PKCS11Exception {
-        if(pkcs11 == null)
+            Class pkcs11Class = Class.forName("sun.security.pkcs11.wrapper.PKCS11");
+
+            Method getInstanceMethod = pkcs11Class.getDeclaredMethod("getInstance",
+                    String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class);
+            //new Class[]{String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class});
+
+            pkcs11 = (PKCS11) getInstanceMethod.invoke(null,
+                    new Object[]{libName, "C_GetFunctionList", null, false});
 
         // PKCS11 Reference Guide
         // https://docs.oracle.com/en/java/javase/11/security/pkcs11-reference-guide1.html#GUID-F068390B-EB41-48A0-A713-B4CBCC72285D
         // https://metacpan.org/pod/distribution/Crypt-PKCS11/lib/Crypt/PKCS11/Session.pod
 
-        //Open the PKCS11 session
-        p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
-        //Token login
-        pkcs11.C_Login(p11_session, 1, null);
+            //Open the PKCS11 session
+            p11_session = pkcs11.C_OpenSession(0, PKCS11Constants.CKF_SERIAL_SESSION, null, null);
+            //Token login
+            pkcs11.C_Login(p11_session, 1, null);
 
-        //Get signature key
-        long signatureKey = getSignatureKey();
 
-        // Initialize signature method
-        initializeSignatureMethod(signatureKey);
-    }
-
-    /**
-     * Initialize the PKCS11 instance
-     */
-    private void initializePKCS11Instante() throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Class pkcs11Class = Class.forName("sun.security.pkcs11.wrapper.PKCS11");
-
-        Method getInstanceMethod = pkcs11Class.getDeclaredMethod("getInstance",
-                String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class);
-        //new Class[]{String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class});
-
-        pkcs11 = (PKCS11) getInstanceMethod.invoke(null,
-                new Object[]{libName, "C_GetFunctionList", null, false});
-    }
-
-    private void initializeLib() throws PteidException {
-        //Initialize the eID lib
-        pteid.Init("");
-        // Don't check the integrity of the ID, address and photo (!)
-        pteid.SetSODChecking(false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            exit();
+            throw e;
+        }
     }
 
 
     private void initializeSignatureMethod(long signatureKey) throws PKCS11Exception {
         //Mechanism specifies how the signature is processed
         //CKM_SHA256_RSA_PKCS = RSA signature with SHA-256
+
         CK_MECHANISM mechanism = new CK_MECHANISM();
         mechanism.mechanism = PKCS11Constants.CKM_SHA256_RSA_PKCS;
         mechanism.pParameter = null;
@@ -128,6 +107,12 @@ public class CitizenCardController {
     }
 
     public byte[] sign(byte[] data) throws PKCS11Exception {
+        //Get signature key
+        long signatureKey = getSignatureKey();
+
+        // Initialize signature method
+        initializeSignatureMethod(signatureKey);
+
         return pkcs11.C_Sign(p11_session, data);
     }
 
@@ -143,9 +128,13 @@ public class CitizenCardController {
     public static void main(String[] args) {
         CitizenCardController controller = new CitizenCardController();
         try {
+            controller.init();
             X509Certificate certificate = controller.getAuthenticationCertificate();
             System.out.println(certificate.getSubjectX500Principal());
-        } catch (PteidException | CertificateException e) {
+
+            controller.sign("test message".getBytes());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
         } finally {
             try {

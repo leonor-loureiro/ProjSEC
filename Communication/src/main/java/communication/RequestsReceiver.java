@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class RequestsReceiver{
 
     private Communication server;
-    private static boolean running;
+    private boolean running;
 
     /**
      * Simple constructor that sets values
@@ -63,5 +63,9 @@ public class RequestsReceiver{
         try {
             server.stop();
         } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }

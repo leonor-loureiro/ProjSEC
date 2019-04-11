@@ -18,11 +18,9 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 public class Manager implements IMessageProcess {
 
@@ -61,11 +59,13 @@ public class Manager implements IMessageProcess {
 
 
     private Manager(){
-        System.out.println("Started server shutdown...");
         ccController = new CitizenCardController();
         try {
             ccController.init();
         } catch (Exception e) {
+            System.out.println("Failed to initialize Citizen Card Controller");
+            System.out.println(e.getMessage());
+            //System.exit(0); //Comment for tests
             //If init failed, not CC available
             ccController = null;
         }
@@ -76,7 +76,7 @@ public class Manager implements IMessageProcess {
      * @param port the port the service runs on
      */
     public void startServer(int port) throws IOException, ClassNotFoundException {
-
+        System.out.println("Starting server...");
         loadResources();
         requestReceiver.initializeInNewThread(port, this);
     }
@@ -86,7 +86,10 @@ public class Manager implements IMessageProcess {
             ccController.exit();
 
         // stops running thread that's receiving requests
-        requestReceiver.stop();
+        if(requestReceiver.isRunning()) {
+            System.out.println("IS running");
+            requestReceiver.stop();
+        }
     }
 
     /**
@@ -191,20 +194,27 @@ public class Manager implements IMessageProcess {
         if(message.getIntentionToBuy() == null)
             return createErrorMessage("Intention to buy does not exist.");
 
+        //Intention to buy fresh
+        if(!isFresh(message.getIntentionToBuy()))
+            return createErrorMessage("Intention to buy is not fresh");
+
+        //Buyer exists
         User buyer = findUser(message.getIntentionToBuy().getBuyerID());
+        if(buyer == null)
+            return createErrorMessage("Buyer does not exist");
 
-
+        //Validate intention to buy
         if(!isSignatureValid(message.getIntentionToBuy(), buyer.getPublicKey()))
             return createErrorMessage("Intention to buy validation failed.");
 
-        // Validate the intention to sell
+        //Seller exists
         User seller = findUser(message.getSellerID());
+        if(seller == null)
+            return createErrorMessage("Seller does not exist");
 
-
+        //Validate intention to sell
         if(!isSignatureValid(message, seller.getPublicKey()))
             return createErrorMessage("Intention to sell validation failed");
-
-
 
         //Alter internal mapping of Goods->Users
         if(!updateGood(good, buyer.getUserID(), false))
@@ -214,6 +224,7 @@ public class Manager implements IMessageProcess {
         Message response = new Message(Message.Operation.TRANSFER_GOOD);
         response.setSellerID(seller.getUserID());
         response.setBuyerID(buyer.getUserID());
+        response.setGoodID(good.getGoodID());
 
         //Add node and timestamp
         addFreshness(response);
@@ -226,6 +237,8 @@ public class Manager implements IMessageProcess {
      * This method returns the good with given good ID
      */
     private Good findGood(String goodID){
+        if(goodID == null)
+            return null;
         for(Good good : goods)
             if(good.getGoodID().equals(goodID))
                 return good;
@@ -236,6 +249,8 @@ public class Manager implements IMessageProcess {
      * This method returns the user with given user ID
      * */
     private User findUser(String userID){
+        if(userID == null)
+            return null;
         for (User user : users)
             if(user.getUserID().equals(userID))
                 return user;
@@ -246,8 +261,7 @@ public class Manager implements IMessageProcess {
      * This method is responsible for validating whether a message signature is valid
      * @param message signed message
      * @param publicKey public key
-     * @return
-     * @throws CryptoException
+     * @return true if valid, false otherwise
      */
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
@@ -263,15 +277,10 @@ public class Manager implements IMessageProcess {
      * @return response
      */
     public Message process(Message message) {
-        String nonce = message.getNonce();
         try{
             try {
-                //Check if request is fresh
-                if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
-                        nonces.contains(nonce))
+                if (!isFresh(message))
                     return createErrorMessage("Request is not fresh");
-                nonces.add(nonce);
-
 
                 switch (message.getOperation()) {
                     case INTENTION_TO_SELL:
@@ -295,6 +304,18 @@ public class Manager implements IMessageProcess {
         return null;
     }
 
+    public boolean isFresh(Message message) throws SignatureException {
+        String nonce = message.getNonce();
+
+        //Check if request is fresh
+        if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
+                nonces.contains(nonce))
+            return false;
+
+        nonces.add(nonce);
+        return true;
+    }
+
     /* ***************************************************************************************
      *                                  AUXILIARY FUNCTIONS
      * ***************************************************************************************/
@@ -309,7 +330,7 @@ public class Manager implements IMessageProcess {
 
     /**
      * This function is responsible for signing a message
-     * @param message
+     * @param message message to be signed
      * @return signed message
      */
     private Message signMessage(Message message) throws SignatureException {
@@ -321,6 +342,8 @@ public class Manager implements IMessageProcess {
             message.setSignature(signature);
             return message;
         } catch (PKCS11Exception e) {
+            System.out.println("Failed to sign: " + e.getMessage());
+            e.printStackTrace();
             throw new SignatureException();
         }
 

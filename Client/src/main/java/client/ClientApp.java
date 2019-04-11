@@ -1,5 +1,14 @@
 package client;
 
+import commontypes.exception.PasswordIsWrongException;
+import commontypes.exception.UserNotExistException;
+import crypto.CryptoException;
+
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
 public class ClientApp {
     public static void main(String[] args) {
 
@@ -32,20 +41,31 @@ public class ClientApp {
                         login = UserInterface.requestLogin();
 
                         // if we had a correct login we cant initiliaze the client
-                        if(ClientManager.getInstance().login(login)) {
+                        try {
+                            ClientManager.getInstance().login(login);
                             System.out.println("Sucessful login");
                             ClientManager.getInstance().startClient(login);
-                        }
-                        else{
+                        }catch (PasswordIsWrongException e){
+                            System.out.println("Insert correct information");
+                            login = null;
+                        } catch (UserNotExistException e) {
                             System.out.println("Insert correct information");
                             login = null;
                         }
                     }
                 }
-
-            }catch(Exception e){
+            } catch (IOException e) {
                 e.printStackTrace();
-                System.out.println(e.getMessage());
+            } catch (CertificateException e) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (KeyStoreException e) {
+                e.printStackTrace();
+            } catch (CryptoException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
     }

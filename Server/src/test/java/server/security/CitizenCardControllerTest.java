@@ -9,15 +9,6 @@ import org.junit.Test;
 import pteidlib.PteidException;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Random;
 
@@ -27,8 +18,9 @@ public class CitizenCardControllerTest {
     private byte[] data = new byte[20];
     private X509Certificate certificate;
     @Before
-    public void setUp() throws CertificateException, PteidException {
+    public void setUp() throws Exception {
         (new Random()).nextBytes(data);
+        controller.init();
         certificate = controller.getAuthenticationCertificate();
     }
 
@@ -38,45 +30,10 @@ public class CitizenCardControllerTest {
         Assert.assertTrue(
             Crypto.verifySignature(signature, data, certificate.getPublicKey())
         );
-        try {
-            storeCertificate("SEC-keystore",
-                    certificate, "notary", "password");
-            loadCertificate("SEC-keystore", "notary", "password");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void storeCertificate(String keystore, X509Certificate certificate, String alias, String password)
-            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
-
-        //Initialize the keystore
-        KeyStore keyStore=KeyStore.getInstance("jks");
-        keyStore.load(null,null);
-
-        //Add certificate
-        keyStore.setCertificateEntry(alias, certificate);
-
-        //Store keystore
-        keyStore.store(new FileOutputStream(keystore),password.toCharArray());
-    }
-
-    public Certificate loadCertificate(String keystore, String alias, String password) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
-        //Load the keystore
-        KeyStore keyStore=KeyStore.getInstance("jks");
-        keyStore.load(new FileInputStream(keystore),password.toCharArray());
-
-        //Retrieve the certificate
-        Certificate cert = keyStore.getCertificate(alias);
-
-        //Display the certificate
-        System.out.println(cert.toString());
-
-        return cert;
 
     }
 
-    @After
+  @After
     public void cleanUp() throws PteidException {
         controller.exit();
     }
