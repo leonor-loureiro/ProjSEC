@@ -14,6 +14,7 @@ Go to the project's root directory and execute the following commands
 
 ## Executing
 The following instructions are to start a 2 clients and 1 server
+
 Travel back to root directory
 
 #### Script (Windows only)
