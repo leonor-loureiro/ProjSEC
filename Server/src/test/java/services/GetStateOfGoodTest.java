@@ -1,3 +1,5 @@
+package services;
+
 import commontypes.Good;
 import commontypes.User;
 import communication.Message;
@@ -10,18 +12,11 @@ import java.security.KeyPair;
 
 import static java.lang.System.currentTimeMillis;
 
-
-/**
- * This class tests the process of an intention to sell
- * request received by the notary server
- */
-public class IntentionToSellTests extends NotaryServerTests{
-
+public class GetStateOfGoodTest extends NotaryServerTest {
 
     /**
-     * The user that owns the good sends an authenticated, fresh request
-     * to change the good status to for sale.
-     * The request is successful.
+     * User sends a fresh, authenticated get state of good request.
+     * The operation is successful.
      */
     @Test
     public void success() throws CryptoException {
@@ -36,9 +31,8 @@ public class IntentionToSellTests extends NotaryServerTests{
         );
 
         notary.dummyPopulate(users, goods);
-
         // Create intention to sell request
-        Message request = createIntentionToSellRequest();
+        Message request = createGetStateOfGoodRequest();
         //Add freshness
         request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
@@ -47,30 +41,28 @@ public class IntentionToSellTests extends NotaryServerTests{
 
         Message response = notary.process(request);
 
-        Assert.assertEquals(Message.Operation.INTENTION_TO_SELL, response.getOperation());
+        Assert.assertEquals(Message.Operation.GET_STATE_OF_GOOD, response.getOperation());
         Assert.assertEquals(goodID, response.getGoodID());
-        Assert.assertTrue(response.isForSale());
-        /*Assert.assertTrue(
+        Assert.assertFalse(response.isForSale());
+        Assert.assertTrue(
                 Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );*/
+        );
     }
 
-
     /**
-     * Send an intention to sell request for a good that doesn't exist.
-     * The server returns an error message.
+     * Request state of a good that not exists.
      */
     @Test
     public void goodNotExists() throws CryptoException {
         KeyPair keyPair = Crypto.generateRSAKeys();
+
         users.add(
                 new User(userID, keyPair.getPublic())
         );
+
         notary.dummyPopulate(users, goods);
-
         // Create intention to sell request
-        Message request = createIntentionToSellRequest();
-
+        Message request = createGetStateOfGoodRequest();
         //Add freshness
         request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
@@ -78,144 +70,103 @@ public class IntentionToSellTests extends NotaryServerTests{
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
 
         Message response = notary.process(request);
-        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        /*Assert.assertTrue(
-                Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );*/
 
+        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
     }
 
     /**
-     * The user that sends the intention to sell request doesn't exist
-     * The server returns an error message.
+     * A user, not in the system, request the state of a good.
      */
     @Test
     public void userNotExists() throws CryptoException {
         KeyPair keyPair = Crypto.generateRSAKeys();
+
         goods.add(
                 new Good(goodID, userID, false)
         );
 
         notary.dummyPopulate(users, goods);
-
         // Create intention to sell request
-        Message request = createIntentionToSellRequest();
-
+        Message request = createGetStateOfGoodRequest();
         //Add freshness
         request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
-
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
 
         Message response = notary.process(request);
-
         Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        /*Assert.assertTrue(
-                Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );*/
     }
 
     /**
-     * The user that sends the intention to sell request is not it's current owner.
-     * The server returns an error message.
+     * Signature of the request is not valid.
      */
     @Test
-    public void notTheSeller() throws CryptoException {
+    public void invalidSignature() throws CryptoException {
         KeyPair keyPair = Crypto.generateRSAKeys();
-        String user2 = "user2ID";
+
+        users.add(
+                new User(userID, keyPair.getPublic())
+        );
+
+        goods.add(
+                new Good(goodID, userID, false)
+        );
+
+        notary.dummyPopulate(users, goods);
+        // Create intention to sell request
+        Message request = createGetStateOfGoodRequest();
+        //Add freshness
+        request.setTimestamp(currentTimeMillis());
+        request.setNonce(userID + random.nextInt());
+
+        Message response = notary.process(request);
+        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
+    }
+
+    /**
+     * User is changed after the request has been signed.
+     */
+    @Test
+    public void corrupted() throws CryptoException {
+        KeyPair keyPair = Crypto.generateRSAKeys();
+        String user2 = "user2";
         users.add(
                 new User(userID, keyPair.getPublic())
         );
         users.add(
-                new User(user2, Crypto.generateRSAKeys().getPublic())
+                new User(user2, keyPair.getPublic())
         );
 
         goods.add(
-                new Good(goodID, user2, false)
+                new Good(goodID, userID, false)
         );
 
         notary.dummyPopulate(users, goods);
-
         // Create intention to sell request
-        Message request = createIntentionToSellRequest();
+        Message request = createGetStateOfGoodRequest();
         //Add freshness
         request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
 
-        Message response = notary.process(request);
-
-        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        System.out.println(response.getErrorMessage());
-
-    }
-
-    /**
-     * Send a request with a timestamp older than 15min
-     */
-    @Test
-    public void timestampIsOld() throws CryptoException {
-        notary.dummyPopulate(users, goods);
-        KeyPair keyPair = Crypto.generateRSAKeys();
-        // Create intention to sell request
-        Message request = createIntentionToSellRequest();
-        //Add freshness
-        request.setTimestamp(currentTimeMillis() - 1000000);
-        request.setNonce(userID + random.nextInt());
-        //Sign
-        request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
+        //Change user
+        request.setBuyerID(user2);
 
         Message response = notary.process(request);
-
         Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        System.out.println(response.getErrorMessage());
-        /*Assert.assertTrue(
-                Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );*/
-    }
-
-    /**
-     * Send same request twice
-     */
-    @Test
-    public void reusedNonce() throws CryptoException {
-        notary.dummyPopulate(users, goods);
-        KeyPair keyPair = Crypto.generateRSAKeys();
-        // Create intention to sell request
-        Message request = createIntentionToSellRequest();
-        //Add freshness
-        request.setTimestamp(currentTimeMillis());
-        request.setNonce(userID + random.nextInt());
-        //Sign
-        request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
-
-        //Send message once
-        notary.process(request);
-        //Re-send same message
-        Message response = notary.process(request);
-
-
-        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        System.out.println(response.getErrorMessage());
-        /*Assert.assertTrue(
-                Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );*/
     }
 
 
-
-
-    private Message createIntentionToSellRequest() {
+    private Message createGetStateOfGoodRequest() {
         Message request = new Message();
-        request.setOperation(Message.Operation.INTENTION_TO_SELL);
+        request.setOperation(Message.Operation.GET_STATE_OF_GOOD);
         //Set seller ID
-        request.setSellerID(userID);
+        request.setBuyerID(userID);
         //Set goodID
         request.setGoodID(goodID);
         return request;
     }
-
 
 }

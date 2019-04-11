@@ -135,7 +135,7 @@ public class Message implements Serializable {
             for (Field field : fields) {
                 Object obj = field.get(this);
                 if (!field.getName().equals("signature") && obj != null) {
-                    System.out.println(field.getName() + " = " + obj);
+                    //System.out.println(field.getName() + " = " + obj);
                     oos.writeObject(obj);
                     oos.flush();
                 }

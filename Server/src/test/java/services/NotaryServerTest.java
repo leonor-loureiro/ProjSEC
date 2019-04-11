@@ -1,3 +1,5 @@
+package services;
+
 import commontypes.Good;
 import commontypes.User;
 import crypto.Crypto;
@@ -10,19 +12,19 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class NotaryServerTests {
+public class NotaryServerTest {
 
-    protected Manager notary = Manager.getInstance();
+    Manager notary = Manager.getInstance();
 
-    protected ArrayList<User> users;
-    protected ArrayList<Good> goods;
+    ArrayList<User> users;
+    ArrayList<Good> goods;
 
-    protected Random random = new Random();
+    Random random = new Random();
 
-    protected PublicKey notaryPublicKey;
+    PublicKey notaryPublicKey;
 
-    protected String userID = "dummyUser";
-    protected String goodID = "dummyGood";
+    String userID = "dummyUser";
+    String goodID = "dummyGood";
 
     @Before
     public void setUp() throws Exception {

@@ -74,12 +74,11 @@ public class ClientManager implements IMessageProcess {
      * @param login
      * @throws IOException
      * @throws ClassNotFoundException
-     * @throws CryptoException
      * @throws CertificateException
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
      */
-    public void startClient(Login login) throws IOException, ClassNotFoundException, CryptoException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    public void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
             //loads the goods from a file
             goods = ResourcesLoader.loadGoodsList();
@@ -140,9 +139,9 @@ public class ClientManager implements IMessageProcess {
             return;
         }
 
-     /*   if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             System.out.println("State of good " + response.getGoodID() + " is now " + response.isForSale());
@@ -193,9 +192,9 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-        /* if (!isSignatureValid(response, notaryPublicKey)) {
+         if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
@@ -256,10 +255,10 @@ public class ClientManager implements IMessageProcess {
 
         //if the code is transfer good it means the operation was sucessfull
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-           /*  if (!isSignatureValid(response, notaryPublicKey)) {
+             if (!isSignatureValid(response, notaryPublicKey)) {
                 System.out.println("Notary validation failed");
                 return;
-                }*/
+             }
         }
             System.out.println("Successfully bought good");
 
@@ -275,11 +274,11 @@ public class ClientManager implements IMessageProcess {
                 System.out.println(response.getErrorMessage());
             }
             else{
-                /*if (!isSignatureValid(response,notaryPublicKey)) {
+                if (!isSignatureValid(response,notaryPublicKey)) {
                     System.out.println("Notary validation failed");
                     return;
-                    }*/
                 }
+            }
                 System.out.println(response.getErrorMessage());
         }
     }
@@ -320,9 +319,9 @@ public class ClientManager implements IMessageProcess {
         }
 
 
-       /* if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             System.out.println("Sucessfully transfered good " + message.getGoodID() + " to " + message.getBuyerID());
@@ -404,9 +403,9 @@ public class ClientManager implements IMessageProcess {
         response = transferGood(message);
 
 
-        /* if (!isSignatureValid(response, notaryPublicKey)) {
+        if (!isSignatureValid(response, notaryPublicKey)) {
             System.out.println("Notary validation failed");
-        } */
+        }
 
         return response;
     }

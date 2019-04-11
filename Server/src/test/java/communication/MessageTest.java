@@ -7,9 +7,6 @@ import org.junit.Test;
 public class MessageTest {
 
     private Message message;
-    @Before
-    public void setUp(){
-    }
 
     @Test
     public void convertToString(){
