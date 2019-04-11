@@ -16,8 +16,6 @@ public class ClientTests {
     protected ArrayList<User> users;
     protected ArrayList<Good> goods;
 
-    protected Random random = new Random();
-
     protected PublicKey notaryPublicKey;
 
     protected String userID = "user1";

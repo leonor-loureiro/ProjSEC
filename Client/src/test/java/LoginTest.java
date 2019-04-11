@@ -16,6 +16,14 @@ import java.util.ArrayList;
 
 public class LoginTest extends ClientTests{
 
+    /**
+     * User inserts correct login information and succesfully logs in.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
     @Test
     public void sucess() throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
         KeyPair keyPair = Crypto.generateRSAKeys();
@@ -37,6 +45,15 @@ public class LoginTest extends ClientTests{
         Assert.assertEquals(users.get(0).getPublicKey(),keyPair.getPublic());
         Assert.assertEquals(users.get(0).getPrivateKey(),ResourcesLoader.getPrivateKey(login.getUsername(),login.getUsername() + login.getUsername()));
     }
+
+    /**
+     * User fails to login due to the fact that the userid does not exist.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
     @Test(expected = UserNotExistException.class)
     public void userDoesntExist() throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
 
@@ -48,6 +65,15 @@ public class LoginTest extends ClientTests{
         clientManager.login(login);
 
     }
+
+    /**
+     * User fails to login due to the fact the password inserted is wrong.
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
     @Test(expected = PasswordIsWrongException.class)
     public void passwordIsWrong() throws IOException, ClassNotFoundException, CryptoException, UserNotExistException, PasswordIsWrongException {
 

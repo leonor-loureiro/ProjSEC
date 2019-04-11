@@ -15,26 +15,15 @@ import java.util.ArrayList;
 
 public class IntentionToSellTest extends ClientTests {
 
-    @Test
-    public void sucess() throws CryptoException, IOException, ClassNotFoundException, GoodNotExistsException {
-   /*   KeyPair keyPair = Crypto.generateRSAKeys();
-
-        users.add(
-                new User(userID, keyPair.getPublic())
-        );
-
-        goods.add(
-                new Good(goodID, userID, false)
-        );
-
-        Login login = new Login();
-
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
-        clientManager.login(login);
-
-        clientManager.intentionToSell(goodID); */
-    }
+    /**
+     * The intentiontosell request isnt sent due to the fact the user inserted a good that does not exist.
+     * @throws CryptoException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws GoodNotExistsException
+     * @throws UserNotExistException
+     * @throws PasswordIsWrongException
+     */
     @Test (expected= GoodNotExistsException.class)
     public void goodDoesnotExist() throws CryptoException, IOException, ClassNotFoundException, GoodNotExistsException, UserNotExistException, PasswordIsWrongException {
        KeyPair keyPair = Crypto.generateRSAKeys();

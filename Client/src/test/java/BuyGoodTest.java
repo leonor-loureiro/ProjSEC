@@ -13,28 +13,15 @@ import java.security.KeyPair;
 
 public class BuyGoodTest extends ClientTests{
 
-    @Test
-    public void sucess() throws ClassNotFoundException, PasswordIsWrongException, CryptoException, UserNotExistException, IOException, GoodNotExistsException {
-     /*   KeyPair keyPair = Crypto.generateRSAKeys();
-
-        users.add(
-                new User(userID, keyPair.getPublic())
-        );
-
-        goods.add(
-                new Good(goodID, userID, false)
-        );
-
-        Login login = new Login();
-
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
-        clientManager.login(login);
-
-        clientManager.getStateOfGood(goodID); */
-
-    }
-
+    /**
+     * user sends a buygood requests and is unsucessfull due to the good not existing in the system
+     * @throws ClassNotFoundException
+     * @throws PasswordIsWrongException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws IOException
+     * @throws GoodNotExistsException
+     */
     @Test (expected = GoodNotExistsException.class)
     public void goodDoesNotExist() throws ClassNotFoundException, PasswordIsWrongException, CryptoException, UserNotExistException, IOException, GoodNotExistsException {
         KeyPair keyPair = Crypto.generateRSAKeys();
@@ -64,6 +51,16 @@ public class BuyGoodTest extends ClientTests{
         clientManager.buyGood(userID2,goodID);
 
     }
+
+    /**
+     * user sends a buygood requests and is unsucessfull due to seller of the good not existing
+     * @throws ClassNotFoundException
+     * @throws PasswordIsWrongException
+     * @throws CryptoException
+     * @throws UserNotExistException
+     * @throws IOException
+     * @throws GoodNotExistsException
+     */
     @Test (expected = UserNotExistException.class)
     public void SellerDoesNotExist() throws ClassNotFoundException, PasswordIsWrongException, CryptoException, UserNotExistException, IOException, GoodNotExistsException {
         KeyPair keyPair = Crypto.generateRSAKeys();
