@@ -124,14 +124,8 @@ public class Crypto {
         try {
             KeyStore ks = KeyStore.getInstance("jceks");
             ks.load(new FileInputStream("../resources/" +keystoreFileName +".jceks"), passwordArray);
-        } catch (IOException e) {
-            System.out.println("Please insert the correct password");
-            return false;
-        } catch (CertificateException e) {
-            return false;
-        } catch (NoSuchAlgorithmException e) {
-            return false;
-        } catch (KeyStoreException e) {
+
+        } catch (IOException | CertificateException | NoSuchAlgorithmException | KeyStoreException e) {
             return false;
         }
         return true;

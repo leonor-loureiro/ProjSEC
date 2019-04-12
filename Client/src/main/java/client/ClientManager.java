@@ -105,7 +105,6 @@ public class ClientManager implements IMessageProcess {
         //checks if the good exists
         Good good = findGood(goodID);
         if(good == null) {
-            System.out.println("Good does not exist");
             throw new GoodNotExistsException(goodID);
         }
         msg.setGoodID(goodID);
@@ -164,7 +163,6 @@ public class ClientManager implements IMessageProcess {
 
         Good good = findGood(goodID);
         if(good == null) {
-            System.out.println("Good does not exist");
             throw new GoodNotExistsException(goodID);
         }
 
@@ -222,14 +220,12 @@ public class ClientManager implements IMessageProcess {
 
         Good good = findGood(goodID);
         if(good == null) {
-            System.out.println("Good does not exist");
             throw new GoodNotExistsException(goodID);
         }
         msg.setGoodID(goodID);
 
         User seller = findUser(sellerID);
         if(seller == null) {
-            System.out.println("User does not exist");
             throw new UserNotExistException()
 ;        }
         msg.setSellerID(sellerID);
@@ -368,7 +364,7 @@ public class ClientManager implements IMessageProcess {
      * @param message the buygood message sent by another client
      * @return the result of the server execution, or a error message
      */
-    private Message receiveBuyGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
+    private Message receiveBuyGood(Message message) throws CryptoException, SaveNonceException {
 
         Message response;
 
@@ -420,22 +416,20 @@ public class ClientManager implements IMessageProcess {
      */
     public Message process(Message message) {
 
-        if(message.getOperation().equals(Message.Operation.BUY_GOOD)) {
+        if(message.getOperation().equals(Message.Operation.BUY_GOOD)) try {
             try {
-                try {
-                    if (!isFresh(message))
-                        return createErrorMessage("Request is not fresh", message.getBuyerID());
+                if (!isFresh(message))
+                    return createErrorMessage("Request is not fresh", message.getBuyerID());
 
-                    //execute operation
-                    System.out.println("Received buy good");
-                    return receiveBuyGood(message);
+                //execute operation
+                System.out.println("Received buy good");
+                return receiveBuyGood(message);
 
-                } catch (SaveNonceException e) {
-                    return createErrorMessage("Failed to process request", message.getBuyerID());
-                }
-            } catch (CryptoException | SignatureException e) {
-                e.printStackTrace();
+            } catch (SaveNonceException e) {
+                return createErrorMessage("Failed to process request", message.getBuyerID());
             }
+        } catch (CryptoException e) {
+            e.printStackTrace();
         }
         System.out.println("Operation Unknown!");
         return null;
@@ -482,7 +476,6 @@ public class ClientManager implements IMessageProcess {
 
         //Store nonce
         if(!TESTING_ON) {
-            System.out.println("Storing nonce " + noncesFile);
             try {
                 AtomicFileManager.atomicWriteObjectToFile(noncesFile, nonces);
             } catch (IOException | ClassNotFoundException e) {
@@ -506,7 +499,7 @@ public class ClientManager implements IMessageProcess {
             return sendRequest.sendMessage(host, port, msg);
 
         } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             System.out.println("Send request failed");
         }
         return null;
@@ -532,10 +525,11 @@ public class ClientManager implements IMessageProcess {
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
 
-        if(publicKey.equals(notaryPublicKey)){
+
+        /*if(publicKey.equals(notaryPublicKey)){
             System.out.println("Ignoring notary signature for tests");
             return true;
-        }
+        }*/
 
 
         if(message.getSignature() == null)
@@ -556,7 +550,6 @@ public class ClientManager implements IMessageProcess {
      * @param errorMsg error message text
      * @return Signed, fresh message with operation set to ERROR,
      *         and the given error message
-     * @throws SignatureException if the message signature fails
      */
     private Message createErrorMessage(String errorMsg, String  buyerID) throws CryptoException {
         Message message = new Message(errorMsg, null, buyerID);
@@ -578,7 +571,6 @@ public class ClientManager implements IMessageProcess {
         //Check if user exists
         user = findUser(login.getUsername());
         if (user == null) {
-            System.out.println("The username does not exist");
             throw new UserNotExistException();
         }
 
@@ -598,7 +590,6 @@ public class ClientManager implements IMessageProcess {
         if(!TESTING_ON){
             if(new File(noncesFile).exists()) {
                 nonces = (ArrayList<String>) ResourcesLoader.loadNonces(noncesFile);
-                System.out.println("Nonces exist = " + nonces.size());
             }else
                 nonces = new ArrayList<>();
         }

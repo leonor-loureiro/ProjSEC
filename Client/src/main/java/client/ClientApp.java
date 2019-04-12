@@ -1,5 +1,6 @@
 package client;
 
+import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import commontypes.exception.UserNotExistException;
 import crypto.CryptoException;

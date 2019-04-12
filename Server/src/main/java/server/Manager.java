@@ -31,7 +31,7 @@ public class Manager implements IMessageProcess {
     private static boolean TESTING_ON = false;
 
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users.ser";
     private static final String NONCES = "../resourcesServer/nonces";
 
     //Validity time
@@ -66,8 +66,16 @@ public class Manager implements IMessageProcess {
         } catch (Exception e) {
             System.out.println("Failed to initialize Citizen Card Controller");
             System.out.println(e.getMessage());
-            //System.exit(0); //Comment for tests
-            //If init failed, not CC available
+
+            System.out.println("Shutting down...");
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
+            System.exit(0); //Comment for tests
+
+            //If init failed, not CC available (for tests)
             ccController = null;
         }
     }
@@ -107,7 +115,6 @@ public class Manager implements IMessageProcess {
 
         if(new File(NONCES).exists()) {
             nonces = (ArrayList<String>) ResourcesLoader.loadNonces(NONCES);
-            System.out.println("Nonces exist = " + nonces.size());
         }else
             nonces = new ArrayList<>();
     }
@@ -403,8 +410,8 @@ public class Manager implements IMessageProcess {
     /**
      * Creates an error message, adds freshness and signs it
      * @param errorMsg error message text
-     * @param sellerID
-     * @param buyerID
+     * @param sellerID seller ID
+     * @param buyerID buyer Id
      * @return Signed, fresh message with operation set to ERROR,
      *         and the given error message
      * @throws SignatureException if the message signature fails

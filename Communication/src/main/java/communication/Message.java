@@ -13,7 +13,6 @@ public class Message implements Serializable {
         BUY_GOOD,
         GET_STATE_OF_GOOD,
         TRANSFER_GOOD,
-        LIST_GOODS,
         ERROR
     }
 
@@ -141,7 +140,7 @@ public class Message implements Serializable {
             for (Field field : fields) {
                 Object obj = field.get(this);
                 if (!field.getName().equals("signature") && obj != null) {
-                    System.out.println(field.getName() + " = " + obj);
+                    //System.out.println(field.getName() + " = " + obj);
                     oos.writeObject(obj);
                     oos.flush();
                 }

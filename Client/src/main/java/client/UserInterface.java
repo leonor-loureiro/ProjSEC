@@ -1,5 +1,8 @@
 package client;
 
+import commontypes.exception.GoodNotExistsException;
+import commontypes.exception.UserNotExistException;
+
 import java.io.Console;
 import java.util.Scanner;
 
@@ -91,6 +94,12 @@ public interface UserInterface {
             }
         } catch(IllegalArgumentException e){
             System.out.println("Use one of the commands available");
+
+        }catch (GoodNotExistsException e){
+            System.out.println("Good does not exist");
+
+        }catch (UserNotExistException e){
+            System.out.println("User does not exist");
         }
         catch (Exception e){
             e.printStackTrace();

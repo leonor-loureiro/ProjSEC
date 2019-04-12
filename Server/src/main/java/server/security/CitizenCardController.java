@@ -56,7 +56,7 @@ public class CitizenCardController {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             exit();
             throw e;
         }

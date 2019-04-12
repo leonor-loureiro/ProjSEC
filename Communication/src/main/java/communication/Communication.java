@@ -78,11 +78,29 @@ public class Communication{
             throw new IllegalArgumentException();
         }
 
-        ObjectOutputStream out2 = new ObjectOutputStream(msgSocket.getOutputStream());
-        ObjectInputStream in2 = new ObjectInputStream(msgSocket.getInputStream());
-        out2.writeObject(message);
+        ObjectOutputStream out2 = null;
+        ObjectInputStream in2 = null;
+        Message response;
 
-        return (Message) in2.readObject();
+        try {
+            //Send
+            out2 = new ObjectOutputStream(msgSocket.getOutputStream());
+            out2.writeObject(message);
+
+
+            //Receive
+            in2 = new ObjectInputStream(msgSocket.getInputStream());
+            response = (Message) in2.readObject();
+
+        }finally {
+            if(out2 != null)
+                out2.close();
+
+            if(in2 != null)
+                in2.close();
+        }
+
+        return response;
 
     }
 
