@@ -1,6 +1,12 @@
 package crypto;
 
 
+import javafx.util.Pair;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,6 +16,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.security.cert.Certificate;
+
+import static javax.crypto.Cipher.ENCRYPT_MODE;
 
 public class Crypto {
 
@@ -145,6 +153,44 @@ public class Crypto {
             throw new CryptoException("Invalid key");
         } catch (NoSuchAlgorithmException e) {
             throw new CryptoException("Failed to recover public key");
+        }
+    }
+
+    /**
+     * Encrypts data with AES
+     * @param key AES secret key
+     * @param data data to cipher
+     * @return ciphered data and IV
+     */
+    public static Pair<byte[], byte[]> encryptAES(byte[] key, byte[] data, byte[] iv) throws CryptoException {
+        //Create secret key
+        SecretKeySpec sKey = new SecretKeySpec(key,"AES");
+
+        // Create IV param if not exits
+        if(iv == null){
+            iv = new byte[16];
+            SecureRandom random = new SecureRandom();
+            random.nextBytes(iv);
+        }
+
+        IvParameterSpec ivParam = new IvParameterSpec(iv);
+
+        try {
+            //Create cipher instance
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(ENCRYPT_MODE, sKey, ivParam);
+
+            // Cipher data
+            byte[] cipheredData = cipher.doFinal(data);
+
+            return new Pair<>(cipheredData, cipher.getIV());
+
+
+        } catch (InvalidKeyException e) {
+            throw new CryptoException("Invalid key");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CryptoException("Encryption failed");
         }
     }
 }
