@@ -1,15 +1,20 @@
 package commontypes;
 
+
+import communication.ByzantineRegularRegister;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /**
  * This class represents a good
  */
-public class Good extends ArrayList<Good> implements Serializable {
-    String goodID;
-    String userID;
-    boolean forSale;
+public class Good  implements Serializable {
+    private String goodID;
+    private String userID;
+    private boolean forSale;
+    private ByzantineRegularRegister brr;
+    private String signature;
+    private int ts;
 
     public Good(String goodID, String userID, boolean onSale) {
         this.goodID = goodID;
@@ -39,6 +44,30 @@ public class Good extends ArrayList<Good> implements Serializable {
 
     public void setForSale(boolean forSale) {
         this.forSale = forSale;
+    }
+
+    public ByzantineRegularRegister getBrr() {
+        return brr;
+    }
+
+    public void setBrr(ByzantineRegularRegister brr) {
+        this.brr = brr;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    public int getTs() {
+        return ts;
+    }
+
+    public void setTs(int ts) {
+        this.ts = ts;
     }
 
     @Override

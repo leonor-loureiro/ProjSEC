@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 
-public class Message implements Serializable {
+public class Message implements Serializable, Comparable {
 
     public enum Operation {
         INTENTION_TO_SELL,
@@ -26,6 +26,11 @@ public class Message implements Serializable {
     private String nonce;
     private String signature;
     private Message intentionToBuy;
+
+    //Byzantine Registers Variables
+    private int wts;
+    private int rid;
+    private String valSignature;
 
     public Message() {
     }
@@ -125,6 +130,30 @@ public class Message implements Serializable {
         this.operation = operation;
     }
 
+    public int getWts() {
+        return wts;
+    }
+
+    public void setWts(int wts) {
+        this.wts = wts;
+    }
+
+    public int getRid() {
+        return rid;
+    }
+
+    public void setRid(int rid) {
+        this.rid = rid;
+    }
+
+    public String getValSignature() {
+        return valSignature;
+    }
+
+    public void setValSignature(String valSignature) {
+        this.valSignature = valSignature;
+    }
+
     public byte[] getBytesToSign(){
         ObjectOutputStream oos = null;
         ByteArrayOutputStream bos = null;
@@ -140,7 +169,7 @@ public class Message implements Serializable {
             for (Field field : fields) {
                 Object obj = field.get(this);
                 if (!field.getName().equals("signature") && obj != null) {
-                    //System.out.println(field.getName() + " = " + obj);
+                    System.out.println(field.getName() + " = " + obj);
                     oos.writeObject(obj);
                     oos.flush();
                 }
@@ -158,4 +187,14 @@ public class Message implements Serializable {
 
         return bytesToSign;
     }
+
+
+    public int compareTo(Object o) {
+        if(!(o instanceof Message))
+            return -1;
+
+        Message msg = (Message) o;
+        return new Integer(wts).compareTo(msg.getWts());
+    }
+
 }

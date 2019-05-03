@@ -67,13 +67,13 @@ public class Manager implements IMessageProcess {
             System.out.println("Failed to initialize Citizen Card Controller");
             System.out.println(e.getMessage());
 
-            System.out.println("Shutting down...");
+            /*System.out.println("Shutting down...");
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             }
-            System.exit(0); //Comment for tests
+            System.exit(0);*/ //Comment for tests
 
             //If init failed, not CC available (for tests)
             ccController = null;
@@ -126,7 +126,7 @@ public class Manager implements IMessageProcess {
     /**
      * This method is responsible for processing an intention to sell request
      */
-    public Message intentionToSell(Message message) throws CryptoException, SignatureException {
+    private Message intentionToSell(Message message) throws CryptoException, SignatureException {
 
         //Find good
         Good good = findGood(message.getGoodID());
@@ -150,7 +150,7 @@ public class Manager implements IMessageProcess {
 
         //Update the good state
         if(!good.isForSale())
-            if(!updateGood(good, good.getUserID(), true))
+            if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getSignature()))
                 return createErrorMessage("Failed to change good state.", message.getSellerID(), null);
 
         //Build response message
@@ -158,6 +158,7 @@ public class Manager implements IMessageProcess {
         response.setGoodID(good.getGoodID());
         response.setSellerID(seller.getUserID());
         response.setForSale(true);
+        response.setWts(message.getWts());
 
         addFreshness(response);
 
@@ -187,6 +188,12 @@ public class Manager implements IMessageProcess {
         response.setSellerID(good.getUserID());
         response.setForSale(good.isForSale());
         response.setBuyerID(buyer.getUserID());
+        //Send value write timestamp and signature
+        response.setWts(good.getTs());
+        response.setValSignature(good.getSignature());
+        //Send read operation ID
+        response.setRid(message.getRid());
+
         addFreshness(response);
 
         return signMessage(response);
@@ -253,7 +260,7 @@ public class Manager implements IMessageProcess {
                     message.getBuyerID());
 
         //Alter internal mapping of Goods->Users
-        if(!updateGood(good, buyer.getUserID(), false))
+        if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getSignature()))
             return createErrorMessage("Failed to update good state",
                     message.getSellerID(),
                     message.getBuyerID());
@@ -263,6 +270,8 @@ public class Manager implements IMessageProcess {
         response.setSellerID(seller.getUserID());
         response.setBuyerID(buyer.getUserID());
         response.setGoodID(good.getGoodID());
+
+        response.setWts(message.getWts());
 
         //Add node and timestamp
         addFreshness(response);
@@ -430,9 +439,14 @@ public class Manager implements IMessageProcess {
      * @param isForSale whether its for sale or not
      * @return true if was successful, false otherwise
      */
-    private boolean updateGood(Good good, String userID, boolean isForSale) {
+    private boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
+        if(ts <= good.getTs())
+            return false;
+
         good.setForSale(isForSale);
         good.setUserID(userID);
+        good.setTs(ts);
+        good.setSignature(signature);
 
         //For tests, don't update mapping
         if(TESTING_ON)

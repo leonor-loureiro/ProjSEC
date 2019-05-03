@@ -7,10 +7,7 @@ import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import commontypes.exception.SaveNonceException;
 import commontypes.exception.UserNotExistException;
-import communication.Communication;
-import communication.IMessageProcess;
-import communication.Message;
-import communication.RequestsReceiver;
+import communication.*;
 import crypto.Crypto;
 import crypto.CryptoException;
 import resourcesloader.ResourcesLoader;
@@ -19,9 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -66,7 +61,6 @@ public class ClientManager implements IMessageProcess {
     private PublicKey notaryPublicKey;
     private ArrayList<String> nonces = new ArrayList<>();
 
-
     public static ClientManager getInstance(){
 
         if(clientManager == null)
@@ -90,6 +84,14 @@ public class ClientManager implements IMessageProcess {
 
             //initliazes the receiver in a new thread
             requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
+
+
+            HashMap<String, Integer> servers = new HashMap();
+            servers.put(HOST, notaryPort);
+
+            for(Good good: goods){
+                good.setBrr(new ByzantineRegularRegister(servers, user.getPrivateKey(), sendRequest, 1));
+        }
     }
 
 
@@ -118,13 +120,15 @@ public class ClientManager implements IMessageProcess {
 
         addFreshness(msg);
 
-        try {
-            signMessage(msg);
+        /*try {
+            signMessage(msg, user.getPrivateKey());
         } catch (CryptoException e) {
             e.printStackTrace();
-        }
+        }*/
 
-        Message response = sendMessage(msg, HOST, notaryPort);
+        //Message response = sendMessage(msg, HOST, notaryPort);
+        Message response = null;
+        response = good.getBrr().write(msg, goodID, good.getUserID(), true);
         if(response == null)
             return;
 
@@ -175,14 +179,15 @@ public class ClientManager implements IMessageProcess {
         addFreshness(msg);
 
 
-        try {
-            signMessage(msg);
+        /*try {
+            signMessage(msg, user.getPrivateKey());
         } catch (CryptoException e) {
             e.printStackTrace();
-        }
+        }*/
 
 
-        response = sendMessage(msg, HOST, notaryPort);
+        //response = sendMessage(msg, HOST, notaryPort);
+        response = good.getBrr().read(msg);
         if(response == null)
             return;
 
@@ -237,7 +242,7 @@ public class ClientManager implements IMessageProcess {
         addFreshness(msg);
 
         try {
-            signMessage(msg);
+            signMessage(msg, user.getPrivateKey());
         } catch (CryptoException e) {
             e.printStackTrace();
         }
@@ -294,6 +299,10 @@ public class ClientManager implements IMessageProcess {
      */
     private Message transferGood(Message message) throws CryptoException, SaveNonceException {
 
+        Good good = findGood(message.getGoodID());
+        if(good == null)
+            return createErrorMessage("Good does not exist", message.getBuyerID());
+
         Message msg = new Message();
         msg.setBuyerID(message.getBuyerID());
         msg.setSellerID(message.getSellerID());
@@ -305,14 +314,16 @@ public class ClientManager implements IMessageProcess {
 
         Message response = null;
 
-        try {
-            signMessage(msg);
+        /*try {
+            signMessage(msg, user.getPrivateKey());
         } catch (CryptoException e) {
             e.printStackTrace();
-        }
+        }*/
 
 
-        response = sendMessage(msg, HOST, notaryPort);
+        //response = sendMessage(msg, HOST, notaryPort);
+
+        response = good.getBrr().write(msg, good.getGoodID(), good.getUserID(), false);
         if(response == null)
             return createErrorMessage("Failed to send request to Notary", message.getBuyerID());
 
@@ -499,7 +510,6 @@ public class ClientManager implements IMessageProcess {
             return sendRequest.sendMessage(host, port, msg);
 
         } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
-            //e.printStackTrace();
             System.out.println("Send request failed");
         }
         return null;
@@ -510,8 +520,8 @@ public class ClientManager implements IMessageProcess {
      * @param message message to be signed
      * @return signed message
      */
-    private Message signMessage(Message message) throws CryptoException {
-        String signature = Crypto.sign(message.getBytesToSign(), user.getPrivateKey());
+    private static Message signMessage(Message message, PrivateKey privateKey) throws CryptoException {
+        String signature = Crypto.sign(message.getBytesToSign(), privateKey);
         message.setSignature(signature);
         return message;
     }
@@ -526,10 +536,10 @@ public class ClientManager implements IMessageProcess {
             throws CryptoException {
 
 
-        /*if(publicKey.equals(notaryPublicKey)){
+        if(publicKey.equals(notaryPublicKey)){
             System.out.println("Ignoring notary signature for tests");
             return true;
-        }*/
+        }
 
 
         if(message.getSignature() == null)
@@ -554,7 +564,7 @@ public class ClientManager implements IMessageProcess {
     private Message createErrorMessage(String errorMsg, String  buyerID) throws CryptoException {
         Message message = new Message(errorMsg, null, buyerID);
         addFreshness(message);
-        return signMessage(message);
+        return signMessage(message, user.getPrivateKey());
     }
 
     /**
