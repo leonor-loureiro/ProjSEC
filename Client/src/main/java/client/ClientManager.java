@@ -88,6 +88,9 @@ public class ClientManager implements IMessageProcess {
 
             HashMap<String, Integer> servers = new HashMap();
             servers.put(HOST, notaryPort);
+            servers.put(HOST, notaryPort+1);
+            servers.put(HOST, notaryPort+2);
+            servers.put(HOST, notaryPort+3);
 
             for(Good good: goods){
                 good.setBrr(new ByzantineRegularRegister(servers, user.getPrivateKey(), sendRequest, 1));

@@ -30,12 +30,18 @@ public class Manager implements IMessageProcess {
     //Testing mode (does not update real mapping)
     private static boolean TESTING_ON = false;
 
+    //Byzantine Mode
+    private static boolean BYZANTINE_ON = false;
+
     //Name of the file where the users -> goods mapping is stored
     private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users.ser";
     private static final String NONCES = "../resourcesServer/nonces";
 
     //Validity time
     private static final int VALIDITY = 900000;
+
+    // is this necessary?
+    private int wts;
 
     //Singleton instance
     static Manager manager = null;
@@ -78,6 +84,14 @@ public class Manager implements IMessageProcess {
             //If init failed, not CC available (for tests)
             ccController = null;
         }
+    }
+
+    public static void setByzantine(boolean mode) {
+        BYZANTINE_ON = mode;
+    }
+
+    public static boolean getByzantine() {
+        return BYZANTINE_ON;
     }
 
     /**
@@ -331,13 +345,27 @@ public class Manager implements IMessageProcess {
 
                 switch (message.getOperation()) {
                     case INTENTION_TO_SELL:
-                        return intentionToSell(message);
+                        //   if message.type == writeback
+                      // if bigger timestamp
+                      //  if(message.getWts() > wts) {
+                            //update timestamp
+                      //      wts = message.getWts();
+                            return intentionToSell(message);
+                      //  }
+                        //just return null????
 
                     case GET_STATE_OF_GOOD:
                         return getStateOfGood(message);
 
                     case TRANSFER_GOOD:
-                        return transferGood(message);
+                     //   if message.type == writeback
+                     //   if bigger timestamp
+                     //   if(message.getWts() > wts) {
+                              //update timestamp
+                     //       wts = message.getWts();
+                            return transferGood(message);
+                     //   }
+                        //just return null????
 
                     default:
                         System.out.println("Operation Unknown!");

@@ -12,15 +12,15 @@ import java.util.concurrent.Executors;
 
 public class ByzantineRegularRegister {
 
-    private static final int WRITE = 100;
-    private static final int READ = 200;
+    public static final int WRITE = 100;
+    public static final int READ = 200;
 
 
     //List of server replicas
     private final HashMap<String, Integer> servers;
 
     //Private key of the client
-    private final PrivateKey privateKey;
+    public final PrivateKey privateKey;
 
     //Handler for the communication between processes
     private final Communication communicationHandler;
@@ -29,19 +29,19 @@ public class ByzantineRegularRegister {
     private final ExecutorService executor;
 
     //Quorum
-    private final int quorum;
+    public final int quorum;
 
     //Read timestamp
-    private int rid = 0;
+    public int rid = 0;
 
     //Write timestamp
     private int wts = 0;
 
     //Stores the write responses
-    private List<Message> ackList = new ArrayList<Message>();
+    public List<Message> ackList = new ArrayList<Message>();
 
     //Stores the read responses
-    private List<Message> readList = new ArrayList<Message>();
+    public List<Message> readList = new ArrayList<Message>();
 
 
     public ByzantineRegularRegister(HashMap<String, Integer> servers, PrivateKey privateKey,
@@ -148,7 +148,7 @@ public class ByzantineRegularRegister {
         readList.add(msg);
     }
 
-    private void broadcast(final Message msg, final int type) throws CryptoException {
+    public void broadcast(final Message msg, final int type) throws CryptoException {
         msg.setSignature(Crypto.sign(msg.getBytesToSign(), privateKey));
 
         for(Map.Entry<String, Integer> entry : servers.entrySet()) {
