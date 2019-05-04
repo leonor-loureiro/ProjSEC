@@ -131,27 +131,31 @@ public class Manager implements IMessageProcess {
         //Find good
         Good good = findGood(message.getGoodID());
         if(good == null)
-            return createErrorMessage("Good does not exist.", message.getSellerID(), null);
+            return createErrorMessage("Good does not exist.", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
 
         //Check that good belong to the seller
         if(!good.getUserID().equals(message.getSellerID()))
             return createErrorMessage("Seller ID does not match current owner.",
-                    message.getSellerID(), null);
+                    message.getSellerID(), null, message.getWts(), message.getRid());
 
         //Find seller
         User seller = findUser(message.getSellerID());
         if(seller == null)
-            return createErrorMessage("User does not exist", message.getSellerID(), null);
+            return createErrorMessage("User does not exist", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
         PublicKey sellerKey = seller.getPublicKey();
 
         //Check if the message signature is valid
         if(!isSignatureValid(message, sellerKey))
-            return createErrorMessage("Authentication failed.", message.getSellerID(), null);
+            return createErrorMessage("Authentication failed.", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
 
         //Update the good state
         if(!good.isForSale())
             if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getSignature()))
-                return createErrorMessage("Failed to change good state.", message.getSellerID(), null);
+                return createErrorMessage("Failed to change good state.", message.getSellerID(), null,
+                        message.getWts(), message.getRid());
 
         //Build response message
         Message response = new Message(Message.Operation.INTENTION_TO_SELL);
@@ -174,14 +178,17 @@ public class Manager implements IMessageProcess {
     private Message getStateOfGood(Message message) throws CryptoException, SignatureException {
         Good good = findGood(message.getGoodID());
         if(good == null)
-            return createErrorMessage("Good does not exist.", null, message.getBuyerID());
+            return createErrorMessage("Good does not exist.", null, message.getBuyerID(),
+                    message.getWts(), message.getRid());
 
         User buyer = findUser(message.getBuyerID());
         if(buyer == null)
-            return createErrorMessage("User does not exist.", null, message.getBuyerID());
+            return createErrorMessage("User does not exist.", null, message.getBuyerID(),
+                    message.getWts(), message.getRid());
 
         if(!isSignatureValid(message, buyer.getPublicKey()))
-            return createErrorMessage("Authentication failed.", null, message.getBuyerID());
+            return createErrorMessage("Authentication failed.", null, message.getBuyerID(),
+                    message.getWts(), message.getRid());
 
         Message response = new Message(Message.Operation.GET_STATE_OF_GOOD);
         response.setGoodID(good.getGoodID());
@@ -207,63 +214,81 @@ public class Manager implements IMessageProcess {
         if(good == null)
             return createErrorMessage("Good does not exist.",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(), message.getWts(), message.getRid());
 
         // Check the good is for sale
         if(!good.isForSale())
             return createErrorMessage("Good is currently not for sale.",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         // Check the current owner is the seller
         if(!good.getUserID().equals(message.getSellerID()))
             return createErrorMessage("Seller ID does not match current owner.",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         // Validate the intention to buy
         if(message.getIntentionToBuy() == null)
             return createErrorMessage("Intention to buy does not exist.",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Intention to buy fresh
         if(!isFresh(message.getIntentionToBuy()))
             return createErrorMessage("Intention to buy is not fresh",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Buyer exists
         User buyer = findUser(message.getIntentionToBuy().getBuyerID());
         if(buyer == null)
             return createErrorMessage("Buyer does not exist",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Validate intention to buy
         if(!isSignatureValid(message.getIntentionToBuy(), buyer.getPublicKey()))
             return createErrorMessage("Intention to buy validation failed.",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Seller exists
         User seller = findUser(message.getSellerID());
         if(seller == null)
             return createErrorMessage("Seller does not exist",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Validate intention to sell
         if(!isSignatureValid(message, seller.getPublicKey()))
             return createErrorMessage("Intention to sell validation failed",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Alter internal mapping of Goods->Users
         if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getSignature()))
             return createErrorMessage("Failed to update good state",
                     message.getSellerID(),
-                    message.getBuyerID());
+                    message.getBuyerID(),
+                    message.getWts(),
+                    message.getRid());
 
         //Create response message
         Message response = new Message(Message.Operation.TRANSFER_GOOD);
@@ -327,7 +352,8 @@ public class Manager implements IMessageProcess {
         try{
             try {
                 if (!isFresh(message))
-                    return createErrorMessage("Request is not fresh", null, null);
+                    return createErrorMessage("Request is not fresh",
+                            null, null, message.getWts(), message.getRid());
 
                 switch (message.getOperation()) {
                     case INTENTION_TO_SELL:
@@ -345,11 +371,11 @@ public class Manager implements IMessageProcess {
 
             } catch (CryptoException e) {
                 return createErrorMessage("Failed to verify the signature",
-                        message.getSellerID(), message.getBuyerID());
+                        message.getSellerID(), message.getBuyerID(), message.getWts(), message.getRid());
 
             } catch (SaveNonceException e) {
                 return createErrorMessage("Failed to process request",
-                        message.getSellerID(), message.getBuyerID());
+                        message.getSellerID(), message.getBuyerID(), message.getWts(), message.getRid());
             }
         }catch (SignatureException e) {
             return new Message("Failed to sign the message", message.getSellerID(), message.getBuyerID());
@@ -425,8 +451,11 @@ public class Manager implements IMessageProcess {
      *         and the given error message
      * @throws SignatureException if the message signature fails
      */
-    private Message createErrorMessage(String errorMsg, String sellerID, String buyerID) throws SignatureException {
+    private Message createErrorMessage(String errorMsg, String sellerID, String buyerID, int wts, int rid)
+            throws SignatureException {
         Message message = new Message(errorMsg, sellerID, buyerID);
+        message.setWts(wts);
+        message.setRid(rid);
         addFreshness(message);
         return signMessage(message);
     }
@@ -440,8 +469,10 @@ public class Manager implements IMessageProcess {
      * @return true if was successful, false otherwise
      */
     private boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
-        if(ts <= good.getTs())
+        if(ts <= good.getTs()) {
+            System.out.println("Old write " + ts + "/" + good.getTs());
             return false;
+        }
 
         good.setForSale(isForSale);
         good.setUserID(userID);
