@@ -18,8 +18,8 @@ public class ClientTests {
 
     protected PublicKey notaryPublicKey;
 
-    protected String userID = "user1";
-    protected String userID2 = "user2";
+    protected String seller = "user1";
+    protected String buyer = "user2";
 
     protected String goodID = "good00";
 

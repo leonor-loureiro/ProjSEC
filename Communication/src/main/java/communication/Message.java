@@ -1,19 +1,29 @@
 package communication;
 
+import crypto.Crypto;
+import crypto.CryptoException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.security.PublicKey;
+import java.util.Random;
+
+import static java.lang.System.currentTimeMillis;
 
 public class Message implements Serializable, Comparable {
+
+    private static final Random random = new Random();
 
     public enum Operation {
         INTENTION_TO_SELL,
         BUY_GOOD,
         GET_STATE_OF_GOOD,
         TRANSFER_GOOD,
-        ERROR
+        ERROR,
+        WRITE_BACK
     }
 
     private Operation operation;
@@ -154,6 +164,26 @@ public class Message implements Serializable, Comparable {
         this.valSignature = valSignature;
     }
 
+
+    /**
+     * Responsible for adding a nonce and a timestamp to the message
+     */
+
+    public void addFreshness(String ID) {
+        this.setTimestamp(currentTimeMillis());
+        this.setNonce(ID + random.nextInt());
+    }
+
+    /**
+     * Responsible for validating the message's signature
+     */
+    public boolean isSignatureValid(PublicKey publicKey) throws CryptoException {
+
+        if(getSignature() == null)
+            return false;
+        return Crypto.verifySignature(getSignature(), getBytesToSign(), publicKey);
+    }
+
     public byte[] getBytesToSign(){
         ObjectOutputStream oos = null;
         ByteArrayOutputStream bos = null;
@@ -168,7 +198,7 @@ public class Message implements Serializable, Comparable {
             Field[] fields = Message.class.getDeclaredFields();
             for (Field field : fields) {
                 Object obj = field.get(this);
-                if (!field.getName().equals("signature") && obj != null) {
+                if (!field.getName().equals("signature") && !field.getName().equals("random") && obj != null) {
                     System.out.println(field.getName() + " = " + obj);
                     oos.writeObject(obj);
                     oos.flush();
@@ -179,9 +209,7 @@ public class Message implements Serializable, Comparable {
             oos.close();
             bos.close();
 
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IllegalAccessException | IOException e) {
             e.printStackTrace();
         }
 
@@ -196,5 +224,6 @@ public class Message implements Serializable, Comparable {
         Message msg = (Message) o;
         return new Integer(wts).compareTo(msg.getWts());
     }
+
 
 }

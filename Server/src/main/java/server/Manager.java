@@ -2,6 +2,7 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import commontypes.Utils;
 import commontypes.exception.SaveNonceException;
 import communication.IMessageProcess;
 import communication.Message;
@@ -14,6 +15,7 @@ import commontypes.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
+import javax.jws.soap.SOAPBinding;
 import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
@@ -305,6 +307,41 @@ public class Manager implements IMessageProcess {
         return signMessage(response);
     }
 
+    private Message writeBack(Message message) throws SignatureException, CryptoException {
+        Good good = findGood(message.getGoodID());
+        if(good == null)
+            return createErrorMessage("Good does not exist", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
+
+        User seller = findUser(message.getSellerID());
+        if(seller == null)
+            return createErrorMessage("Seller does not exist", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
+
+        //Buyer is the user that sent the request
+        User buyer = findUser(message.getBuyerID());
+        if(buyer == null)
+            return createErrorMessage("User does not exist", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
+
+
+        if(!isSignatureValid(message, buyer.getPublicKey())){
+            return createErrorMessage("Authentication failed", message.getSellerID(), null,
+                    message.getWts(), message.getRid());
+        }
+
+        updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature());
+
+        Message response = new Message();
+        response.setOperation(Message.Operation.WRITE_BACK);
+        response.setWts(message.getWts());
+        //Buyer is the user that sent the request
+        response.setSellerID(message.getBuyerID());
+        addFreshness(response);
+
+        return signMessage(response);
+    }
+
     /**
      * This method returns the good with given good ID
      */
@@ -337,8 +374,10 @@ public class Manager implements IMessageProcess {
      */
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
-        if(message.getSignature() == null)
+        if(message.getSignature() == null) {
+            System.out.println("Signature is null");
             return false;
+        }
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
@@ -365,6 +404,9 @@ public class Manager implements IMessageProcess {
                     case TRANSFER_GOOD:
                         return transferGood(message);
 
+                    case WRITE_BACK:
+                        return writeBack(message);
+
                     default:
                         System.out.println("Operation Unknown!");
                 }
@@ -382,6 +424,7 @@ public class Manager implements IMessageProcess {
         }
         return null;
     }
+
 
 
     /* ***************************************************************************************
@@ -416,11 +459,10 @@ public class Manager implements IMessageProcess {
      * Responsible for adding a nonce and a timestamp to a message
      */
     private void addFreshness(Message response) {
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce("server" + random.nextInt());
+        response.addFreshness("server");
     }
 
-    /**
+     /**
      * This function is responsible for signing a message
      * @param message message to be signed
      * @return signed message

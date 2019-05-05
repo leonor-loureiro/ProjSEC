@@ -2,14 +2,10 @@ import client.Login;
 import commontypes.Good;
 import commontypes.User;
 import commontypes.exception.GoodNotExistsException;
-import commontypes.exception.PasswordIsWrongException;
-import commontypes.exception.SaveNonceException;
 import commontypes.exception.UserNotExistException;
 import crypto.Crypto;
-import crypto.CryptoException;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.security.KeyPair;
 
 public class BuyGoodTest extends ClientTests{
@@ -24,26 +20,26 @@ public class BuyGoodTest extends ClientTests{
 
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         users.add(
-                new User(userID2, keyPair2.getPublic())
+                new User(buyer, keyPair2.getPublic())
         );
 
         goods.add(
-                new Good("wronggood", userID, false)
+                new Good("wronggood", seller, false)
         );
 
         clientManager.dummyPopulate(users, goods);
 
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
-        clientManager.buyGood(userID2,goodID);
+        clientManager.buyGood(buyer,goodID);
 
     }
 
@@ -57,23 +53,23 @@ public class BuyGoodTest extends ClientTests{
 
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         users.add(
-                new User(userID2, keyPair2.getPublic())
+                new User(buyer, keyPair2.getPublic())
         );
 
         goods.add(
-                new Good(goodID, userID, false)
+                new Good(goodID, seller, false)
         );
 
         clientManager.dummyPopulate(users, goods);
 
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
         clientManager.buyGood("wronguser",goodID);

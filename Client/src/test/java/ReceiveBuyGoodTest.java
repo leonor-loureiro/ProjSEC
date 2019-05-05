@@ -23,23 +23,23 @@ public class ReceiveBuyGoodTest extends ClientTests{
 
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         users.add(
-                new User(userID2, keyPair2.getPublic())
+                new User(buyer, keyPair2.getPublic())
         );
 
         goods.add(
-                new Good(goodID, userID, false)
+                new Good(goodID, seller, false)
         );
 
         Login login = new Login();
 
         clientManager.dummyPopulate(users, goods);
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
     }
@@ -49,8 +49,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
      */
     @Test
     public void GoodDoesNotExist() throws CryptoException {
-        Message message = generateBuyGoodMessage(userID,userID2,"wrong good");
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(seller, buyer,"wrong good");
+        message.addFreshness(buyer);
 
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
@@ -67,8 +67,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
     @Test
     public void BuyerDoesNotExist() throws CryptoException {
 
-        Message message = generateBuyGoodMessage(userID,"wronguser",goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(seller,"wronguser",goodID);
+        message.addFreshness(buyer);
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
         Message response = clientManager.process(message);
@@ -84,8 +84,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
     @Test
     public void SellerDoesNotExist() throws CryptoException {
 
-        Message message = generateBuyGoodMessage("wronguser",userID2,goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage("wronguser", buyer,goodID);
+        message.addFreshness(buyer);
 
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
@@ -103,8 +103,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
     @Test
     public void SellerDoesNotMath() throws CryptoException {
 
-        Message message = generateBuyGoodMessage(userID2,userID,goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(buyer, seller,goodID);
+        message.addFreshness(buyer);
 
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
@@ -121,9 +121,9 @@ public class ReceiveBuyGoodTest extends ClientTests{
      */
     public void NotFreshMessageRepeatedNonce() throws CryptoException {
 
-        Message message = generateBuyGoodMessage(userID,userID2,goodID);
+        Message message = generateBuyGoodMessage(seller, buyer,goodID);
 
-        clientManager.addFreshness(message);
+        message.addFreshness(buyer);
 
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
@@ -145,8 +145,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
     @Test
     public void NotFreshMessageBadTimestamp() {
 
-        Message message = generateBuyGoodMessage(userID,userID2,goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(seller, buyer,goodID);
+        message.addFreshness(buyer);
 
         message.setTimestamp(0);
 
@@ -163,8 +163,8 @@ public class ReceiveBuyGoodTest extends ClientTests{
      */
     @Test
     public void NotSignedMessage(){
-        Message message = generateBuyGoodMessage(userID,userID2,goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(seller, buyer,goodID);
+        message.addFreshness(buyer);
         Message response = clientManager.process(message);
 
         Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);
@@ -176,12 +176,12 @@ public class ReceiveBuyGoodTest extends ClientTests{
      */
     @Test
     public void CorruptMessage() throws CryptoException {
-        Message message = generateBuyGoodMessage(userID,userID2,goodID);
-        clientManager.addFreshness(message);
+        Message message = generateBuyGoodMessage(seller, buyer,goodID);
+        message.addFreshness(buyer);
 
         message.setSignature(Crypto.sign(message.getBytesToSign(),keyPair.getPrivate()));
 
-        message.setBuyerID(userID);
+        message.setBuyerID(seller);
         Message response = clientManager.process(message);
 
         Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);

@@ -1,5 +1,6 @@
 package commontypes;
 
+import communication.Message;
 import crypto.Crypto;
 import crypto.CryptoException;
 import javafx.util.Pair;
@@ -10,8 +11,11 @@ import java.math.BigInteger;
 import java.security.*;
 import java.util.*;
 
+import static java.lang.System.currentTimeMillis;
+
 public class Utils {
 
+    public static Random random = new Random();
     /**
      * This function is responsible for serializing an array list
      * @param arrayList array list to be serialized
@@ -54,6 +58,8 @@ public class Utils {
         }
         return arrayList;
     }
+
+
 
     /**************************************************************************
      *
@@ -159,6 +165,15 @@ public class Utils {
         return set;
     }
 
+    public static String bytesToHex(byte[] hashInBytes) {
+
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashInBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+
+    }
     private static String randomString(char[] alphabet, int n){
         StringBuilder str = new StringBuilder();
         Random random = new Random();

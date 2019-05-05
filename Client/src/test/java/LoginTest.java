@@ -10,7 +10,6 @@ import resourcesloader.ResourcesLoader;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.util.ArrayList;
 
 
@@ -29,14 +28,14 @@ public class LoginTest extends ClientTests{
         KeyPair keyPair = Crypto.generateRSAKeys();
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         clientManager.dummyPopulate(users,new ArrayList<Good>());
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
 
@@ -60,8 +59,8 @@ public class LoginTest extends ClientTests{
         clientManager.dummyPopulate(new ArrayList<>(),new ArrayList<>());
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
     }
@@ -80,13 +79,13 @@ public class LoginTest extends ClientTests{
         KeyPair keyPair = Crypto.generateRSAKeys();
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         clientManager.dummyPopulate(users,new ArrayList<>());
         Login login = new Login();
 
-        login.setUsername(userID);
+        login.setUsername(seller);
         login.setPassword(("wrongpassword").toCharArray());
         clientManager.login(login);
 

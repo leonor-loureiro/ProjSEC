@@ -15,6 +15,8 @@ public class ByzantineRegularRegister {
     private static final int WRITE = 100;
     private static final int READ = 200;
 
+    protected final String ID;
+
 
     //List of server replicas
     private final HashMap<String, Integer> servers;
@@ -44,8 +46,9 @@ public class ByzantineRegularRegister {
     private List<Message> readList = new ArrayList<Message>();
 
 
-    public ByzantineRegularRegister(HashMap<String, Integer> servers, PrivateKey privateKey,
-                                       Communication communicationHandler, int faults) {
+    public ByzantineRegularRegister(String id, HashMap<String, Integer> servers, PrivateKey privateKey,
+                                    Communication communicationHandler, int faults) {
+        ID = id;
         this.servers = servers;
         this.privateKey = privateKey;
         this.communicationHandler = communicationHandler;
@@ -66,6 +69,12 @@ public class ByzantineRegularRegister {
 
         //Update write timestamp
         wts ++;
+
+        return write(msg, goodID, userID, isForSale, wts);
+    }
+
+
+    protected Message write(Message msg, String goodID, String userID, boolean isForSale, int wts) throws CryptoException {
         msg.setWts(wts);
 
         //Clear previous responses

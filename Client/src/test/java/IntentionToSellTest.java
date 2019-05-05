@@ -2,14 +2,9 @@ import client.Login;
 import commontypes.Good;
 import commontypes.User;
 import commontypes.exception.GoodNotExistsException;
-import commontypes.exception.PasswordIsWrongException;
-import commontypes.exception.SaveNonceException;
-import commontypes.exception.UserNotExistException;
 import crypto.Crypto;
-import crypto.CryptoException;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.security.KeyPair;
 import java.util.ArrayList;
 
@@ -24,14 +19,14 @@ public class IntentionToSellTest extends ClientTests {
        KeyPair keyPair = Crypto.generateRSAKeys();
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         clientManager.dummyPopulate(users,new ArrayList<Good>());
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
         clientManager.intentionToSell(goodID);

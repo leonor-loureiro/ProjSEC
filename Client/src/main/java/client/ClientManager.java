@@ -3,6 +3,7 @@ package client;
 import commontypes.AtomicFileManager;
 import commontypes.Good;
 import commontypes.User;
+import commontypes.Utils;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import commontypes.exception.SaveNonceException;
@@ -19,6 +20,7 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -90,7 +92,7 @@ public class ClientManager implements IMessageProcess {
             servers.put(HOST, notaryPort);
 
             for(Good good: goods){
-                good.setBrr(new ByzantineRegularRegister(servers, user.getPrivateKey(), sendRequest, 1));
+                good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), sendRequest, 1));
         }
     }
 
@@ -118,7 +120,7 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
 
-        addFreshness(msg);
+        msg.addFreshness(user.getUserID());
 
         /*try {
             signMessage(msg, user.getPrivateKey());
@@ -176,11 +178,11 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.GET_STATE_OF_GOOD);
         Message response = null;
 
-        addFreshness(msg);
-
+        msg.addFreshness(user.getUserID());
 
         /*try {
             signMessage(msg, user.getPrivateKey());
+            System.out.println(Crypto.verifySignature(msg.getSignature(), msg.getBytesToSign(), user.getPublicKey()));
         } catch (CryptoException e) {
             e.printStackTrace();
         }*/
@@ -239,7 +241,7 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.BUY_GOOD);
         Message response = null;
 
-        addFreshness(msg);
+        msg.addFreshness(user.getUserID());
 
         try {
             signMessage(msg, user.getPrivateKey());
@@ -310,8 +312,7 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.TRANSFER_GOOD);
 
         msg.setIntentionToBuy(message);
-        addFreshness(msg);
-
+        msg.addFreshness(user.getUserID());
         Message response = null;
 
         /*try {
@@ -540,21 +541,10 @@ public class ClientManager implements IMessageProcess {
             System.out.println("Ignoring notary signature for tests");
             return true;
         }
-
-
-        if(message.getSignature() == null)
-            return false;
-        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+        return message.isSignatureValid(publicKey);
     }
 
-    /**
-     * Responsible for adding a nonce and a timestamp to a message
-     */
 
-    public void addFreshness(Message response) {
-        response.setTimestamp(currentTimeMillis());
-        response.setNonce("server" + random.nextInt());
-    }
     /**
      * Creates an error message, adds freshness and signs it
      * @param errorMsg error message text
@@ -563,7 +553,7 @@ public class ClientManager implements IMessageProcess {
      */
     private Message createErrorMessage(String errorMsg, String  buyerID) throws CryptoException {
         Message message = new Message(errorMsg, null, buyerID);
-        addFreshness(message);
+        message.addFreshness(user.getUserID());
         return signMessage(message, user.getPrivateKey());
     }
 

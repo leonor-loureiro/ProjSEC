@@ -17,19 +17,19 @@ public class GetStateOfGoodTest extends ClientTests{
        KeyPair keyPair = Crypto.generateRSAKeys();
 
         users.add(
-                new User(userID, keyPair.getPublic())
+                new User(seller, keyPair.getPublic())
         );
 
         goods.add(
-                new Good("wronggood", userID, false)
+                new Good("wronggood", seller, false)
         );
 
         clientManager.dummyPopulate(users, goods);
 
         Login login = new Login();
 
-        login.setUsername(userID);
-        login.setPassword((userID + userID).toCharArray());
+        login.setUsername(seller);
+        login.setPassword((seller + seller).toCharArray());
         clientManager.login(login);
 
         clientManager.getStateOfGood(goodID);
