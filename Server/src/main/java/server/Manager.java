@@ -34,13 +34,13 @@ public class Manager implements IMessageProcess {
     private static boolean BYZANTINE_ON = false;
 
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users.ser";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
     private static final String NONCES = "../resourcesServer/nonces";
 
     //Validity time
     private static final int VALIDITY = 900000;
 
-    // is this necessary?
+    // TODO: is this necessary?
     private int wts;
 
     //Singleton instance
@@ -57,11 +57,25 @@ public class Manager implements IMessageProcess {
     private ArrayList<String> nonces = new ArrayList<>();
     //Nonces generator
     private Random random = new Random();
+    private int port;
 
+    /**
+     *
+     * @return
+     */
     public static Manager getInstance(){
         if(manager == null)
             manager = new Manager();
         return manager;
+    }
+
+
+    private String userGoodsPath(){
+        return USERS_GOODS_MAPPING + port + ".ser";
+    }
+
+    private String getNoncesPath(){
+        return NONCES + port + ".ser";
     }
 
 
@@ -99,7 +113,8 @@ public class Manager implements IMessageProcess {
      * @param port the port the service runs on
      */
     public void startServer(int port) throws IOException, ClassNotFoundException {
-        System.out.println("Starting server...");
+        this.port = port;
+        System.out.println("Starting server on port " + port + "...");
         loadResources();
         requestReceiver.initializeInNewThread(port, this);
     }
@@ -122,13 +137,13 @@ public class Manager implements IMessageProcess {
     public void loadResources() throws IOException, ClassNotFoundException {
         users = (ArrayList<User>) ResourcesLoader.loadUserList();
 
-        if(new File(USERS_GOODS_MAPPING).exists())
-            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
+        if(new File(userGoodsPath()).exists())
+            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(userGoodsPath());
         else
             goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
 
-        if(new File(NONCES).exists()) {
-            nonces = (ArrayList<String>) ResourcesLoader.loadNonces(NONCES);
+        if(new File(getNoncesPath()).exists()) {
+            nonces = (ArrayList<String>) ResourcesLoader.loadNonces(getNoncesPath());
         }else
             nonces = new ArrayList<>();
     }
@@ -404,7 +419,7 @@ public class Manager implements IMessageProcess {
         nonces.add(nonce);
         try {
             if(!TESTING_ON)
-                AtomicFileManager.atomicWriteObjectToFile(NONCES, nonces);
+                AtomicFileManager.atomicWriteObjectToFile(getNoncesPath(), nonces);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("Failed to persistently store nonce");
@@ -481,7 +496,7 @@ public class Manager implements IMessageProcess {
             return true;
 
         try {
-            AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
+            AtomicFileManager.atomicWriteObjectToFile(userGoodsPath(), goods);
             return true;
 
         } catch (IOException | ClassNotFoundException e) {

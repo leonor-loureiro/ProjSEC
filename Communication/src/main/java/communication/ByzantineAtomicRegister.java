@@ -2,14 +2,16 @@ package communication;
 
 import crypto.Crypto;
 import crypto.CryptoException;
+import javafx.util.Pair;
 
 import java.security.PrivateKey;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class ByzantineAtomicRegister extends ByzantineRegularRegister{
 
-    public ByzantineAtomicRegister(HashMap<String, Integer> servers, PrivateKey privateKey,
+    public ByzantineAtomicRegister(List<Pair<String, Integer>> servers, PrivateKey privateKey,
                                    Communication communicationHandler, int faults){
         super(servers,privateKey,communicationHandler,faults);
     }
@@ -52,7 +54,7 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister{
     public Message read(Message msg) throws CryptoException {
         //Update read timestamp
 
-        //changed this atributes to public, leonor if you want can make them private and do set(get()+1) etc
+        //TODO: changed this atributes to public, leonor if you want can make them private and do set(get()+1) etc
         rid ++;
         msg.setRid(rid);
 
@@ -77,7 +79,8 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister{
         //save response
         Message response = Collections.max(readList);
 
-        //what strings and parameters does one put here lads?
+
+        //TODO what strings and parameters does one put here lads?
         this.writeBack(response,"","",false);
 
         return response;

@@ -2,6 +2,7 @@ package communication;
 
 import crypto.Crypto;
 import crypto.CryptoException;
+import javafx.util.Pair;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -17,7 +18,7 @@ public class ByzantineRegularRegister {
 
 
     //List of server replicas
-    private final HashMap<String, Integer> servers;
+    private final List<Pair<String, Integer>> servers;
 
     //Private key of the client
     public final PrivateKey privateKey;
@@ -44,15 +45,15 @@ public class ByzantineRegularRegister {
     public List<Message> readList = new ArrayList<Message>();
 
 
-    public ByzantineRegularRegister(HashMap<String, Integer> servers, PrivateKey privateKey,
+    public ByzantineRegularRegister(List<Pair<String, Integer>> servers, PrivateKey privateKey,
                                        Communication communicationHandler, int faults) {
         this.servers = servers;
         this.privateKey = privateKey;
         this.communicationHandler = communicationHandler;
-        this.quorum = (servers.size() + faults) / 2;
+        this.quorum = (int) Math.ceil(((double)servers.size() + faults) / 2);
         //Creates a thread pool with one thread for server replica
         this.executor = Executors.newFixedThreadPool(servers.size());
-        System.out.println("Quorum = " + quorum);
+        System.out.println("Quorum = " + quorum + " serverCount: " + servers.size());
     }
 
 
@@ -151,9 +152,9 @@ public class ByzantineRegularRegister {
     public void broadcast(final Message msg, final int type) throws CryptoException {
         msg.setSignature(Crypto.sign(msg.getBytesToSign(), privateKey));
 
-        for(Map.Entry<String, Integer> entry : servers.entrySet()) {
-            final String host = entry.getKey();
-            final int port = entry.getValue();
+        for(Pair<String, Integer> pair : servers) {
+            final String host = pair.getKey();
+            final int port = pair.getValue();
 
             executor.submit(new Callable<Void>() {
                 @Override
