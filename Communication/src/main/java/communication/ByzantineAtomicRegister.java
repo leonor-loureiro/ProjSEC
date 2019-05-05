@@ -33,7 +33,7 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
         writeBackMsg.addFreshness(ID);
 
         Message writeBackRsp =
-        super.write(writeBackMsg, response.getGoodID(), response.getSellerID(), response.isForSale(), response.getWts());
+        super.writeImpl(writeBackMsg, response.getGoodID(), response.getSellerID(), response.isForSale(), response.getWts());
 
         //TODO: validate server response
 

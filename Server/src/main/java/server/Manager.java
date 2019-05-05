@@ -491,7 +491,7 @@ public class Manager implements IMessageProcess {
      * Responsible for adding a nonce and a timestamp to a message
      */
     private void addFreshness(Message response) {
-        response.addFreshness("server");
+        response.addFreshness("server_" + port);
     }
 
      /**

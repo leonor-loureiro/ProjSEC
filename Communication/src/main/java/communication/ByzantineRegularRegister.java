@@ -69,14 +69,25 @@ public class ByzantineRegularRegister {
     public Message write(Message msg, String goodID, String userID, boolean isForSale)
             throws CryptoException {
 
-        //Update write timestamp
-        wts ++;
+        Message getTsMsg = new Message();
+        getTsMsg.setOperation(Message.Operation.GET_STATE_OF_GOOD);
+        getTsMsg.setGoodID(goodID);
+        //Set user ID
+        getTsMsg.setBuyerID(ID);
+        getTsMsg.addFreshness(ID);
 
-        return write(msg, goodID, userID, isForSale, wts);
+        Message getTsResp = readImpl(getTsMsg);
+        //TODO validate Notary signature (Is necessary?)
+
+        //Increment write timestamp
+        wts = getTsResp.getWts()+1;
+
+        return writeImpl(msg, goodID, userID, isForSale, wts);
     }
 
 
-    protected Message write(Message msg, String goodID, String userID, boolean isForSale, int wts) throws CryptoException {
+    Message writeImpl(Message msg, String goodID, String userID, boolean isForSale, int wts) throws CryptoException {
+        System.out.println("Send " + msg.getOperation() + " wts=" +wts);
         //Update last write timestamp seen
         this.wts = wts;
         msg.setWts(wts);
@@ -104,13 +115,17 @@ public class ByzantineRegularRegister {
         return ackList.get(0);
     }
 
+    public Message read(Message msg) throws CryptoException {
+        return readImpl(msg);
+    }
+
 
     /**
      * Sends a message that requests a read operation
      * @param msg message to send
      * @return server's response
      */
-    public Message read(Message msg) throws CryptoException {
+    private Message readImpl(Message msg) throws CryptoException {
         //Update read timestamp
         rid ++;
         msg.setRid(rid);

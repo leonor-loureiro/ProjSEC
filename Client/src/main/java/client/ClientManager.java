@@ -176,9 +176,11 @@ public class ClientManager implements IMessageProcess {
 
         msg.setBuyerID(user.getUserID());;
         msg.setOperation(Message.Operation.GET_STATE_OF_GOOD);
-        Message response = null;
 
         msg.addFreshness(user.getUserID());
+
+        Message response = null;
+
 
         /*try {
             signMessage(msg, user.getPrivateKey());
