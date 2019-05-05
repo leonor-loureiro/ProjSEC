@@ -32,12 +32,18 @@ public class Manager implements IMessageProcess {
     //Testing mode (does not update real mapping)
     private static boolean TESTING_ON = false;
 
+    //Byzantine Mode
+    private static boolean BYZANTINE_ON = false;
+
     //Name of the file where the users -> goods mapping is stored
-    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users.ser";
+    private static final String USERS_GOODS_MAPPING = "../resourcesServer/goods_users";
     private static final String NONCES = "../resourcesServer/nonces";
 
     //Validity time
     private static final int VALIDITY = 900000;
+
+    // TODO: is this necessary?
+    private int wts;
 
     //Singleton instance
     static Manager manager = null;
@@ -53,11 +59,25 @@ public class Manager implements IMessageProcess {
     private ArrayList<String> nonces = new ArrayList<>();
     //Nonces generator
     private Random random = new Random();
+    private int port;
 
+    /**
+     *
+     * @return
+     */
     public static Manager getInstance(){
         if(manager == null)
             manager = new Manager();
         return manager;
+    }
+
+
+    private String userGoodsPath(){
+        return USERS_GOODS_MAPPING + port + ".ser";
+    }
+
+    private String getNoncesPath(){
+        return NONCES + port + ".ser";
     }
 
 
@@ -82,12 +102,21 @@ public class Manager implements IMessageProcess {
         }
     }
 
+    public static void setByzantine(boolean mode) {
+        BYZANTINE_ON = mode;
+    }
+
+    public static boolean getByzantine() {
+        return BYZANTINE_ON;
+    }
+
     /**
      * This method is responsible for launching the notary server
      * @param port the port the service runs on
      */
     public void startServer(int port) throws IOException, ClassNotFoundException {
-        System.out.println("Starting server...");
+        this.port = port;
+        System.out.println("Starting server on port " + port + "...");
         loadResources();
         requestReceiver.initializeInNewThread(port, this);
     }
@@ -110,13 +139,13 @@ public class Manager implements IMessageProcess {
     public void loadResources() throws IOException, ClassNotFoundException {
         users = (ArrayList<User>) ResourcesLoader.loadUserList();
 
-        if(new File(USERS_GOODS_MAPPING).exists())
-            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(USERS_GOODS_MAPPING);
+        if(new File(userGoodsPath()).exists())
+            goods = (ArrayList<Good>) ResourcesLoader.loadNotaryGoodsList(userGoodsPath());
         else
             goods = (ArrayList<Good>)ResourcesLoader.loadGoodsList();
 
-        if(new File(NONCES).exists()) {
-            nonces = (ArrayList<String>) ResourcesLoader.loadNonces(NONCES);
+        if(new File(getNoncesPath()).exists()) {
+            nonces = (ArrayList<String>) ResourcesLoader.loadNonces(getNoncesPath());
         }else
             nonces = new ArrayList<>();
     }
@@ -330,7 +359,10 @@ public class Manager implements IMessageProcess {
                     message.getWts(), message.getRid());
         }
 
-        updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature());
+        if(good.getTs() == message.getWts())
+            System.out.println("Already have updated value");
+        else
+            updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature());
 
         Message response = new Message();
         response.setOperation(Message.Operation.WRITE_BACK);
@@ -396,13 +428,13 @@ public class Manager implements IMessageProcess {
 
                 switch (message.getOperation()) {
                     case INTENTION_TO_SELL:
-                        return intentionToSell(message);
+                            return intentionToSell(message);
 
                     case GET_STATE_OF_GOOD:
                         return getStateOfGood(message);
 
                     case TRANSFER_GOOD:
-                        return transferGood(message);
+                            return transferGood(message);
 
                     case WRITE_BACK:
                         return writeBack(message);
@@ -445,7 +477,7 @@ public class Manager implements IMessageProcess {
         nonces.add(nonce);
         try {
             if(!TESTING_ON)
-                AtomicFileManager.atomicWriteObjectToFile(NONCES, nonces);
+                AtomicFileManager.atomicWriteObjectToFile(getNoncesPath(), nonces);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("Failed to persistently store nonce");
@@ -526,7 +558,7 @@ public class Manager implements IMessageProcess {
             return true;
 
         try {
-            AtomicFileManager.atomicWriteObjectToFile(USERS_GOODS_MAPPING, goods);
+            AtomicFileManager.atomicWriteObjectToFile(userGoodsPath(), goods);
             return true;
 
         } catch (IOException | ClassNotFoundException e) {

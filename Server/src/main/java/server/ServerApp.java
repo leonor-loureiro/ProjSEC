@@ -28,7 +28,16 @@ public class ServerApp {
                     "                                                                         \n"
             .replace("\\", "\\\\"));
 
-            Manager.getInstance().startServer(8080);
+            String portnumber = args[0];
+
+            String byzantineMode = args[1];
+
+            Manager.getInstance().startServer(Integer.parseInt(portnumber));
+            
+            if(byzantineMode.equals("true")) {
+                Manager.setByzantine(true);
+                System.out.println(Manager.getByzantine());
+            }
 
 
             BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in));
@@ -37,6 +46,8 @@ public class ServerApp {
 
             // initializes server shutdown
             Manager.getInstance().closeServer();
+
+
 
         }catch(Exception e){
             e.printStackTrace();

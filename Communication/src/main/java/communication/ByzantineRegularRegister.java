@@ -2,6 +2,7 @@ package communication;
 
 import crypto.Crypto;
 import crypto.CryptoException;
+import javafx.util.Pair;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -12,17 +13,17 @@ import java.util.concurrent.Executors;
 
 public class ByzantineRegularRegister {
 
-    private static final int WRITE = 100;
-    private static final int READ = 200;
+    public static final int WRITE = 100;
+    public static final int READ = 200;
 
     protected final String ID;
 
 
     //List of server replicas
-    private final HashMap<String, Integer> servers;
+    private final List<Pair<String, Integer>> servers;
 
     //Private key of the client
-    private final PrivateKey privateKey;
+    public final PrivateKey privateKey;
 
     //Handler for the communication between processes
     private final Communication communicationHandler;
@@ -31,31 +32,32 @@ public class ByzantineRegularRegister {
     private final ExecutorService executor;
 
     //Quorum
-    private final int quorum;
+    public final int quorum;
 
     //Read timestamp
-    private int rid = 0;
+    public int rid = 0;
 
     //Write timestamp
     private int wts = 0;
 
     //Stores the write responses
-    private List<Message> ackList = new ArrayList<Message>();
+    public List<Message> ackList = new ArrayList<Message>();
 
     //Stores the read responses
-    private List<Message> readList = new ArrayList<Message>();
+    public List<Message> readList = new ArrayList<Message>();
 
 
-    public ByzantineRegularRegister(String id, HashMap<String, Integer> servers, PrivateKey privateKey,
+
+    public ByzantineRegularRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey,
                                     Communication communicationHandler, int faults) {
         ID = id;
         this.servers = servers;
         this.privateKey = privateKey;
         this.communicationHandler = communicationHandler;
-        this.quorum = (servers.size() + faults) / 2;
+        this.quorum = (int) Math.ceil(((double)servers.size() + faults) / 2);
         //Creates a thread pool with one thread for server replica
         this.executor = Executors.newFixedThreadPool(servers.size());
-        System.out.println("Quorum = " + quorum);
+        System.out.println("Quorum = " + quorum + " serverCount: " + servers.size());
     }
 
 
@@ -75,6 +77,8 @@ public class ByzantineRegularRegister {
 
 
     protected Message write(Message msg, String goodID, String userID, boolean isForSale, int wts) throws CryptoException {
+        //Update last write timestamp seen
+        this.wts = wts;
         msg.setWts(wts);
 
         //Clear previous responses
@@ -157,12 +161,12 @@ public class ByzantineRegularRegister {
         readList.add(msg);
     }
 
-    private void broadcast(final Message msg, final int type) throws CryptoException {
+    public void broadcast(final Message msg, final int type) throws CryptoException {
         msg.setSignature(Crypto.sign(msg.getBytesToSign(), privateKey));
 
-        for(Map.Entry<String, Integer> entry : servers.entrySet()) {
-            final String host = entry.getKey();
-            final int port = entry.getValue();
+        for(Pair<String, Integer> pair : servers) {
+            final String host = pair.getKey();
+            final int port = pair.getValue();
 
             executor.submit(new Callable<Void>() {
                 @Override

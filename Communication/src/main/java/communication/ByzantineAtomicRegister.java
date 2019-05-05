@@ -1,19 +1,23 @@
 package communication;
 
-import crypto.CryptoException;
 
+import crypto.CryptoException;
+import javafx.util.Pair;
 import java.security.PrivateKey;
-import java.util.HashMap;
+import java.util.List;
+
 
 public class ByzantineAtomicRegister extends ByzantineRegularRegister {
 
-    public ByzantineAtomicRegister(String id, HashMap<String, Integer> servers, PrivateKey privateKey,
+    public ByzantineAtomicRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey,
                                    Communication communicationHandler, int faults) {
         super(id, servers, privateKey, communicationHandler, faults);
+
     }
 
     @Override
     public Message read(Message msg) throws CryptoException {
+
         Message response = super.read(msg);
 
         //Write-back phase

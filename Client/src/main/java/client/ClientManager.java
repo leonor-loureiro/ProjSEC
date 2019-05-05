@@ -11,6 +11,7 @@ import commontypes.exception.UserNotExistException;
 import communication.*;
 import crypto.Crypto;
 import crypto.CryptoException;
+import javafx.util.Pair;
 import resourcesloader.ResourcesLoader;
 
 import java.io.File;
@@ -88,8 +89,7 @@ public class ClientManager implements IMessageProcess {
             requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
 
 
-            HashMap<String, Integer> servers = new HashMap();
-            servers.put(HOST, notaryPort);
+        List<Pair<String, Integer>> servers = ResourcesLoader.loadServersInfo();
 
             for(Good good: goods){
                 good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), sendRequest, 1));

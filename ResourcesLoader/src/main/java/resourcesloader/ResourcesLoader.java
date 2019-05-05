@@ -7,10 +7,10 @@ import crypto.CryptoException;
 
 import java.io.*;
 import java.security.KeyPair;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
+import javafx.util.Pair;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -28,8 +28,6 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.util.Calendar;
-import java.util.Date;
 
 
 /**
@@ -37,13 +35,52 @@ import java.util.Date;
  */
 public class ResourcesLoader {
 
-    public static final String KEYSTORE_TYPE = "JCEKS";
+    private static final String KEYSTORE_TYPE = "JCEKS";
+    final private static int startingServerPort = 8080;
     final private static int startingPort = 8089;
     final private static String address = "localhost";
     final private static String resourcesPath = "../resources/";
-    final public static String alias = "userCert";
-    List<User> users = new ArrayList<User>();
-    List<Good> goods = new ArrayList<Good>();
+    private final static String alias = "userCert";
+    private List<User> users = new ArrayList<User>();
+    private List<Good> goods = new ArrayList<Good>();
+    private List<Pair<String, Integer>> servers = new ArrayList<>();
+
+
+    /**
+     * Creates the map with the servers' ports and adresss
+     * @param initialPort the starting port for the servers
+     */
+    private void createServers(int initialPort, int numberOfServers){
+
+        for(int i = 0; i < numberOfServers; i++){
+            servers.add(new Pair<>(address, initialPort + i));
+        }
+    }
+
+    /**
+     * Stores the given lists of servers
+     * @param servers the list to be stored
+     * @throws IOException if an error happens
+     */
+    public static void storeServers(List<Pair<String, Integer>> servers) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(resourcesPath+"serverInfo.ser"));
+        out.writeObject(servers);
+        out.flush();
+        out.close();
+    }
+
+    /**
+     * loads and deserializes the map containing the serverInformation
+     * @return a map with the server info
+     */
+    public static List<Pair<String, Integer>> loadServersInfo() throws IOException, ClassNotFoundException {
+        // Deserialize
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(resourcesPath+"serverInfo.ser"));
+        List<Pair<String, Integer>> users = (List<Pair<String, Integer>>) in.readObject();
+        in.close();
+
+        return users;
+    }
 
 
     /**
@@ -76,8 +113,6 @@ public class ResourcesLoader {
             e.printStackTrace();
             System.out.println("unable to create " + userID + "'s certificate");
         }
-
-
     }
 
     /**
@@ -227,6 +262,14 @@ public class ResourcesLoader {
         return selfSignedCert;
     }
 
+    /**
+     * Creates and stores a self signed certificate
+     * @param keyPair the key pair to be stored
+     * @param keystoreFileName the name of the keystore file
+     * @param alias the alias
+     * @param passwordArray the password to protect the key
+     * @return the certificate
+     */
     public static Certificate CreateAndStoreCertificate(KeyPair keyPair, String keystoreFileName, String alias, char[] passwordArray)
             throws CertificateException, OperatorCreationException, IOException, KeyStoreException, NoSuchAlgorithmException {
 
@@ -256,6 +299,12 @@ public class ResourcesLoader {
         return selfSignedCertificate;
     }
 
+    /**
+     * loads the given user's certificate
+     * @param user username of the user
+     * @param keystorePwd the password storing the certificate
+     * @return the certificate
+     */
     public Certificate loadUserCertificate(String user, String keystorePwd) throws CryptoException, KeyStoreException {
 
 
@@ -269,7 +318,6 @@ public class ResourcesLoader {
      * @param keystoreFile file where the keystore is
      * @param keystorePwd keystore password
      * @return the keystore
-     * @throws CryptoException
      */
     private static KeyStore loadKeystore(String keystoreFile, String keystorePwd) throws CryptoException {
         try {
@@ -310,12 +358,18 @@ public class ResourcesLoader {
         int usersCount = 3;
         int itemForSaleCount = 3;
         int itemNotForSaleCount = 3;
+        int serverCount = 3;
 
-        if(args. length == 3){
+
+        if(args. length == 4){
             usersCount = Integer.parseInt(args[0]);
             itemForSaleCount = Integer.parseInt(args[1]);
             itemNotForSaleCount = Integer.parseInt(args[2]);
+            serverCount = Integer.parseInt(args[3]);
         }
+
+        rsl.createServers(startingServerPort, serverCount);
+
 
         for(int i = 0; i < usersCount; i++){
             try {
@@ -336,9 +390,11 @@ public class ResourcesLoader {
             }
 
         }
+
         try {
             ResourcesLoader.storeUserList(rsl.users);
             ResourcesLoader.storeGoods(rsl.goods);
+            ResourcesLoader.storeServers(rsl.servers);
         } catch (IOException e) {
             e.printStackTrace();
         }
