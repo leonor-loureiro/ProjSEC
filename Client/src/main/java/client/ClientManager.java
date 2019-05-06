@@ -1,9 +1,6 @@
 package client;
 
-import commontypes.AtomicFileManager;
-import commontypes.Good;
-import commontypes.User;
-import commontypes.Utils;
+import commontypes.*;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import commontypes.exception.SaveNonceException;
@@ -11,7 +8,6 @@ import commontypes.exception.UserNotExistException;
 import communication.*;
 import crypto.Crypto;
 import crypto.CryptoException;
-import javafx.util.Pair;
 import resourcesloader.ResourcesLoader;
 
 import java.io.File;
@@ -21,7 +17,6 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -89,7 +84,7 @@ public class ClientManager implements IMessageProcess {
             requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
 
 
-        List<Pair<String, Integer>> servers = ResourcesLoader.loadServersInfo();
+        List<ServerInfo> servers = ResourcesLoader.loadServersInfo();
 
             for(Good good: goods){
                 good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), sendRequest, 1));
