@@ -58,6 +58,9 @@ public class ClientManager implements IMessageProcess {
 
     private PublicKey notaryPublicKey;
     private ArrayList<String> nonces = new ArrayList<>();
+    private String logFile;
+
+    private ArrayList<Message> log = new ArrayList<>();
 
     public static ClientManager getInstance(){
 
@@ -89,6 +92,9 @@ public class ClientManager implements IMessageProcess {
             for(Good good: goods){
                 good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), sendRequest, 1));
         }
+
+
+            logFile = "../resources/" + this.getUser().getUserID() + ".log";
     }
 
 
@@ -126,6 +132,7 @@ public class ClientManager implements IMessageProcess {
         //Message response = sendMessage(msg, HOST, notaryPort);
         Message response = null;
         response = good.getBrr().write(msg, goodID, good.getUserID(), true);
+        saveResponse(response);
         if(response == null)
             return;
 
@@ -152,7 +159,6 @@ public class ClientManager implements IMessageProcess {
             System.out.println(response.getErrorMessage());
         }
     }
-
 
 
     /**
@@ -249,6 +255,7 @@ public class ClientManager implements IMessageProcess {
 
         System.out.println("Sent buy good to " + seller.getPort());
         response = sendMessage(msg, HOST, seller.getPort());
+        saveResponse(response);
         if(response == null)
             return;
 
@@ -322,6 +329,7 @@ public class ClientManager implements IMessageProcess {
         //response = sendMessage(msg, HOST, notaryPort);
 
         response = good.getBrr().write(msg, good.getGoodID(), good.getUserID(), false);
+        saveResponse(response);
         if(response == null)
             return createErrorMessage("Failed to send request to Notary", message.getBuyerID());
 
@@ -591,6 +599,22 @@ public class ClientManager implements IMessageProcess {
                 nonces = new ArrayList<>();
         }
         return true;
+
+    }
+
+    /**
+     * Saves a response to the log
+     * @param response
+     */
+    private void saveResponse(Message response) {
+        log.add(response);
+        try {
+            AtomicFileManager.atomicWriteObjectToFile(logFile,log);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 
