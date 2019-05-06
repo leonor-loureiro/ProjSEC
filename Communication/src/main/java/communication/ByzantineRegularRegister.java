@@ -20,7 +20,7 @@ public class ByzantineRegularRegister {
 
 
     //List of server replicas
-    private final List<Pair<String, Integer>> servers;
+    private final List<ServerInfo> servers;
 
     //Private key of the client
     public final PrivateKey privateKey;
@@ -48,7 +48,7 @@ public class ByzantineRegularRegister {
 
 
 
-    public ByzantineRegularRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey,
+    public ByzantineRegularRegister(String id, List<ServerInfo> servers, PrivateKey privateKey,
                                     Communication communicationHandler, int faults) {
         ID = id;
         this.servers = servers;
@@ -179,9 +179,9 @@ public class ByzantineRegularRegister {
     public void broadcast(final Message msg, final int type) throws CryptoException {
         msg.setSignature(Crypto.sign(msg.getBytesToSign(), privateKey));
 
-        for(Pair<String, Integer> pair : servers) {
-            final String host = pair.getKey();
-            final int port = pair.getValue();
+        for(ServerInfo server : servers) {
+            final String host = server.getAddress();
+            final int port = server.getPort();
 
             executor.submit(new Callable<Void>() {
                 @Override

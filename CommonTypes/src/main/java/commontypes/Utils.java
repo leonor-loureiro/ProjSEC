@@ -20,7 +20,6 @@ public class Utils {
      * This function is responsible for serializing an array list
      * @param arrayList array list to be serialized
      * @param filename file to store the serialized array list
-     * @throws IOException
      */
     public static void serializeArrayList(ArrayList<?> arrayList, String filename) throws IOException {
         FileOutputStream fos = null;
@@ -38,11 +37,9 @@ public class Utils {
     }
 
     /**
-     * This funtion is responsible for deserializing an array list
+     * This function is responsible for deserializing an array list
      * @param filename name of the file where the serialized object is stored
      * @return array list
-     * @throws IOException
-     * @throws ClassNotFoundException
      */
     public static ArrayList deserializeArrayList( String filename) throws IOException, ClassNotFoundException {
         ArrayList arrayList;
@@ -101,6 +98,30 @@ public class Utils {
         return hexText.toString();
     }
 
+    /**
+     * Find the random that hashed with the data has the given prefix
+     * @param prefix md5 prefix
+     * @param data data
+     * @return random value
+     */
+
+    public static int proofOfWork(String prefix, String data) throws NoSuchAlgorithmException {
+        String md5;
+        int random = 0;
+        int end = prefix.length();
+        while(true){
+            md5 = computeMD5(data + random);
+            System.out.println(random + " -- " + md5.substring(0, end));
+            if(md5.substring(0, end).equals(prefix))
+                return random;
+            random++;
+        }
+    }
+
+    /**
+     * Finds the data that generates the md5 hash
+     * @param MD5 hash
+     */
     public static List<String> crackMD5(String MD5){
         List<String> matches = new ArrayList<>();
         String word;
@@ -115,6 +136,10 @@ public class Utils {
         return matches;
     }
 
+
+    /**
+     * Finds the password that encrypting with AES-128 the plaintext generates the cypher
+     */
     public static String crackPassword(byte[] plainText, byte[] cypher, byte[] IV){
         List<String> possiblePasswords = new ArrayList<>();
         nCharacterWords(possiblePasswords, alphabet, "", 24);
@@ -133,6 +158,13 @@ public class Utils {
     }
 
 
+    /**
+     * Generates all possible words in the alphabet with the given prefix and length n
+     * @param out stores the output
+     * @param alphabet word's alphabet
+     * @param prefix word's prefix
+     * @param n word's length
+     */
     private static void nCharacterWords(List<String> out, char[] alphabet, String prefix, int n){
         if(n == 0) {
             //System.out.println(prefix);
@@ -144,6 +176,11 @@ public class Utils {
         }
     }
 
+    /**
+     * Generates all possible combinations of the characters in the string
+     * @param chars input string
+     * @return set of possible combinations
+     */
     private static HashSet<String> permute(String chars)
     {
 
@@ -165,33 +202,53 @@ public class Utils {
         return set;
     }
 
-    public static String bytesToHex(byte[] hashInBytes) {
+    /**
+     * Converts a byte array to hex string
+     * @param byteArray byte array
+     * @return hex string
+     */
+    public static String bytesToHex(byte[] byteArray) {
 
         StringBuilder sb = new StringBuilder();
-        for (byte b : hashInBytes) {
+        for (byte b : byteArray) {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
 
     }
+
+    /**
+     * Selects a random word
+     * @param alphabet word's alphabet
+     * @param n word's length
+     * @return random word
+     */
     private static String randomString(char[] alphabet, int n){
         StringBuilder str = new StringBuilder();
         Random random = new Random();
         while (str.length() < n){
-            int index = random.nextInt(2);
+            int index = random.nextInt(alphabet.length);
             str.append(alphabet[index]);
         }
         return str.toString();
     }
 
 
-    public static void main(String[] args) throws CryptoException {
-        String pass = randomString(alphabet, 24);
+    public static void main(String[] args) throws CryptoException, NoSuchAlgorithmException {
+        /*String pass = randomString(alphabet, 24);
         System.out.println(pass);
         Pair<byte[], byte[]> cipherAndIV = Crypto.encryptAES(pass.getBytes(), "leonor".getBytes(), null);
         long start = System.currentTimeMillis();
         System.out.println(crackPassword("leonor".getBytes(), cipherAndIV.getKey(), cipherAndIV.getValue()));
-        System.out.println("Time = " + (System.currentTimeMillis() - start));
+        System.out.println("Time = " + (System.currentTimeMillis() - start));*/
+
+        long start = System.currentTimeMillis();
+        String prefix = "12345";
+
+        String data = Message.Operation.TRANSFER_GOOD + "|buyer|seller|good00|true|6|seller_7364592|";
+        int result = proofOfWork(prefix, data);
+        System.out.println("result=" + result);
+        System.out.println("Time = " + (System.currentTimeMillis() - start)/1000);
     }
 
 }
