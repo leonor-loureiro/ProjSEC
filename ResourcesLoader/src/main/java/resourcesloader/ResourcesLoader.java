@@ -358,7 +358,7 @@ public class ResourcesLoader {
         int usersCount = 3;
         int itemForSaleCount = 3;
         int itemNotForSaleCount = 3;
-        int serverCount = 3;
+        int serverCount = 4;
 
 
         if(args. length == 4){
