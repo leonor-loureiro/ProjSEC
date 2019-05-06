@@ -542,7 +542,7 @@ public class Manager implements IMessageProcess {
      * @param isForSale whether its for sale or not
      * @return true if was successful, false otherwise
      */
-    private boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
+    private synchronized boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
         if(ts <= good.getTs()) {
             System.out.println("Old write " + ts + "/" + good.getTs());
             return false;
