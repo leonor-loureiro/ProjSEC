@@ -19,7 +19,7 @@ public class AtomicFileManager {
     }
 
     public static void atomicWriteObjectToFile(String destFilename, ArrayList<?> content)
-            throws IOException, ClassNotFoundException {
+            throws IOException {
 
         //Temp file
         File tempFile = null;
@@ -53,18 +53,10 @@ public class AtomicFileManager {
             //Close buffer
             fos.close();
 
-            //Confirm the data was successfully saved to disk (not sure if necessary)
-            fis = new FileInputStream(tempFile.getAbsolutePath());
-            ois = new ObjectInputStream(fis);
-            ArrayList<Good> arrayList = (ArrayList) ois.readObject();
 
-            fis.close();
-
-            if(arrayList.equals(content)){
-                //Data was successfully written to temp file
-                //replace destinationFile with tempFile
-                atomicFileMove(tempFile.getAbsolutePath(), destFilename);
-            }
+            //Data was successfully written to temp file
+            //replace destinationFile with tempFile
+            atomicFileMove(tempFile.getAbsolutePath(), destFilename);
 
         }finally {
             //Close output streams/buffers

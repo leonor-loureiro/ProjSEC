@@ -1,8 +1,5 @@
 package commontypes;
 
-
-import communication.ByzantineAtomicRegister;
-
 import java.io.Serializable;
 
 /**
@@ -12,7 +9,7 @@ public class Good  implements Serializable {
     private String goodID;
     private String userID;
     private boolean forSale;
-    private ByzantineAtomicRegister bar;
+
     private String signature;
     private int ts;
 
@@ -46,13 +43,6 @@ public class Good  implements Serializable {
         this.forSale = forSale;
     }
 
-    public ByzantineAtomicRegister getBrr() {
-        return bar;
-    }
-
-    public void setBrr(ByzantineAtomicRegister brr) {
-        this.bar = brr;
-    }
 
     public String getSignature() {
         return signature;

@@ -1,4 +1,4 @@
-package commontypes.exception;
+package communication;
 
 public class SaveNonceException extends Exception {
 }

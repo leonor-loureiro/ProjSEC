@@ -3,7 +3,7 @@ package server;
 import commontypes.Good;
 import commontypes.User;
 import commontypes.Utils;
-import commontypes.exception.SaveNonceException;
+import communication.SaveNonceException;
 import communication.IMessageProcess;
 import communication.Message;
 import communication.RequestsReceiver;
@@ -15,7 +15,6 @@ import commontypes.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
-import javax.jws.soap.SOAPBinding;
 import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
@@ -234,6 +233,8 @@ public class Manager implements IMessageProcess {
 
         addFreshness(response);
 
+        response.getBytesToSign();
+
         return signMessage(response);
     }
 
@@ -407,9 +408,11 @@ public class Manager implements IMessageProcess {
     private boolean isSignatureValid(Message message, PublicKey  publicKey)
             throws CryptoException {
         if(message.getSignature() == null) {
-            System.out.println("Signature is null");
             return false;
         }
+        boolean v = Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+
+            message.print();
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
@@ -466,7 +469,7 @@ public class Manager implements IMessageProcess {
     /**
      * Checks if a message is fresh and stores the nonce persistently
      */
-    public boolean isFresh(Message message) throws SaveNonceException {
+    public synchronized boolean isFresh(Message message) throws SaveNonceException {
         String nonce = message.getNonce();
 
         //Check if request is fresh
@@ -478,7 +481,7 @@ public class Manager implements IMessageProcess {
         try {
             if(!TESTING_ON)
                 AtomicFileManager.atomicWriteObjectToFile(getNoncesPath(), nonces);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Failed to persistently store nonce");
             throw new SaveNonceException();
@@ -542,7 +545,7 @@ public class Manager implements IMessageProcess {
      * @param isForSale whether its for sale or not
      * @return true if was successful, false otherwise
      */
-    private boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
+    private synchronized boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
         if(ts <= good.getTs()) {
             System.out.println("Old write " + ts + "/" + good.getTs());
             return false;
@@ -561,7 +564,7 @@ public class Manager implements IMessageProcess {
             AtomicFileManager.atomicWriteObjectToFile(userGoodsPath(), goods);
             return true;
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }

@@ -2,11 +2,12 @@ package communication;
 
 import crypto.Crypto;
 import crypto.CryptoException;
-import javafx.util.Pair;
 
 import java.io.IOException;
 import java.security.PrivateKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,11 +17,11 @@ public class ByzantineRegularRegister {
     private static final int WRITE = 100;
     private static final int READ = 200;
 
+    private final ProcessInfo senderInfo;
     protected final String ID;
 
-
     //List of server replicas
-    private final List<Pair<String, Integer>> servers;
+    private final List<ProcessInfo> servers;
 
     //Private key of the client
     private final PrivateKey privateKey;
@@ -45,7 +46,9 @@ public class ByzantineRegularRegister {
 
 
 
-    public ByzantineRegularRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey, int faults) {
+
+    public ByzantineRegularRegister(String id, List<ProcessInfo> servers, PrivateKey privateKey, int faults) {
+
         ID = id;
         this.servers = servers;
         this.privateKey = privateKey;
@@ -53,6 +56,7 @@ public class ByzantineRegularRegister {
         //Creates a thread pool with one thread for server replica
         this.executor = Executors.newFixedThreadPool(servers.size());
         System.out.println("Quorum = " + quorum + " serverCount: " + servers.size());
+        senderInfo = new ProcessInfo(id, privateKey);
     }
 
 
@@ -69,10 +73,8 @@ public class ByzantineRegularRegister {
         getTsMsg.setGoodID(goodID);
         //Set user ID
         getTsMsg.setBuyerID(ID);
-        getTsMsg.addFreshness(ID);
 
         Message getTsResp = readImpl(getTsMsg);
-        //TODO validate Notary signature (Is necessary?)
 
         //Increment write timestamp
         wts = getTsResp.getWts()+1;
@@ -82,7 +84,6 @@ public class ByzantineRegularRegister {
 
 
     Message writeImpl(Message msg, String goodID, String userID, boolean isForSale, int wts) throws CryptoException {
-        System.out.println("Send " + msg.getOperation() + " wts=" +wts);
         //Update last write timestamp seen
         this.wts = wts;
         msg.setWts(wts);
@@ -106,7 +107,6 @@ public class ByzantineRegularRegister {
             }
         }
 
-        //TODO: find out which response should be returned
         return ackList.get(0);
     }
 
@@ -139,7 +139,6 @@ public class ByzantineRegularRegister {
             }
         }
 
-        System.out.println("Quorum reads");
         return Collections.max(readList);
     }
 
@@ -149,7 +148,6 @@ public class ByzantineRegularRegister {
      * @param msg write response
      */
     private synchronized void handleWriteResponse(Message msg){
-        System.out.println("Received -WRITE- " + msg.getWts() + "/" + wts);
         msg.getBytesToSign();
         if(wts != msg.getWts())
             return;
@@ -163,38 +161,51 @@ public class ByzantineRegularRegister {
      * @param msg message received
      */
     private synchronized void handleReadResponse(Message msg){
-        System.out.println("Received -READ- " + msg.getRid() + "/" + rid);
         msg.getBytesToSign();
         if(rid != msg.getRid())
             return;
+
         //TODO: verify value signature
         readList.add(msg);
     }
 
-    public void broadcast(final Message msg, final int type) throws CryptoException {
-        msg.setSignature(Crypto.sign(msg.getBytesToSign(), privateKey));
+    private void broadcast(final Message msg, final int type) throws CryptoException {
 
-        for(Pair<String, Integer> pair : servers) {
-            final String host = pair.getKey();
-            final int port = pair.getValue();
+
+        for(final ProcessInfo serverInfo : servers) {
+            final String host = serverInfo.getHost();
+            final int port = serverInfo.getPort();
 
             executor.submit(new Callable<Void>() {
                 @Override
-                public Void call() throws IOException, ClassNotFoundException {
+                public Void call(){
+
                     Message response = null;
                     try {
-                        response = Communication.sendMessage(host, port, msg);
-                        System.out.println("Sent wts=" + msg.getWts() + "/rid=" + msg.getRid());
+                        //authenticator.authenticate(sent);
 
+                        response = AuthenticatedPerfectLinks.sendMessage(senderInfo, serverInfo, msg);
+
+
+                       /* if(!authenticator.isValid(response))
+                            return null;*/
+
+                        if(type == WRITE)
+                            handleWriteResponse(response);
+                        else if(type == READ)
+                            handleReadResponse(response);
+
+
+                    //TODO: Figure out what to do in these cases
                     } catch (IOException | ClassNotFoundException e) {
                         System.out.println("Failed to send message to " + host + ":" + port);
-                        throw e;
-                    }
-                    if(type == WRITE)
-                        handleWriteResponse(response);
-                    else if(type == READ)
-                        handleReadResponse(response);
-
+                    } catch (NotFreshException e) {
+                        System.out.println("Response is not fresh");
+                    } catch (AuthenticationException e) {
+                        System.out.println("Authentication failed");
+                    } catch (SaveNonceException | CryptoException e) {
+                        e.printStackTrace();
+                     }
                     return null;
                 }
             });

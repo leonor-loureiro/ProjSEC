@@ -37,6 +37,7 @@ public class Message implements Serializable, Comparable {
     private String signature;
     private Message intentionToBuy;
     private String sender;
+    private String receiver;
 
     //Byzantine Registers Variables
     private int wts;
@@ -165,6 +166,21 @@ public class Message implements Serializable, Comparable {
         this.valSignature = valSignature;
     }
 
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public String getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
+    }
 
     public String getDataToChallenge(){
         return goodID + "|" + buyerID + "|" + sellerID + "|" + wts + "|" + nonce;
@@ -179,15 +195,6 @@ public class Message implements Serializable, Comparable {
         this.setNonce(ID + random.nextInt());
     }
 
-    /**
-     * Responsible for validating the message's signature
-     */
-    public boolean isSignatureValid(PublicKey publicKey) throws CryptoException {
-
-        if(getSignature() == null)
-            return false;
-        return Crypto.verifySignature(getSignature(), getBytesToSign(), publicKey);
-    }
 
     public byte[] getBytesToSign(){
         ObjectOutputStream oos = null;
@@ -204,7 +211,7 @@ public class Message implements Serializable, Comparable {
             for (Field field : fields) {
                 Object obj = field.get(this);
                 if (!field.getName().equals("signature") && !field.getName().equals("random") && obj != null) {
-                    System.out.println(field.getName() + " = " + obj);
+                    //System.out.println(field.getName() + " = " + obj);
                     oos.writeObject(obj);
                     oos.flush();
                 }
@@ -219,6 +226,23 @@ public class Message implements Serializable, Comparable {
         }
 
         return bytesToSign;
+    }
+
+    public synchronized void print(){
+      try {
+
+        //Iterate to all fields of the message
+        Field[] fields = Message.class.getDeclaredFields();
+        for (Field field : fields) {
+            Object obj = field.get(this);
+            if (!field.getName().equals("random") && obj != null) {
+                System.out.println(field.getName() + " = " + obj);
+            }
+        }
+
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
 

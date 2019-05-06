@@ -1,17 +1,13 @@
 package commontypes;
 
-import communication.Message;
 import crypto.Crypto;
 import crypto.CryptoException;
-import javafx.util.Pair;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.math.BigInteger;
-import java.security.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
-
-import static java.lang.System.currentTimeMillis;
 
 public class Utils {
 
@@ -56,6 +52,28 @@ public class Utils {
         return arrayList;
     }
 
+
+    /**
+     * Deep copy of the object
+     */
+    public static Object deepCopy(Object object) {
+        try {
+            //Write object into the stream
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+
+
+            //Read object from stream
+            ByteArrayInputStream is = new ByteArrayInputStream(baos.toByteArray());
+            ObjectInputStream objIs = new ObjectInputStream(is);
+            return objIs.readObject();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
     /**************************************************************************
@@ -239,7 +257,7 @@ public class Utils {
         long start = System.currentTimeMillis();
         String prefix = "12345";
 
-        String data = Message.Operation.TRANSFER_GOOD + "|buyer|seller|good00|true|6|seller_7364592|";
+        String data = "|buyer|seller|good00|true|6|seller_7364592|";
         int result = proofOfWork(prefix, data);
         System.out.println("result=" + result);
         System.out.println("Time = " + (System.currentTimeMillis() - start)/1000);

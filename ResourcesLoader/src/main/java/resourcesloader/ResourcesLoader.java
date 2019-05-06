@@ -1,6 +1,7 @@
 package resourcesloader;
 
 import commontypes.Good;
+import communication.ProcessInfo;
 import commontypes.User;
 import crypto.Crypto;
 import crypto.CryptoException;
@@ -10,7 +11,6 @@ import java.security.KeyPair;
 import java.util.*;
 
 
-import javafx.util.Pair;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -43,18 +43,44 @@ public class ResourcesLoader {
     private final static String alias = "userCert";
     private List<User> users = new ArrayList<User>();
     private List<Good> goods = new ArrayList<Good>();
-    private List<Pair<String, Integer>> servers = new ArrayList<>();
+    private List<ProcessInfo> servers = new ArrayList<>();
+
+    private static int notaryPort = 8088;
+    private static boolean userNotary = false;
 
 
     /**
-     * Creates the map with the servers' ports and adresss
+     * Creates the map with the servers' ports and address
      * @param initialPort the starting port for the servers
      */
     private void createServers(int initialPort, int numberOfServers){
 
-        for(int i = 0; i < numberOfServers; i++){
-            servers.add(new Pair<>(address, initialPort + i));
+        try {
+
+            for(int i = 0; i < numberOfServers; i++){
+
+                KeyPair keyPair;
+                //GenerateKeyStore with user's id
+                keyPair = Crypto.generateRSAKeys();
+
+                //Stores public key
+                ProcessInfo serverInf = new ProcessInfo(address, initialPort + i, keyPair.getPublic());
+                servers.add(serverInf);
+
+                CreateAndStoreCertificate(keyPair, resourcesPath + serverInf.getID(), alias, "password".toCharArray() );
+            }
+
+            if(userNotary){
+                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
+
+                ProcessInfo serverInf = new ProcessInfo(address, notaryPort, notaryPublicKey);
+                servers.add(serverInf);
+            }
+
+        } catch (CertificateException | OperatorCreationException | NoSuchAlgorithmException | KeyStoreException | IOException | CryptoException e) {
+            e.printStackTrace();
         }
+
     }
 
     /**
@@ -62,7 +88,7 @@ public class ResourcesLoader {
      * @param servers the list to be stored
      * @throws IOException if an error happens
      */
-    public static void storeServers(List<Pair<String, Integer>> servers) throws IOException {
+    public static void storeServers(List<ProcessInfo> servers) throws IOException {
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(resourcesPath+"serverInfo.ser"));
         out.writeObject(servers);
         out.flush();
@@ -73,10 +99,10 @@ public class ResourcesLoader {
      * loads and deserializes the map containing the serverInformation
      * @return a map with the server info
      */
-    public static List<Pair<String, Integer>> loadServersInfo() throws IOException, ClassNotFoundException {
+    public static List<ProcessInfo> loadServersInfo() throws IOException, ClassNotFoundException {
         // Deserialize
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(resourcesPath+"serverInfo.ser"));
-        List<Pair<String, Integer>> users = (List<Pair<String, Integer>>) in.readObject();
+        List<ProcessInfo> users = (List<ProcessInfo>) in.readObject();
         in.close();
 
         return users;
@@ -368,9 +394,11 @@ public class ResourcesLoader {
             serverCount = Integer.parseInt(args[3]);
         }
 
+        // create all servers and the serverListInfo
         rsl.createServers(startingServerPort, serverCount);
 
 
+        // create each user
         for(int i = 0; i < usersCount; i++){
             try {
                 rsl.createUser("user"+i, startingPort + i, address);
@@ -379,6 +407,7 @@ public class ResourcesLoader {
             }
         }
 
+        // give 3 items to each user
         for(int j = 0;j<usersCount;j ++) {
 
             for (int i = 0; i < itemForSaleCount; i++) {

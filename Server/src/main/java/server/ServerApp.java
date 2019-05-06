@@ -32,6 +32,7 @@ public class ServerApp {
 
             String byzantineMode = args[1];
 
+            System.out.println(portnumber);
             Manager.getInstance().startServer(Integer.parseInt(portnumber));
             
             if(byzantineMode.equals("true")) {

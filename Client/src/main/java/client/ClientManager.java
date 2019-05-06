@@ -3,15 +3,12 @@ package client;
 import commontypes.AtomicFileManager;
 import commontypes.Good;
 import commontypes.User;
-import commontypes.Utils;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
-import commontypes.exception.SaveNonceException;
-import commontypes.exception.UserNotExistException;
 import communication.*;
+import commontypes.exception.UserNotExistException;
 import crypto.Crypto;
 import crypto.CryptoException;
-import javafx.util.Pair;
 import resourcesloader.ResourcesLoader;
 
 import java.io.File;
@@ -21,7 +18,6 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -49,6 +45,7 @@ public class ClientManager implements IMessageProcess {
      */
     private User user;
 
+    private Map<String, ByzantineAtomicRegister> goodsRegisters;
     /*
     Random to generate nonces
      */
@@ -58,6 +55,10 @@ public class ClientManager implements IMessageProcess {
 
     private PublicKey notaryPublicKey;
     private ArrayList<String> nonces = new ArrayList<>();
+    private String logFile;
+
+    private ArrayList<Message> log = new ArrayList<>();
+    private ProcessInfo sender;
 
     public static ClientManager getInstance(){
 
@@ -84,11 +85,16 @@ public class ClientManager implements IMessageProcess {
             requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
 
 
-        List<Pair<String, Integer>> servers = ResourcesLoader.loadServersInfo();
+            List<ProcessInfo> servers = ResourcesLoader.loadServersInfo();
+
+            goodsRegisters = new HashMap<>();
 
             for(Good good: goods){
-                good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
+                goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
         }
+
+
+            logFile = "../resources/" + this.getUser().getUserID() + ".log";
     }
 
 
@@ -125,7 +131,7 @@ public class ClientManager implements IMessageProcess {
 
         //Message response = sendMessage(msg, HOST, notaryPort);
         Message response = null;
-        response = good.getBrr().write(msg, goodID, good.getUserID(), true);
+        response = getGoodRegister(goodID).write(msg, goodID, good.getUserID(), true);
         if(response == null)
             return;
 
@@ -145,6 +151,9 @@ public class ClientManager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
+            //Save operation in log
+            saveResponse(response);
+
             System.out.println("Good " + response.getGoodID() + " is now " +
                     (response.isForSale()? "for sale." : "not for sale"));
         }
@@ -152,7 +161,6 @@ public class ClientManager implements IMessageProcess {
             System.out.println(response.getErrorMessage());
         }
     }
-
 
 
     /**
@@ -186,7 +194,7 @@ public class ClientManager implements IMessageProcess {
 
 
         //response = sendMessage(msg, HOST, notaryPort);
-        response = good.getBrr().read(msg);
+        response = getGoodRegister(goodID).read(msg);
         if(response == null)
             return;
 
@@ -249,6 +257,7 @@ public class ClientManager implements IMessageProcess {
 
         System.out.println("Sent buy good to " + seller.getPort());
         response = sendMessage(msg, HOST, seller.getPort());
+
         if(response == null)
             return;
 
@@ -269,6 +278,8 @@ public class ClientManager implements IMessageProcess {
                 System.out.println("Notary validation failed");
                 return;
             }
+            //Save operation in log
+            saveResponse(response);
             System.out.println("Successfully bought good");
 
         // if it failed it could have failed in the client that received the buy good operation or the notary that
@@ -321,7 +332,8 @@ public class ClientManager implements IMessageProcess {
 
         //response = sendMessage(msg, HOST, notaryPort);
 
-        response = good.getBrr().write(msg, good.getGoodID(), good.getUserID(), false);
+        response = getGoodRegister(good.getGoodID()).write(msg, good.getGoodID(), good.getUserID(), false);
+
         if(response == null)
             return createErrorMessage("Failed to send request to Notary", message.getBuyerID());
 
@@ -343,6 +355,8 @@ public class ClientManager implements IMessageProcess {
         }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
+            //Save operation in log
+            saveResponse(response);
             System.out.println("Successfully transferred good " + message.getGoodID() + " to " + message.getBuyerID());
             return response;
 
@@ -470,13 +484,16 @@ public class ClientManager implements IMessageProcess {
         return null;
     }
 
+    private ByzantineAtomicRegister getGoodRegister(String goodID){
+        return goodsRegisters.get(goodID);
+    }
 
     /**
      * This method checks if a message is fresh
      * @param message message to be verified
      */
     private boolean isFresh(Message message) throws SaveNonceException {
-        String nonce = message.getNonce();
+       /* String nonce = message.getNonce();
         //Check freshness
         if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
                 nonces.contains(nonce))
@@ -492,7 +509,7 @@ public class ClientManager implements IMessageProcess {
                 throw new SaveNonceException();
             }
         }
-
+*/
         return true;
     }
 
@@ -538,7 +555,7 @@ public class ClientManager implements IMessageProcess {
             System.out.println("Ignoring notary signature for tests");
             return true;
         }
-        return message.isSignatureValid(publicKey);
+        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
 
@@ -581,6 +598,8 @@ public class ClientManager implements IMessageProcess {
                 login.getUsername(),login.getUsername() + login.getUsername())
         );
 
+        sender = new ProcessInfo(user.getUserID(),user.getPrivateKey());
+
         String NONCES_PREFIX = "../resources/nonces_";
         noncesFile = NONCES_PREFIX + user.getUserID();
         //Load nonces
@@ -590,7 +609,23 @@ public class ClientManager implements IMessageProcess {
             }else
                 nonces = new ArrayList<>();
         }
+
+        AuthenticatedPerfectLinks.initialize(VALIDITY, nonces, noncesFile);
         return true;
+
+    }
+
+    /**
+     * Saves a response to the log
+     * @param response
+     */
+    private void saveResponse(Message response) {
+        log.add(response);
+        try {
+            AtomicFileManager.atomicWriteObjectToFile(logFile,log);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -607,4 +642,17 @@ public class ClientManager implements IMessageProcess {
     public User getUser() {
         return user;
     }
+
+    /*
+    TODO: Delete if no longer needed
+    @Override
+    public void authenticate(Message message) throws CryptoException {
+        message.addFreshness(user.getUserID());
+        signMessage(message, user.getPrivateKey());
+    }
+
+    @Override
+    public synchronized boolean isValid(Message message) throws SaveNonceException, CryptoException {
+        return isFresh(message) && isSignatureValid(message, notaryPublicKey);
+    }*/
 }
