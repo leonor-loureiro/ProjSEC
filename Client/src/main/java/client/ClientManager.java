@@ -45,11 +45,6 @@ public class ClientManager implements IMessageProcess {
     private List<Good> goods;
 
     /*
-    handles the communication between entities
-     */
-    private Communication sendRequest = new Communication();
-
-    /*
     user logged in the system
      */
     private User user;
@@ -92,7 +87,7 @@ public class ClientManager implements IMessageProcess {
         List<Pair<String, Integer>> servers = ResourcesLoader.loadServersInfo();
 
             for(Good good: goods){
-                good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), sendRequest, 1));
+                good.setBrr(new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
         }
     }
 
@@ -510,7 +505,7 @@ public class ClientManager implements IMessageProcess {
      */
     private Message sendMessage(Message msg, String host, int port) {
         try {
-            return sendRequest.sendMessage(host, port, msg);
+            return Communication.sendMessage(host, port, msg);
 
         } catch (IllegalArgumentException | ClassNotFoundException | IOException e) {
             System.out.println("Send request failed");

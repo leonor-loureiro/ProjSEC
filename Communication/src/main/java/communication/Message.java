@@ -36,6 +36,7 @@ public class Message implements Serializable, Comparable {
     private String nonce;
     private String signature;
     private Message intentionToBuy;
+    private String sender;
 
     //Byzantine Registers Variables
     private int wts;

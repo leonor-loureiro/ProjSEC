@@ -9,9 +9,8 @@ import java.util.List;
 
 public class ByzantineAtomicRegister extends ByzantineRegularRegister {
 
-    public ByzantineAtomicRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey,
-                                   Communication communicationHandler, int faults) {
-        super(id, servers, privateKey, communicationHandler, faults);
+    public ByzantineAtomicRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey, int faults) {
+        super(id, servers, privateKey, faults);
 
     }
 

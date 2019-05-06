@@ -13,8 +13,8 @@ import java.util.concurrent.Executors;
 
 public class ByzantineRegularRegister {
 
-    public static final int WRITE = 100;
-    public static final int READ = 200;
+    private static final int WRITE = 100;
+    private static final int READ = 200;
 
     protected final String ID;
 
@@ -23,37 +23,32 @@ public class ByzantineRegularRegister {
     private final List<Pair<String, Integer>> servers;
 
     //Private key of the client
-    public final PrivateKey privateKey;
-
-    //Handler for the communication between processes
-    private final Communication communicationHandler;
+    private final PrivateKey privateKey;
 
     //Handles the execution of async tasks
     private final ExecutorService executor;
 
     //Quorum
-    public final int quorum;
+    private final int quorum;
 
     //Read timestamp
-    public int rid = 0;
+    private int rid = 0;
 
     //Write timestamp
     private int wts = 0;
 
     //Stores the write responses
-    public List<Message> ackList = new ArrayList<Message>();
+    private List<Message> ackList = new ArrayList<Message>();
 
     //Stores the read responses
-    public List<Message> readList = new ArrayList<Message>();
+    private List<Message> readList = new ArrayList<Message>();
 
 
 
-    public ByzantineRegularRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey,
-                                    Communication communicationHandler, int faults) {
+    public ByzantineRegularRegister(String id, List<Pair<String, Integer>> servers, PrivateKey privateKey, int faults) {
         ID = id;
         this.servers = servers;
         this.privateKey = privateKey;
-        this.communicationHandler = communicationHandler;
         this.quorum = (int) Math.ceil(((double)servers.size() + faults) / 2);
         //Creates a thread pool with one thread for server replica
         this.executor = Executors.newFixedThreadPool(servers.size());
@@ -188,7 +183,7 @@ public class ByzantineRegularRegister {
                 public Void call() throws IOException, ClassNotFoundException {
                     Message response = null;
                     try {
-                        response = communicationHandler.sendMessage(host, port, msg);
+                        response = Communication.sendMessage(host, port, msg);
                         System.out.println("Sent wts=" + msg.getWts() + "/rid=" + msg.getRid());
 
                     } catch (IOException | ClassNotFoundException e) {

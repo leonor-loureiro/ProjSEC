@@ -52,7 +52,7 @@ public class RequestsReceiver{
     public void stop(){
         System.out.println("Turning down requests reception...");
 
-        // Allow server start before starting shutodnw
+        // Allow server start before starting shutdown
         try {
             Thread.sleep(4000);
         } catch (InterruptedException e) { e.printStackTrace(); }

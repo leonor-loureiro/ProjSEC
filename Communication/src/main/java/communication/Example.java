@@ -22,15 +22,16 @@ public class Example implements IMessageProcess {
         reqRec.initializeInNewThread(6666, exampleClass);
 
         Message message = new Message();
+        message.setOperation(Message.Operation.GET_STATE_OF_GOOD);
         //message.setOperation("Nice try!");
 
-        Message response = new Communication().sendMessage("localhost", 6666, message);
+        Message response = Communication.sendMessage("localhost", 6666, message);
         System.out.println("response was: " + response.getOperation());
 
-        response = new Communication().sendMessage("localhost", 6666, message);
+        response = Communication.sendMessage("localhost", 6666, message);
         System.out.println("response was: " + response.getOperation());
 
-        response = new Communication().sendMessage("localhost", 6666, message);
+        response = Communication.sendMessage("localhost", 6666, message);
         System.out.println("response was: " + response.getOperation());
 
     }
