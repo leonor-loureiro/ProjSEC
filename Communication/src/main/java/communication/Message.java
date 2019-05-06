@@ -165,6 +165,10 @@ public class Message implements Serializable, Comparable {
     }
 
 
+    public String getDataToChallenge(){
+        return goodID + "|" + buyerID + "|" + sellerID + "|" + wts + "|" + nonce;
+    }
+
     /**
      * Responsible for adding a nonce and a timestamp to the message
      */
