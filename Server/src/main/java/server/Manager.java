@@ -2,10 +2,9 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
-import commontypes.Utils;
-import communication.SaveNonceException;
-import communication.IMessageProcess;
-import communication.Message;
+import communication.exception.SaveNonceException;
+import communication.interfaces.IMessageProcess;
+import communication.data.Message;
 import communication.RequestsReceiver;
 import crypto.Crypto;
 import crypto.CryptoException;

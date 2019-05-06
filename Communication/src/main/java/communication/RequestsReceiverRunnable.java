@@ -1,5 +1,7 @@
 package communication;
 
+import communication.interfaces.IMessageProcess;
+
 import java.io.IOException;
 
 

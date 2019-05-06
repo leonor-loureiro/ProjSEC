@@ -1,9 +1,9 @@
 package communication;
 
+import communication.data.Message;
+import communication.interfaces.IMessageProcess;
+
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
 
 public class Example implements IMessageProcess {
     private int counter = 0;

@@ -1,7 +1,8 @@
-package communication;
+package communication.registers;
 
 
-import commontypes.Utils;
+import communication.data.Message;
+import communication.data.ProcessInfo;
 import crypto.CryptoException;
 import java.security.PrivateKey;
 import java.util.List;

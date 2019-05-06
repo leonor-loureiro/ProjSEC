@@ -1,5 +1,7 @@
-package communication;
+package communication.interfaces;
 
+import communication.data.Message;
+import communication.exception.SaveNonceException;
 import crypto.CryptoException;
 
 public interface IMessageAuthenticate {

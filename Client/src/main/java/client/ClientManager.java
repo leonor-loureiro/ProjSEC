@@ -7,6 +7,12 @@ import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import communication.*;
 import commontypes.exception.UserNotExistException;
+import communication.AuthenticatedPerfectLinks;
+import communication.data.Message;
+import communication.data.ProcessInfo;
+import communication.exception.SaveNonceException;
+import communication.interfaces.IMessageProcess;
+import communication.registers.ByzantineAtomicRegister;
 import crypto.Crypto;
 import crypto.CryptoException;
 import resourcesloader.ResourcesLoader;
@@ -16,8 +22,6 @@ import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
-
-import static java.lang.System.currentTimeMillis;
 
 
 public class ClientManager implements IMessageProcess {

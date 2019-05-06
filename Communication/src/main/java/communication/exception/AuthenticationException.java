@@ -1,4 +1,4 @@
-package communication;
+package communication.exception;
 
 public class AuthenticationException extends Exception {
 

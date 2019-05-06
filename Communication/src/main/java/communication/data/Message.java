@@ -1,14 +1,10 @@
-package communication;
-
-import crypto.Crypto;
-import crypto.CryptoException;
+package communication.data;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.security.PublicKey;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;

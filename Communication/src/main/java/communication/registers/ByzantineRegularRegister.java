@@ -1,5 +1,11 @@
-package communication;
+package communication.registers;
 
+import communication.AuthenticatedPerfectLinks;
+import communication.data.Message;
+import communication.data.ProcessInfo;
+import communication.exception.AuthenticationException;
+import communication.exception.NotFreshException;
+import communication.exception.SaveNonceException;
 import crypto.Crypto;
 import crypto.CryptoException;
 

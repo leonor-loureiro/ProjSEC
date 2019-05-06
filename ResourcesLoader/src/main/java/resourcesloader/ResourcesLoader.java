@@ -1,7 +1,7 @@
 package resourcesloader;
 
 import commontypes.Good;
-import communication.ProcessInfo;
+import communication.data.ProcessInfo;
 import commontypes.User;
 import crypto.Crypto;
 import crypto.CryptoException;

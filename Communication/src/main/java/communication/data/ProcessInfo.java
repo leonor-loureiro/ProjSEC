@@ -1,4 +1,4 @@
-package communication;
+package communication.data;
 
 import java.io.Serializable;
 import java.security.PrivateKey;

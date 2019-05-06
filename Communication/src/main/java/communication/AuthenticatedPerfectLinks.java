@@ -2,12 +2,17 @@ package communication;
 
 import commontypes.AtomicFileManager;
 import commontypes.Utils;
+import communication.Communication;
+import communication.data.Message;
+import communication.data.ProcessInfo;
+import communication.exception.AuthenticationException;
+import communication.exception.NotFreshException;
+import communication.exception.SaveNonceException;
 import crypto.Crypto;
 import crypto.CryptoException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -18,6 +23,7 @@ public class AuthenticatedPerfectLinks {
     private static ArrayList<String> nonces;
     private static String noncesFile;
     private static boolean TESTING_ON = false;
+
 
     public static void initialize(int validityInt, ArrayList<String> noncesList, String noncesStorage){
         nonces = noncesList;

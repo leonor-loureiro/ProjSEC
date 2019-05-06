@@ -1,5 +1,8 @@
 package communication;
 
+import communication.data.Message;
+import communication.interfaces.IMessageProcess;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -32,35 +35,7 @@ public class Communication{
 
         System.out.println("Received request, running socket on port: " + serverSocket.getLocalPort());
 
-
-        // set receiving stream and output stream; according to java documentation, out must exist first.
-        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
-        Message request = null;
-
-        System.out.println("Received message on port: " + serverSocket.getLocalPort());
-
-        // Parse received message
-        try {
-            request = (Message) in.readObject();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
-        // write response
-        Message response = null;
-        if (request != null) {
-            response = processMessage.process(request);
-            response.setSender(request.getReceiver());
-            response.setReceiver(request.getSender());
-            out.writeObject(response);
-        }
-
-
-        System.out.println("Processed request, closing connection");
-        clientSocket.close();
+        new Thread(new ProcessMessageRunable(clientSocket, processMessage)).start();
     }
 
     /**
@@ -124,7 +99,7 @@ public class Communication{
         System.out.println("Stopping communication...");
 
         try{
-            serverSocket.close();;
+            serverSocket.close();
             clientSocket.close();
 
         }catch (NullPointerException np){

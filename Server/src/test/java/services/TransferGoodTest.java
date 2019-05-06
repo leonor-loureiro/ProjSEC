@@ -2,7 +2,7 @@ package services;
 
 import commontypes.Good;
 import commontypes.User;
-import communication.Message;
+import communication.data.Message;
 import crypto.Crypto;
 import crypto.CryptoException;
 import org.junit.Assert;

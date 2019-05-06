@@ -1,5 +1,6 @@
 package communication;
 
+import communication.data.Message;
 import org.junit.Assert;
 import org.junit.Test;
 
