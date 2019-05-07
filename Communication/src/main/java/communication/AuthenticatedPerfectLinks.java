@@ -57,22 +57,21 @@ public class AuthenticatedPerfectLinks {
 
         //Verify response
         if(!isFresh(response)) {
-            throw new NotFreshException();
+            throw new NotFreshException(response.getSender());
         }
 
         //The request sender is the response receiver and vice-versa
         if(response.getSender() == null || response.getReceiver() == null ||
                 !response.getSender().equals(receiver.getID()) || !response.getReceiver().equals(sender.getID())) {
             System.out.println("Sender/Receiver not valid");
-            throw new AuthenticationException();
+            throw new AuthenticationException(response.getSender());
         }
 
         // verify signature
         try {
             if(!isSignatureValid(response, receiver.getPublicKey())){
-                //TODO: but becareful since it crashes the whole client!!!! throw new AuthenticationException();
                 System.out.println("Invalid signature");
-                throw new AuthenticationException();
+                throw new AuthenticationException(response.getSender());
             }
         } catch (CryptoException e) {
             e.printStackTrace();

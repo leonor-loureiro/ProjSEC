@@ -21,7 +21,7 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
     public Message read(Message msg) throws CryptoException {
         Message response = super.read(msg);
 
-        if(response.getOperation().equals(Message.Operation.ERROR))
+        if(response == null || response.getOperation().equals(Message.Operation.ERROR))
             return response;
 
         //Write-back phase
@@ -36,6 +36,11 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
 
         Message writeBackRsp =
         super.writeImpl(writeBackMsg, response.getGoodID(), response.getSellerID(), response.isForSale(), response.getWts());
+
+        if(writeBackRsp == null) {
+            System.out.println("Write back failed");
+            return null;
+        }
 
         return response;
     }

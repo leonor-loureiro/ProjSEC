@@ -2,7 +2,6 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
-import commontypes.Utils;
 import communication.data.ProcessInfo;
 import communication.exception.SaveNonceException;
 import communication.interfaces.IMessageProcess;
@@ -16,16 +15,13 @@ import commontypes.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
-import javax.rmi.CORBA.Util;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
@@ -193,7 +189,7 @@ public class Manager implements IMessageProcess {
 
         //Update the good state
         if(!good.isForSale())
-            if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getSignature()))
+            if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getSignature(), message.getSender()))
                 return createErrorMessage("Failed to change good state.", message.getSellerID(), null,
                         message.getWts(), message.getRid());
 
@@ -235,6 +231,7 @@ public class Manager implements IMessageProcess {
         //Send value write timestamp and signature
         response.setWts(good.getTs());
         response.setValSignature(good.getSignature());
+        response.setWriter(good.getWriter());
         //Send read operation ID
         response.setRid(message.getRid());
 
@@ -318,7 +315,7 @@ public class Manager implements IMessageProcess {
                     message.getRid());
 
         //Alter internal mapping of Goods->Users
-        if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getSignature()))
+        if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getSignature(), message.getSender()))
             return createErrorMessage("Failed to update good state",
                     message.getSellerID(),
                     message.getBuyerID(),
@@ -363,7 +360,7 @@ public class Manager implements IMessageProcess {
         if(good.getTs() == message.getWts())
             System.out.println("Already have updated value");
         else
-            updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature());
+            updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature(), message.getSender());
 
         Message response = new Message();
         response.setOperation(Message.Operation.WRITE_BACK);
@@ -570,9 +567,10 @@ public class Manager implements IMessageProcess {
      * @param good good to be updated
      * @param userID owner ID
      * @param isForSale whether its for sale or not
+     * @param writer
      * @return true if was successful, false otherwise
      */
-    private synchronized boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature) {
+    private synchronized boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature, String writer) {
         if(ts <= good.getTs()) {
             System.out.println("Old write " + ts + "/" + good.getTs());
             return false;
@@ -582,6 +580,7 @@ public class Manager implements IMessageProcess {
         good.setUserID(userID);
         good.setTs(ts);
         good.setSignature(signature);
+        good.setWriter(writer);
 
         //For tests, don't update mapping
         if(TESTING_ON)

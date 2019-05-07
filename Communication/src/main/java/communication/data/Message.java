@@ -39,6 +39,7 @@ public class Message implements Serializable, Comparable {
     private int wts;
     private int rid;
     private String valSignature;
+    private String writer;
 
     public Message() {
     }
@@ -176,6 +177,14 @@ public class Message implements Serializable, Comparable {
 
     public void setReceiver(String receiver) {
         this.receiver = receiver;
+    }
+
+    public String getWriter() {
+        return writer;
+    }
+
+    public void setWriter(String writer) {
+        this.writer = writer;
     }
 
     public String getDataToChallenge(){

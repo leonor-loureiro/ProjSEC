@@ -12,6 +12,7 @@ public class Good  implements Serializable {
 
     private String signature;
     private int ts;
+    private String writer;
 
     public Good(String goodID, String userID, boolean onSale) {
         this.goodID = goodID;
@@ -58,6 +59,14 @@ public class Good  implements Serializable {
 
     public void setTs(int ts) {
         this.ts = ts;
+    }
+
+    public String getWriter() {
+        return writer;
+    }
+
+    public void setWriter(String writer) {
+        this.writer = writer;
     }
 
     @Override

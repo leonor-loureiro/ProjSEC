@@ -11,6 +11,7 @@ import crypto.CryptoException;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +51,8 @@ public class ByzantineRegularRegister {
     //Stores the read responses
     private List<Message> readList = new ArrayList<Message>();
 
-
+    //Failed requests counter
+    private int error;
 
 
     public ByzantineRegularRegister(String id, List<ProcessInfo> servers, PrivateKey privateKey, int faults) {
@@ -82,6 +84,12 @@ public class ByzantineRegularRegister {
 
         Message getTsResp = readImpl(getTsMsg);
 
+        if(getTsResp == null){
+            System.out.println("Failed to get current timestamp");
+            return null;
+        }
+
+
         //Increment write timestamp
         wts = getTsResp.getWts()+1;
 
@@ -98,14 +106,14 @@ public class ByzantineRegularRegister {
         ackList.clear();
 
         //Sign the new value
-        String value = goodID + "|" + userID + "|" + isForSale;
+        String value = getValueToSign(goodID, userID, isForSale);
         msg.setValSignature(Crypto.sign(value.getBytes(), privateKey));
 
         //Send the message to all server replicas
         broadcast(msg, WRITE);
 
         //Wait until a majority servers have responded
-        while(ackList.size() < quorum){
+        while(ackList.size() < quorum && error < quorum){
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -113,7 +121,14 @@ public class ByzantineRegularRegister {
             }
         }
 
+        if(error >= quorum)
+            return null;
+
         return ackList.get(0);
+    }
+
+    private String getValueToSign(String goodID, String userID, boolean isForSale) {
+        return goodID + "|" + userID + "|" + isForSale;
     }
 
     public Message read(Message msg) throws CryptoException {
@@ -137,13 +152,16 @@ public class ByzantineRegularRegister {
         broadcast(msg, READ);
 
         //Wait until a majority of servers have replied
-        while (readList.size() < quorum) {
+        while (readList.size() < quorum && error < quorum) {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+
+        if(error >= quorum)
+            return null;
 
         return Collections.max(readList);
     }
@@ -166,17 +184,23 @@ public class ByzantineRegularRegister {
      * Adds the message to the reads list
      * @param msg message received
      */
-    private synchronized void handleReadResponse(Message msg){
+    private synchronized void handleReadResponse(Message msg) throws CryptoException {
         msg.getBytesToSign();
         if(rid != msg.getRid())
             return;
 
-        //TODO: verify value signature
+        System.out.println(msg.getWriter());
         readList.add(msg);
+
+        /*String value = getValueToSign(msg.getGoodID(), msg.getSellerID(), msg.isForSale());
+        PublicKey publicKey = null;
+        if(msg.getWriter() != null && Crypto.verifySignature(msg.getValSignature(), value.getBytes(), publicKey)){
+            readList.add(msg);
+        }*/
     }
 
     private void broadcast(final Message msg, final int type) throws CryptoException {
-
+        error = 0;
 
         for(final ProcessInfo serverInfo : servers) {
             final String host = serverInfo.getHost();
@@ -197,16 +221,20 @@ public class ByzantineRegularRegister {
                             handleReadResponse(response);
 
 
-                    //TODO: Figure out what to do in these cases
                     } catch (IOException | ClassNotFoundException e) {
+                        error++;
                         System.out.println("Failed to send message to " + host + ":" + port);
                     } catch (NotFreshException e) {
-                        System.out.println("Response is not fresh");
+                        error++;
+                        System.out.println("Response is not fresh: " + e.getMessage());
                     } catch (AuthenticationException e) {
-                        System.out.println("Authentication failed");
+                        error++;
+                        System.out.println("Authentication failed: " + e.getMessage());
                     } catch (SaveNonceException | CryptoException e) {
+                        error++;
                         e.printStackTrace();
                      }
+
                     return null;
                 }
             });
@@ -214,4 +242,6 @@ public class ByzantineRegularRegister {
 
         }
     }
+
+
 }
