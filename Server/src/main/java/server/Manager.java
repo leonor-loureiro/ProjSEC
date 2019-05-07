@@ -2,6 +2,8 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import commontypes.Utils;
+import communication.data.ProcessInfo;
 import communication.exception.SaveNonceException;
 import communication.interfaces.IMessageProcess;
 import communication.data.Message;
@@ -14,6 +16,7 @@ import commontypes.AtomicFileManager;
 import server.security.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
+import javax.rmi.CORBA.Util;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -21,6 +24,8 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
@@ -60,6 +65,8 @@ public class Manager implements IMessageProcess {
     //Nonces generator
     private Random random = new Random();
     private int port;
+
+    private List<ProcessInfo> serversInfo;
 
     /**
      *
@@ -148,6 +155,8 @@ public class Manager implements IMessageProcess {
             nonces = (ArrayList<String>) ResourcesLoader.loadNonces(getNoncesPath());
         }else
             nonces = new ArrayList<>();
+
+        serversInfo = ResourcesLoader.loadServersInfo();
     }
 
     /* **************************************************************************************
@@ -195,10 +204,7 @@ public class Manager implements IMessageProcess {
         response.setForSale(true);
         response.setWts(message.getWts());
 
-        addFreshness(response);
-
-        //Sign the response
-        return signMessage(response);
+        return response;
     }
 
 
@@ -232,11 +238,7 @@ public class Manager implements IMessageProcess {
         //Send read operation ID
         response.setRid(message.getRid());
 
-        addFreshness(response);
-
-        response.getBytesToSign();
-
-        return signMessage(response);
+        return response;
     }
 
     /**
@@ -329,13 +331,10 @@ public class Manager implements IMessageProcess {
         response.setBuyerID(buyer.getUserID());
         response.setGoodID(good.getGoodID());
 
+        //Set write timestamp
         response.setWts(message.getWts());
 
-        //Add node and timestamp
-        addFreshness(response);
-
-        //Sign response message
-        return signMessage(response);
+        return response;
     }
 
     private Message writeBack(Message message) throws SignatureException, CryptoException {
@@ -371,9 +370,8 @@ public class Manager implements IMessageProcess {
         response.setWts(message.getWts());
         //Buyer is the user that sent the request
         response.setSellerID(message.getBuyerID());
-        addFreshness(response);
 
-        return signMessage(response);
+        return response;
     }
 
     /**
@@ -411,9 +409,6 @@ public class Manager implements IMessageProcess {
         if(message.getSignature() == null) {
             return false;
         }
-        boolean v = Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
-
-            message.print();
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 
@@ -424,41 +419,61 @@ public class Manager implements IMessageProcess {
      * @return response
      */
     public Message process(Message message) {
+        message.print();
+
+        Message response = null;
         try{
             try {
                 if (!isFresh(message))
-                    return createErrorMessage("Request is not fresh",
+                    response = createErrorMessage("Request is not fresh",
                             null, null, message.getWts(), message.getRid());
 
                 switch (message.getOperation()) {
                     case INTENTION_TO_SELL:
-                            return intentionToSell(message);
+                        response = intentionToSell(message);
+                        break;
 
                     case GET_STATE_OF_GOOD:
-                        return getStateOfGood(message);
+                        response = getStateOfGood(message);
+                        break;
 
                     case TRANSFER_GOOD:
-                            return transferGood(message);
+                        response = transferGood(message);
+                        break;
 
                     case WRITE_BACK:
-                        return writeBack(message);
+                        response = writeBack(message);
+                        break;
 
                     default:
                         System.out.println("Operation Unknown!");
                 }
 
             } catch (CryptoException e) {
-                return createErrorMessage("Failed to verify the signature",
+                response = createErrorMessage("Failed to verify the signature",
                         message.getSellerID(), message.getBuyerID(), message.getWts(), message.getRid());
 
             } catch (SaveNonceException e) {
-                return createErrorMessage("Failed to process request",
+                response = createErrorMessage("Failed to process request",
                         message.getSellerID(), message.getBuyerID(), message.getWts(), message.getRid());
+            }
+
+            if(response != null) {
+                response.setSender(message.getReceiver());
+                response.setReceiver(message.getSender());
+                //Add nonce and timestamp
+                addFreshness(response);
+                //Sign message
+                signMessage(response);
+
+                response.print();
+
             }
         }catch (SignatureException e) {
             return new Message("Failed to sign the message", message.getSellerID(), message.getBuyerID());
         }
-        return null;
+
+        return response;
     }
 
 
@@ -510,6 +525,7 @@ public class Manager implements IMessageProcess {
             try {
                 String signature = Crypto.sign(message.getBytesToSign(), getPrivateKey());
                 message.setSignature(signature);
+
             } catch (CryptoException e) {
                 e.printStackTrace();
             }
@@ -544,8 +560,8 @@ public class Manager implements IMessageProcess {
         Message message = new Message(errorMsg, sellerID, buyerID);
         message.setWts(wts);
         message.setRid(rid);
-        addFreshness(message);
-        return signMessage(message);
+
+        return message;
     }
 
     /**
@@ -584,6 +600,13 @@ public class Manager implements IMessageProcess {
 
     private PrivateKey getPrivateKey() throws CryptoException {
         return (PrivateKey) ResourcesLoader.getPrivateKey(port);
+    }
+
+    private PublicKey getPublicKey(){
+        for(ProcessInfo server : serversInfo)
+            if(server.getPort() == port)
+                return server.getPublicKey();
+        return null;
     }
 
     /* *************************************************************************************

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.security.Key;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -41,19 +42,17 @@ public class AuthenticatedPerfectLinks {
 
         authenticateMessage(sender, receiver, message);
 
-
-        Message response = Communication.sendMessage(receiver.getHost(), receiver.getPort(), message);
+        Message response = (Message) Utils.deepCopy(
+                            Communication.sendMessage(receiver.getHost(), receiver.getPort(), message)
+        );
         System.out.println(response.getOperation() + " - " + response.getNonce() + " -> " + response.getErrorMessage());
 
-
-        if(response.getBytesToSign() != response.getBytesToSign())
-            System.out.println("AHAHAHAHAHAHAHAHAHAHAHAHAHAHHA OMEGALOL WHAT THE FUCK ");
         validateResponse(sender, receiver, response);
 
         return response;
     }
 
-    private static void validateResponse(ProcessInfo sender, ProcessInfo receiver, Message response)
+    private synchronized static void validateResponse(ProcessInfo sender, ProcessInfo receiver, Message response)
             throws SaveNonceException, NotFreshException, AuthenticationException {
 
         //Verify response
@@ -64,36 +63,36 @@ public class AuthenticatedPerfectLinks {
         //The request sender is the response receiver and vice-versa
         if(response.getSender() == null || response.getReceiver() == null ||
                 !response.getSender().equals(receiver.getID()) || !response.getReceiver().equals(sender.getID())) {
-
-            System.out.println("Authentication Exception");
+            System.out.println("Sender/Receiver not valid");
             throw new AuthenticationException();
         }
-
 
         // verify signature
         try {
             if(!isSignatureValid(response, receiver.getPublicKey())){
                 //TODO: but becareful since it crashes the whole client!!!! throw new AuthenticationException();
-                System.out.println("INVALID SIGNATURE");
+                System.out.println("Invalid signature");
+                throw new AuthenticationException();
             }
         } catch (CryptoException e) {
             e.printStackTrace();
         }
     }
 
-    private static void authenticateMessage(ProcessInfo sender, ProcessInfo receiver, Message message) throws CryptoException {
+    private synchronized static void authenticateMessage(ProcessInfo sender, ProcessInfo receiver, Message message) throws CryptoException {
         //Authenticate message
         message.setSender(sender.getID());
         message.setReceiver(receiver.getID());
         message.addFreshness(sender.getID());
         message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
+        message.print();
     }
 
     /**
      * This method checks if a message is fresh
      * @param message message to be verified
      */
-    private synchronized static boolean isFresh(Message message) throws SaveNonceException {
+    private static boolean isFresh(Message message) throws SaveNonceException {
         if(nonces == null || noncesFile == null)
             return false;
 
@@ -128,15 +127,9 @@ public class AuthenticatedPerfectLinks {
     private static boolean  isSignatureValid(Message message, PublicKey publicKey)
             throws CryptoException {
         if(message.getSignature() == null) {
-            System.out.println("Null public key");
+            System.out.println("Null signature");
             return false;
         }
-        boolean v = Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
-
-        message.print();
-        System.out.println("Is signature verified? " + v);
-
-
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 }

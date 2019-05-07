@@ -37,8 +37,6 @@ public class ProcessMessageRunable implements Runnable{
             Message response = null;
             if (request != null) {
                 response = processMessage.process(request);
-                response.setSender(request.getReceiver());
-                response.setReceiver(request.getSender());
                 out.writeObject(response);
             }
 

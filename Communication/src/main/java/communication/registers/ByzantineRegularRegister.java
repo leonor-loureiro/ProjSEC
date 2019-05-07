@@ -188,13 +188,8 @@ public class ByzantineRegularRegister {
 
                     Message response = null;
                     try {
-                        //authenticator.authenticate(sent);
 
                         response = AuthenticatedPerfectLinks.sendMessage(senderInfo, serverInfo, msg);
-
-
-                       /* if(!authenticator.isValid(response))
-                            return null;*/
 
                         if(type == WRITE)
                             handleWriteResponse(response);

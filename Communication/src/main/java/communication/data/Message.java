@@ -225,6 +225,7 @@ public class Message implements Serializable, Comparable {
     }
 
     public void print(){
+        System.out.println("START ############################################################");
       try {
 
         //Iterate to all fields of the message
@@ -239,6 +240,8 @@ public class Message implements Serializable, Comparable {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        System.out.println("############################################################  END");
+
     }
 
 
