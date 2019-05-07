@@ -23,6 +23,8 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 
+import static java.lang.System.currentTimeMillis;
+
 
 public class ClientManager implements IMessageProcess {
 
@@ -94,7 +96,7 @@ public class ClientManager implements IMessageProcess {
         goodsRegisters = new HashMap<>();
 
         for(Good good: goods){
-            goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
+            goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, users, user.getPrivateKey(), 1));
         }
 
 
@@ -116,11 +118,13 @@ public class ClientManager implements IMessageProcess {
         if(good == null) {
             throw new GoodNotExistsException(goodID);
         }
-        msg.setGoodID(goodID);
+
 
 
         //sets the parameters of the massage
         msg.setSellerID(user.getUserID());
+        msg.setGoodID(goodID);
+        msg.setForSale(true);
 
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
@@ -135,24 +139,17 @@ public class ClientManager implements IMessageProcess {
 
         //Message response = sendMessage(msg, HOST, notaryPort);
         Message response = null;
-        response = getGoodRegister(goodID).write(msg, goodID, good.getUserID(), true);
-        if(response == null)
+        response = getGoodRegister(goodID).write(msg, user.getUserID());
+        if(response == null) {
+            System.out.println("Intention to sell " + goodID + " failed.");
             return;
+        }
 
         if( response.getSellerID() == null || !response.getSellerID().equals(user.getUserID())){
             System.out.println("Invalid response");
             return;
         }
 
-        if(!isFresh(response)){
-            System.out.println("Notary response is not fresh");
-            return;
-        }
-
-        if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-            return;
-        }
 
         if(response.getOperation().equals(Message.Operation.INTENTION_TO_SELL)){
             //Save operation in log
@@ -199,23 +196,16 @@ public class ClientManager implements IMessageProcess {
 
         //response = sendMessage(msg, HOST, notaryPort);
         response = getGoodRegister(goodID).read(msg);
-        if(response == null)
+        if(response == null){
+            System.out.println("Get state of good " + goodID + " failed.");
             return;
+        }
 
         if(response.getBuyerID() == null || !response.getBuyerID().equals(user.getUserID())){
             System.out.println("Invalid response");
             return;
         }
 
-        if(!isFresh(response)){
-            System.out.println("Notary response is not fresh");
-            return;
-        }
-
-         if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-            return;
-        }
 
         if(response.getOperation().equals(Message.Operation.GET_STATE_OF_GOOD)){
             System.out.println("Current owner" + " " + response.getSellerID() + " " + "for sale:" + " " + response.isForSale());
@@ -262,8 +252,10 @@ public class ClientManager implements IMessageProcess {
         System.out.println("Sent buy good to " + seller.getPort());
         response = sendMessage(msg, HOST, seller.getPort());
 
-        if(response == null)
+        if(response == null) {
+            System.out.println("Buy good " + goodID + " failed.");
             return;
+        }
 
         if(response.getBuyerID() == null ||!response.getBuyerID().equals(user.getUserID())){
             System.out.println("Invalid response");
@@ -327,19 +319,15 @@ public class ClientManager implements IMessageProcess {
         msg.addFreshness(user.getUserID());
         Message response = null;
 
-        /*try {
-            signMessage(msg, user.getPrivateKey());
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }*/
 
 
         //response = sendMessage(msg, HOST, notaryPort);
 
-        response = getGoodRegister(good.getGoodID()).write(msg, good.getGoodID(), good.getUserID(), false);
-
-        if(response == null)
+        response = getGoodRegister(good.getGoodID()).write(msg, message.getBuyerID());
+        if(response == null) {
+            System.out.println("Transfer good " + good.getGoodID() + " to user " + message.getBuyerID() + ".");
             return createErrorMessage("Failed to send request to Notary", message.getBuyerID());
+        }
 
         if(!response.getSellerID().equals(user.getUserID())){
             System.out.println("Invalid response");
@@ -497,7 +485,7 @@ public class ClientManager implements IMessageProcess {
      * @param message message to be verified
      */
     private boolean isFresh(Message message) throws SaveNonceException {
-       /* String nonce = message.getNonce();
+        String nonce = message.getNonce();
         //Check freshness
         if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
                 nonces.contains(nonce))
@@ -508,12 +496,12 @@ public class ClientManager implements IMessageProcess {
         if(!TESTING_ON) {
             try {
                 AtomicFileManager.atomicWriteObjectToFile(noncesFile, nonces);
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 throw new SaveNonceException();
             }
         }
-*/
+
         return true;
     }
 

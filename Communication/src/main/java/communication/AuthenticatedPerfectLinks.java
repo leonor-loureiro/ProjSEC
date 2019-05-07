@@ -84,7 +84,6 @@ public class AuthenticatedPerfectLinks {
         message.setReceiver(receiver.getID());
         message.addFreshness(sender.getID());
         message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
-        message.print();
     }
 
     /**

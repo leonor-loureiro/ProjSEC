@@ -38,10 +38,10 @@ public class ClientApp {
                         UserInterface.clearScreen();
                     }
                     else{
-                        // while we dont have a elegible login ask for another one
+                        // while we don't have a valid login ask for another one
                         login = UserInterface.requestLogin();
 
-                        // if we had a correct login we can initiliaze the client
+                        // if we had a correct login we can initialize the client
                         try {
                             ClientManager.getInstance().login(login);
                             System.out.println("Successful login");

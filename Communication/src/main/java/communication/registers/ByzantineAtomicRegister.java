@@ -1,6 +1,7 @@
 package communication.registers;
 
 
+import commontypes.User;
 import communication.data.Message;
 import communication.data.ProcessInfo;
 import crypto.CryptoException;
@@ -11,8 +12,8 @@ import java.util.List;
 public class ByzantineAtomicRegister extends ByzantineRegularRegister {
 
 
-    public ByzantineAtomicRegister(String id, List<ProcessInfo> servers, PrivateKey privateKey, int faults) {
-        super(id, servers, privateKey, faults);
+    public ByzantineAtomicRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults) {
+        super(id, servers, writers, privateKey, faults);
 
 
     }
@@ -31,11 +32,15 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
         writeBackMsg.setGoodID(response.getGoodID());
         writeBackMsg.setSellerID(response.getSellerID());
         writeBackMsg.setForSale(response.isForSale());
+        writeBackMsg.setWts(response.getWts());
+        writeBackMsg.setWriter(response.getWriter());
+        writeBackMsg.setValSignature(response.getValSignature());
         //Add ID of sender
         writeBackMsg.setBuyerID(ID);
 
+
         Message writeBackRsp =
-        super.writeImpl(writeBackMsg, response.getGoodID(), response.getSellerID(), response.isForSale(), response.getWts());
+        super.writeImpl(writeBackMsg, response.getSellerID(), response.getWts());
 
         if(writeBackRsp == null) {
             System.out.println("Write back failed");
@@ -43,5 +48,10 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
         }
 
         return response;
+    }
+
+    @Override
+    protected String getValueToSign(String goodID, String userID, boolean isForSale, String writer, int wts) {
+        return "WRITE|arr|" + goodID + "|" + userID + "|" + isForSale + "|" + writer + "|" + wts;
     }
 }

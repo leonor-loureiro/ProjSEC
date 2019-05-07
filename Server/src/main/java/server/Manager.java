@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 public class Manager implements IMessageProcess {
 
@@ -188,8 +189,8 @@ public class Manager implements IMessageProcess {
                     message.getWts(), message.getRid());
 
         //Update the good state
-        if(!good.isForSale())
-            if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getSignature(), message.getSender()))
+        //if(!good.isForSale())
+            if(!updateGood(good, good.getUserID(), true, message.getWts(), message.getValSignature(), message.getSender()))
                 return createErrorMessage("Failed to change good state.", message.getSellerID(), null,
                         message.getWts(), message.getRid());
 
@@ -315,7 +316,7 @@ public class Manager implements IMessageProcess {
                     message.getRid());
 
         //Alter internal mapping of Goods->Users
-        if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getSignature(), message.getSender()))
+        if(!updateGood(good, buyer.getUserID(), false, message.getWts(), message.getValSignature(), message.getSender()))
             return createErrorMessage("Failed to update good state",
                     message.getSellerID(),
                     message.getBuyerID(),
@@ -360,12 +361,12 @@ public class Manager implements IMessageProcess {
         if(good.getTs() == message.getWts())
             System.out.println("Already have updated value");
         else
-            updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature(), message.getSender());
+            updateGood(good, message.getSellerID(), message.isForSale(), message.getWts(), message.getValSignature(), message.getWriter());
 
         Message response = new Message();
         response.setOperation(Message.Operation.WRITE_BACK);
         response.setWts(message.getWts());
-        //Buyer is the user that sent the request
+        //TODO: necessary? Buyer is the user that sent the request
         response.setSellerID(message.getBuyerID());
 
         return response;
@@ -416,9 +417,8 @@ public class Manager implements IMessageProcess {
      * @return response
      */
     public Message process(Message message) {
-        message.print();
-
         Message response = null;
+
         try{
             try {
                 if (!isFresh(message))
@@ -462,8 +462,6 @@ public class Manager implements IMessageProcess {
                 addFreshness(response);
                 //Sign message
                 signMessage(response);
-
-                response.print();
 
             }
         }catch (SignatureException e) {
@@ -571,6 +569,10 @@ public class Manager implements IMessageProcess {
      * @return true if was successful, false otherwise
      */
     private synchronized boolean updateGood(Good good, String userID, boolean isForSale, int ts, String signature, String writer) {
+
+        System.out.println("signatureVal = ");
+        System.out.println(signature);
+
         if(ts <= good.getTs()) {
             System.out.println("Old write " + ts + "/" + good.getTs());
             return false;
@@ -580,6 +582,7 @@ public class Manager implements IMessageProcess {
         good.setUserID(userID);
         good.setTs(ts);
         good.setSignature(signature);
+        System.out.println("Set writer: " + writer);
         good.setWriter(writer);
 
         //For tests, don't update mapping
