@@ -19,7 +19,8 @@ public class Message implements Serializable, Comparable {
         GET_STATE_OF_GOOD,
         TRANSFER_GOOD,
         ERROR,
-        WRITE_BACK
+        WRITE_BACK,
+        ECHO
     }
 
     private Operation operation;

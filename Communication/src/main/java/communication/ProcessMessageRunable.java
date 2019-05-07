@@ -32,6 +32,12 @@ public class ProcessMessageRunable implements Runnable{
             // Parse received message
             request = (Message) in.readObject();
 
+            /*
+              TODO:
+              1. Echo (authenticated)
+              2. Wait quorum echos / errors
+              3. If errors >
+             */
 
             // write response
             Message response = null;
