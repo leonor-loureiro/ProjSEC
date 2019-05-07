@@ -12,6 +12,8 @@ import crypto.Crypto;
 import crypto.CryptoException;
 
 import java.io.IOException;
+import java.security.Key;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 import static java.lang.System.currentTimeMillis;
@@ -39,9 +41,13 @@ public class AuthenticatedPerfectLinks {
 
         authenticateMessage(sender, receiver, message);
 
+
         Message response = Communication.sendMessage(receiver.getHost(), receiver.getPort(), message);
         System.out.println(response.getOperation() + " - " + response.getNonce() + " -> " + response.getErrorMessage());
 
+
+        if(response.getBytesToSign() != response.getBytesToSign())
+            System.out.println("AHAHAHAHAHAHAHAHAHAHAHAHAHAHHA OMEGALOL WHAT THE FUCK ");
         validateResponse(sender, receiver, response);
 
         return response;
@@ -63,8 +69,16 @@ public class AuthenticatedPerfectLinks {
             throw new AuthenticationException();
         }
 
-        /*if(response.isSignatureValid(receiver.getPublicKey()))
-            throw new AuthenticationException();*/
+
+        // verify signature
+        try {
+            if(!isSignatureValid(response, receiver.getPublicKey())){
+                //TODO: but becareful since it crashes the whole client!!!! throw new AuthenticationException();
+                System.out.println("INVALID SIGNATURE");
+            }
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void authenticateMessage(ProcessInfo sender, ProcessInfo receiver, Message message) throws CryptoException {
@@ -102,5 +116,27 @@ public class AuthenticatedPerfectLinks {
         }
 
         return true;
+    }
+
+
+    /**
+     * This method is responsible for validating whether a message signature is valid
+     * @param message signed message
+     * @param publicKey public key
+     * @return true if valid, false otherwise
+     */
+    private static boolean  isSignatureValid(Message message, PublicKey publicKey)
+            throws CryptoException {
+        if(message.getSignature() == null) {
+            System.out.println("Null public key");
+            return false;
+        }
+        boolean v = Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+
+        message.print();
+        System.out.println("Is signature verified? " + v);
+
+
+        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 }

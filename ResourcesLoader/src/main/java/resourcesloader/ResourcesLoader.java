@@ -35,17 +35,19 @@ import java.security.cert.CertificateException;
  */
 public class ResourcesLoader {
 
-    private static final String KEYSTORE_TYPE = "JCEKS";
     final private static int startingServerPort = 8080;
     final private static int startingPort = 8089;
+    private static int notaryPort = 8088;
+
+
+    private static final String KEYSTORE_TYPE = "JCEKS";
     final private static String address = "localhost";
     final private static String resourcesPath = "../resources/";
     private final static String alias = "userCert";
+
     private List<User> users = new ArrayList<User>();
     private List<Good> goods = new ArrayList<Good>();
     private List<ProcessInfo> servers = new ArrayList<>();
-
-    private static int notaryPort = 8088;
     private static boolean userNotary = false;
 
 
@@ -67,11 +69,11 @@ public class ResourcesLoader {
                 ProcessInfo serverInf = new ProcessInfo(address, initialPort + i, keyPair.getPublic());
                 servers.add(serverInf);
 
-                CreateAndStoreCertificate(keyPair, resourcesPath + serverInf.getID(), alias, "password".toCharArray() );
+                CreateAndStoreCertificate(keyPair, resourcesPath + serverInf.getID(), alias, ("password"+serverInf.getPort()).toCharArray() );
             }
 
             if(userNotary){
-                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
+                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary",("password"+notaryPort).toCharArray());
 
                 ProcessInfo serverInf = new ProcessInfo(address, notaryPort, notaryPublicKey);
                 servers.add(serverInf);
@@ -363,6 +365,13 @@ public class ResourcesLoader {
     }
 
 //    public static Key getPrivateKey(String keystoreFile, String keystorePwd, String alias, String keyPwd) throws CryptoException {
+
+    /**
+     * Retrieves the private key for a certain user
+     * @param user the user's name
+     * @param keystorePwd the password
+     * @return the user's privateKey
+     */
     public static Key getPrivateKey(String user, String keystorePwd) throws CryptoException {
 
         KeyStore ks =  loadKeystore(resourcesPath+user + ".jceks", keystorePwd);
@@ -375,7 +384,21 @@ public class ResourcesLoader {
         }
     }
 
+    /**
+     * gets the privateKey for a server
+     * @param port the server's running port
+     */
+    public static Key getPrivateKey(int port) throws CryptoException {
 
+        KeyStore ks =  loadKeystore(resourcesPath + address+port + ".jceks", ("password"+port));
+
+        try {
+            return ks.getKey(alias+"-privateKey", ("password"+port).toCharArray());
+        } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+            e.printStackTrace();
+            throw new CryptoException("Unable to load privateKey");
+        }
+    }
 
 
     public static void main(String[] args) {

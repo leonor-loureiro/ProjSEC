@@ -77,28 +77,28 @@ public class ClientManager implements IMessageProcess {
      */
     void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
-            //loads the goods from a file
-            goods = ResourcesLoader.loadGoodsList();
+        //loads the goods from a file
+        goods = ResourcesLoader.loadGoodsList();
 
-            //(sets the current privatekey of the user
-            notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
+        //(sets the current privatekey of the user
+        notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
 
-            RequestsReceiver requestReceiver = new RequestsReceiver();
+        RequestsReceiver requestReceiver = new RequestsReceiver();
 
-            //initliazes the receiver in a new thread
-            requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
+        //initliazes the receiver in a new thread
+        requestReceiver.initializeInNewThread(findUser(login.getUsername()).getPort(), this);
 
 
-            List<ProcessInfo> servers = ResourcesLoader.loadServersInfo();
+        List<ProcessInfo> servers = ResourcesLoader.loadServersInfo();
 
-            goodsRegisters = new HashMap<>();
+        goodsRegisters = new HashMap<>();
 
-            for(Good good: goods){
-                goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
+        for(Good good: goods){
+            goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, user.getPrivateKey(), 1));
         }
 
 
-            logFile = "../resources/" + this.getUser().getUserID() + ".log";
+        logFile = "../resources/" + this.getUser().getUserID() + ".log";
     }
 
 

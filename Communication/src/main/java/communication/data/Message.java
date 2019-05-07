@@ -224,7 +224,7 @@ public class Message implements Serializable, Comparable {
         return bytesToSign;
     }
 
-    public synchronized void print(){
+    public void print(){
       try {
 
         //Iterate to all fields of the message

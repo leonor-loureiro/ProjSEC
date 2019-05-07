@@ -16,7 +16,9 @@ import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -502,18 +504,28 @@ public class Manager implements IMessageProcess {
      * @return signed message
      */
     private Message signMessage(Message message) throws SignatureException {
-        //CC signature disabled (for test purposes)
-        if(ccController == null)
-            return message;
-        try {
-            String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
-            message.setSignature(signature);
-            return message;
-        } catch (PKCS11Exception e) {
-            System.out.println("Failed to sign: " + e.getMessage());
-            e.printStackTrace();
-            throw new SignatureException();
+
+        // Server's own key
+        if(ccController == null){
+            try {
+                String signature = Crypto.sign(message.getBytesToSign(), getPrivateKey());
+                message.setSignature(signature);
+            } catch (CryptoException e) {
+                e.printStackTrace();
+            }
+
+        }else{ // Notary's citizen card
+            try {
+                String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
+                message.setSignature(signature);
+            } catch (PKCS11Exception e) {
+                System.out.println("Failed to sign: " + e.getMessage());
+                e.printStackTrace();
+                throw new SignatureException();
+            }
         }
+
+        return message;
 
     }
 
@@ -569,6 +581,10 @@ public class Manager implements IMessageProcess {
         }
     }
 
+
+    private PrivateKey getPrivateKey() throws CryptoException {
+        return (PrivateKey) ResourcesLoader.getPrivateKey(port);
+    }
 
     /* *************************************************************************************
      *                              AUX FUNCTIONS FOR TESTS
