@@ -43,21 +43,28 @@ public class Message implements Serializable, Comparable {
     private String writer;
 
     public Message() {
+
+        this.setNonce(" "+random.nextInt());
     }
 
     public Message(Operation operation){
         this.operation = operation;
+
+        this.setNonce(operation.name() + random.nextInt());
     }
 
     public Message(String errorMessage) {
         this.errorMessage = errorMessage;
         this.operation = Operation.ERROR;
+
+        this.setNonce("err" + random.nextInt());
     }
 
     public Message(String errorMessage, String sellerID, String buyerID) {
         this(errorMessage);
         setBuyerID(buyerID);
         setSellerID(sellerID);
+        this.setNonce(sellerID + buyerID+ random.nextInt());
     }
 
     public String getErrorMessage() {
@@ -198,7 +205,7 @@ public class Message implements Serializable, Comparable {
 
     public void addFreshness(String ID) {
         this.setTimestamp(currentTimeMillis());
-        this.setNonce(ID + random.nextInt());
+        //this.setNonce(ID + random.nextInt());
     }
 
 

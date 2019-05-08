@@ -52,6 +52,15 @@ public class AuthenticatedPerfectLinks {
         return response;
     }
 
+
+    public static void sendOneWayMessage(ProcessInfo sender, ProcessInfo receiver, Message message) throws CryptoException, IOException, ClassNotFoundException {
+        message = (Message) Utils.deepCopy(message);
+
+        authenticateMessage(sender, receiver, message);
+
+        Communication.sendOneWayMessage(receiver.getHost(), receiver.getPort(), message);
+    }
+
     private synchronized static void validateResponse(ProcessInfo sender, ProcessInfo receiver, Message response)
             throws SaveNonceException, NotFreshException, AuthenticationException {
 

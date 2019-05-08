@@ -122,7 +122,23 @@ public class Manager implements IMessageProcess {
         this.port = port;
         System.out.println("Starting server on port " + port + "...");
         loadResources();
-        requestReceiver.initializeInNewThread(port, this);
+
+
+        //requestReceiver.initializeInNewThread(port, this);
+
+        ProcessInfo server = null;
+
+        try {
+            server = new ProcessInfo("localhost" + port, getPrivateKey());
+            server.setPort(port);
+            server.setHost("localhost");
+
+            System.out.println(getPrivateKey());
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
+        requestReceiver.initializeInNewThreadWithEcho(this, serversInfo, 1, server);
+
     }
 
     public void closeServer() throws PteidException {

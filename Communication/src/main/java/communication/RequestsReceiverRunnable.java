@@ -1,8 +1,13 @@
 package communication;
 
+import communication.data.ProcessInfo;
 import communication.interfaces.IMessageProcess;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -11,9 +16,13 @@ import java.io.IOException;
  */
 public class RequestsReceiverRunnable implements Runnable {
 
+    private int faults;
     private RequestsReceiver receiver;
     private int port;
     private IMessageProcess processor;
+    private boolean echo;
+    private  List<ProcessInfo> servers;
+    private ProcessInfo serverInfo;
 
     /**
      * Attributes that are required for request reception
@@ -25,6 +34,17 @@ public class RequestsReceiverRunnable implements Runnable {
         this.receiver = receiver;
         this.port = port;
         this.processor = processor;
+        this.echo = false;
+    }
+
+    public RequestsReceiverRunnable(RequestsReceiver requestsReceiver, IMessageProcess processMessage, List<ProcessInfo> servers, int faults, ProcessInfo serverInfo) {
+
+        this.receiver = requestsReceiver;
+        this.processor = processMessage;
+        this.servers = servers;
+        this.serverInfo = serverInfo;
+        this.echo = true;
+        this.faults = faults;
     }
 
     /**
@@ -33,7 +53,15 @@ public class RequestsReceiverRunnable implements Runnable {
      */
     public void run() {
         try {
-            receiver.initialize(port, processor);
+            if(echo){
+                receiver.initializeWithEchos(processor, servers, faults, serverInfo );
+                System.out.println("Starting request receiver with echo mode on...");
+            }
+            else{
+                receiver.initialize(port, processor);
+                System.out.println("Starting request receiver with echo mode off...");
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }

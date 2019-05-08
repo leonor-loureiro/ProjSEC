@@ -1,8 +1,10 @@
 package communication;
 
+import communication.data.ProcessInfo;
 import communication.interfaces.IMessageProcess;
 
 import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -38,12 +40,35 @@ public class RequestsReceiver{
     }
 
     /**
+     * initializes the reception of requests but with echo-ing system.
+     * @param processMessage processes the messages
+     * @param servers list of servers
+     * @param faults number of faults allowed
+     * @param serverInfo info for the server running
+     */
+    public void initializeWithEchos(IMessageProcess processMessage, List<ProcessInfo> servers, int faults, ProcessInfo serverInfo) throws IOException {
+        running = true;
+
+        server.start(serverInfo.getPort());
+        while (running){
+            server.listenAndProcessWithEcho(processMessage, servers, faults, serverInfo);
+        }
+    }
+
+
+    /**
      * runs the function {@link #initialize(int, IMessageProcess)}  in a new thread
      * @param port the port to run initialize the request receiver on
      * @param processor the function which processes the messages
      */
     public void initializeInNewThread(int port,IMessageProcess processor){
         Runnable r = new RequestsReceiverRunnable(this, port, processor);
+        new Thread(r).start();
+    }
+
+
+    public void initializeInNewThreadWithEcho(IMessageProcess processMessage, List<ProcessInfo> servers, int faults, ProcessInfo serverInfo){
+        Runnable r = new RequestsReceiverRunnable(this, processMessage, servers, faults, serverInfo);
         new Thread(r).start();
     }
 

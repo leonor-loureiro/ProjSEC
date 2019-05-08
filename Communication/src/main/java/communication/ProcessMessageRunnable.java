@@ -8,15 +8,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ProcessMessageRunable implements Runnable{
+public class ProcessMessageRunnable implements Runnable{
 
 
     private final IMessageProcess processMessage;
     private final Socket clientSocket;
 
-    public ProcessMessageRunable(Socket clientSocket, IMessageProcess processMessage) {
+    public ProcessMessageRunnable(Socket clientSocket, IMessageProcess processMessage) {
         this.clientSocket = clientSocket;
-        this.processMessage   = processMessage;
+        this.processMessage = processMessage;
     }
 
     @Override
@@ -32,12 +32,6 @@ public class ProcessMessageRunable implements Runnable{
             // Parse received message
             request = (Message) in.readObject();
 
-            /*
-              TODO:
-              1. Echo (authenticated)
-              2. Wait quorum echos / errors
-              3. If errors >
-             */
 
             // write response
             Message response = null;
