@@ -11,13 +11,13 @@ rem -- Start Server 0
 start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8080 -Dmode=true"
 
 rem -- Start Server 1
-start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8081 -Dmode=true"
+start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8081 "
 
 rem -- Start Server 2
-start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8082 -Dmode=true"
+start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8082 "
 
 rem -- Start Server 3
-start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8083 -Dmode=true"
+start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8083 "
 
 rem -- Start Client
 start cmd /c "title Client & cd .. & cd Client & mvn exec:java"

@@ -109,10 +109,10 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
         while(true){
             try {
 
-                if (EchoHandler.getErrorCounter(nonce) > quorum - 1)
+                if (EchoHandler.getErrorCounter(nonce) >= quorum - 1)
                     return false;
 
-                if (EchoHandler.getCounter(nonce) > quorum - 1)
+                if (EchoHandler.getCounter(nonce) >= quorum - 1)
                     return true;
 
                 try {
