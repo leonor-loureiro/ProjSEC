@@ -20,7 +20,8 @@ public class Message implements Serializable, Comparable {
         TRANSFER_GOOD,
         ERROR,
         WRITE_BACK,
-        ECHO
+        ECHO,
+        READY
     }
 
     private Operation operation;
