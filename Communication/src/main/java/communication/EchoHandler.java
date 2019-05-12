@@ -21,6 +21,8 @@ public class EchoHandler {
     private static Set<String> msgDelivered = new HashSet<>();
     private static Set<String> readyToDeliver = new HashSet<>();
 
+    private static Set<String> receivedOriginalRequest = new HashSet<>();
+
     /*
      * TODO: Implement sort of a total order that doesn't allow conflicting messages to be ECHOED
      * it's different from total order because there's no need to guarantee liveness
@@ -62,6 +64,13 @@ public class EchoHandler {
         return readyToDeliver.contains(id);
     }
 
+    public static synchronized void markReceivedOriginalRequest(String id){
+        receivedOriginalRequest.add(id);
+    }
+
+    public static synchronized boolean wasReceivedOriginalRequest(String id){
+        return receivedOriginalRequest.contains(id);
+    }
 
 
     /**

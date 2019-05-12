@@ -95,13 +95,26 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                     }
 
                     // mark ready to deliver
-                    if( info.getKey() >= quorum - 1 && !EchoHandler.isReadyToDeliver(info.getValue().getNonce())){
+                    if(info.getValue()!= null && !EchoHandler.isReadyToDeliver(info.getValue().getNonce()) && info.getKey() >= quorum - 1){
                         EchoHandler.markReadyToDeliver((info.getValue().getNonce()));
                     }
 
 
+                    // in case the original request was not received
+                    if(info.getValue() != null && !EchoHandler.wasReceivedOriginalRequest(info.getValue().getNonce()) &&
+                            EchoHandler.isReadyToDeliver(info.getValue().getNonce())) {
 
+                        if (!EchoHandler.wasDelivered(info.getValue().getNonce())) {
+                            System.out.println("DELIVERING not originally received request");
+
+                            //Process message
+                            EchoHandler.markDelivered(info.getValue().getNonce());
+                            processMessage.process(info.getValue());
+                        }
+                    }
                 }else{ //non echo/ready message
+
+                    EchoHandler.markReceivedOriginalRequest(request.getNonce());
 
                     // Retransmission Step
                     if(!EchoHandler.wasEchoSent(request.getNonce())){
@@ -123,8 +136,9 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
                         //Process message
                         EchoHandler.markDelivered(request.getNonce());
-                        response = processMessage.process(request);
+                        Pair<Integer, Message> info = EchoHandler.countMajorityReadys(request.getNonce());
 
+                        response = processMessage.process(info.getValue());
 
                     } else {
                         System.out.println("Already Processed Request");
