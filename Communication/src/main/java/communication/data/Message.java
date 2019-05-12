@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.err;
 
 public class Message implements Serializable, Comparable {
 
@@ -271,5 +272,81 @@ public class Message implements Serializable, Comparable {
         return new Integer(wts).compareTo(msg.getWts());
     }
 
+
+    private boolean equalsStrings(String one, String two){
+        if(one == null || two == null)
+            return one == two; // equals if both are null
+
+        return one.equals(two);
+    }
+
+    @Override
+    public boolean equals(Object o){
+
+        // if the reference is the same, then it's the same object
+        if(this == o)
+            return true;
+
+        // check null and class type
+        if(o == null || o.getClass()!= this.getClass())
+            return false;
+
+        Message msg = (Message) o;
+
+        if(! (( this.getOperation() == msg.getOperation()) ||
+                this.getOperation() != null && msg.getOperation() != null &&
+                        this.getOperation().equals(msg.getOperation())) ){
+            return false;
+        }
+
+        if(!equalsStrings(errorMessage, msg.getErrorMessage()))
+            return false;
+
+        if(!equalsStrings(goodID, msg.getGoodID()))
+            return false;
+
+        if(!equalsStrings(sellerID, msg.getSellerID()))
+            return false;
+
+        if(!equalsStrings(buyerID, msg.getBuyerID()))
+            return false;
+
+        if(!equalsStrings(nonce, msg.getNonce()))
+            return false;
+
+        // Some fields are different so it's signature may not be equal
+        //if(!equalsStrings(signature, msg.getSignature()))
+        //    return false;
+
+        if(intentionToBuy != null && !intentionToBuy.equals(msg.intentionToBuy))
+            return false;
+
+        if(!equalsStrings(sender, msg.getSender()))
+            return false;
+
+//        if(!equalsStrings(receiver, msg.getReceiver()))
+//            return false;
+
+        if(isForSale != msg.isForSale())
+            return false;
+
+        //TODO: make it so that the same message has the same timestamp!!
+        //if(timestamp != msg.getTimestamp())
+        //    return false;
+
+        if(wts != msg.getWts())
+            return false;
+
+        if(rid != msg.getRid())
+            return false;
+
+        if(!equalsStrings(valSignature, msg.getValSignature()))
+           return false;
+
+        if(!equalsStrings(writer, msg.getWriter()))
+            return false;
+
+        return true;
+    }
 
 }

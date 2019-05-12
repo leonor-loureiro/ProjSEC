@@ -1,6 +1,7 @@
 package communication;
 
 import communication.data.Message;
+import javafx.util.Pair;
 
 import java.util.*;
 
@@ -17,6 +18,8 @@ public class EchoHandler {
 
     private static Set<String> sentEcho = new HashSet<>();
     private static Set<String> sentReady = new HashSet<>();
+    private static Set<String> msgDelivered = new HashSet<>();
+    private static Set<String> readyToDeliver = new HashSet<>();
 
     /*
      * TODO: Implement sort of a total order that doesn't allow conflicting messages to be ECHOED
@@ -29,17 +32,37 @@ public class EchoHandler {
         sentEcho.add(id);
     }
 
+    public static synchronized boolean wasEchoSent(String id){
+        return sentEcho.contains(id);
+    }
+
+
     public static synchronized void markReadySent(String id){
         sentReady.add(id);
     }
 
-    public static synchronized boolean wasEchoSent(String id){
-        return echoes.containsKey(id);
+    public static synchronized boolean wasReadySent(String id){
+        return sentReady.contains(id);
     }
 
-    public static synchronized boolean wasReadySent(String id){
-        return readys.containsKey(id);
+
+    public static synchronized void markDelivered(String id){
+        msgDelivered.add(id);
     }
+
+    public static synchronized boolean wasDelivered(String id){
+        return msgDelivered.contains(id);
+    }
+
+    public static synchronized void markReadyToDeliver(String id){
+        readyToDeliver.add(id);
+    }
+
+    public static synchronized boolean isReadyToDeliver(String id){
+        return readyToDeliver.contains(id);
+    }
+
+
 
     /**
      * Add message to the list of echoes
@@ -125,24 +148,51 @@ public class EchoHandler {
     }
 
 
-    /**
-     * Checks if enough valid echoes arrived
-     * @param nonce message's unique identifier
-     * @return true if enough valid echoes found
-     */
-    public static boolean enoughEchoes(String nonce, int quorum) {
+    public static synchronized Pair<Integer, Message> countMajorityEchoes (String nonce){
 
-        // Doesn't send to himself
-        if (getErrorCounter(nonce) >= quorum - 1)
-            return false;
-
-        // TODO: Quorum of equal messages
-        if (getCounter(nonce) >= quorum - 1)
-            return true;
-
-        return false;
+        return getCountAndMessage(nonce, echoes);
     }
 
+    public static synchronized Pair<Integer, Message> countMajorityReadys (String nonce){
 
+        return getCountAndMessage(nonce, readys);
+    }
+
+    private static Pair<Integer, Message> getCountAndMessage(String nonce, Map<String, List<Message>> msgMap) {
+        try {
+            List<Message> list = msgMap.get(nonce);
+
+            if (list == null) {
+                System.out.println("LIST was null");
+                return new Pair<>(0, null);
+            }
+
+            int counter;
+            int previousCounter = 0;
+
+            Message highestMessage = null;
+
+
+            for (Message msg : list) {
+                counter = 0;
+
+                for (Message msg2 : list) {
+                    if (msg.equals(msg2)) {
+                        counter++;
+                        if (counter >= previousCounter) {
+                            previousCounter = counter;
+                            highestMessage = msg2;
+                        }
+                    }
+                }
+            }
+
+            return new Pair<>(previousCounter, highestMessage);
+        }catch (Exception e){
+            e.printStackTrace();
+            return new Pair<>(0, null);
+
+        }
+    }
 
 }

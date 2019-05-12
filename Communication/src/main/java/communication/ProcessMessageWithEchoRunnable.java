@@ -4,6 +4,7 @@ import communication.data.Message;
 import communication.data.ProcessInfo;
 import communication.interfaces.IMessageProcess;
 import crypto.CryptoException;
+import javafx.util.Pair;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -60,29 +61,73 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                     //System.out.println("Received echo from " + request.getSender()+ " with nonce " + request.getNonce());
                     EchoHandler.addEchoMessage(request.getIntentionToBuy().getNonce(), request.getIntentionToBuy());
 
+                    // Get number of equal ECHOs received
+                    Pair<Integer, Message> info = EchoHandler.countMajorityEchoes(request.getIntentionToBuy().getNonce());
+                    System.out.println("Echo count : " + info.getKey());
+                    if( info.getKey() >= quorum - 1 && !EchoHandler.wasReadySent(info.getValue().getNonce())){
+
+                        EchoHandler.markReadySent((info.getValue().getNonce()));
+
+                        Message wrapper = new Message(Message.Operation.READY);
+                        wrapper.setIntentionToBuy(info.getValue());
+
+                        broadcast(wrapper);
+                    }
+
                 } else if (isReadyRequest(request)){
                     System.out.println("READY received");
 
-                    //TODO: if > faults readys received, but it hasn't broadcast yet, then broadcast the ready
+                    EchoHandler.addReadyMessage(request.getIntentionToBuy().getNonce(), request.getIntentionToBuy());
+
+                    Pair<Integer, Message> info = EchoHandler.countMajorityReadys(request.getIntentionToBuy().getNonce());
+
+                    System.out.println("Ready count : " + info.getKey());
+
+                    // Amplification phase
+                    if( info.getKey() > faults && !EchoHandler.wasReadySent(info.getValue().getNonce())){
+
+                        EchoHandler.markReadySent((info.getValue().getNonce()));
+
+                        Message wrapper = new Message(Message.Operation.READY);
+                        wrapper.setIntentionToBuy(info.getValue());
+
+                        broadcast(wrapper);
+                    }
+
+                    // mark ready to deliver
+                    if( info.getKey() >= quorum - 1 && !EchoHandler.isReadyToDeliver(info.getValue().getNonce())){
+                        EchoHandler.markReadyToDeliver((info.getValue().getNonce()));
+                    }
 
 
 
-1
                 }else{ //non echo/ready message
 
-                    if(!EchoHandler.wasEchoSent(request.getNonce()))
-                        broadcast(request);
+                    // Retransmission Step
+                    if(!EchoHandler.wasEchoSent(request.getNonce())){
 
-                    if(EchoHandler.enoughEchoes(request.getNonce(), quorum)){
-                        System.out.println("Got enough echoes!!");
+                        EchoHandler.markEchoSent(request.getNonce());
+                        Message wrapper = new Message(Message.Operation.ECHO);
+                        wrapper.setIntentionToBuy(request);
+
+                        broadcast(wrapper);
+                    }
+
+                    // wait until ready to deliver message
+                    while(!EchoHandler.isReadyToDeliver(request.getNonce()))
+                        Thread.sleep(10);
+
+                    // Process
+                    if(!EchoHandler.wasDelivered(request.getNonce())){
+                        System.out.println("DELIVERING");
 
                         //Process message
+                        EchoHandler.markDelivered(request.getNonce());
                         response = processMessage.process(request);
 
-                        // write response
-                    }
-                    else {
-                        System.out.println("Too many error receives in echo");
+
+                    } else {
+                        System.out.println("Already Processed Request");
                     }
 
                 }
@@ -95,6 +140,10 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
 
@@ -102,10 +151,8 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
 
     private void broadcast(final Message msg){
+        System.out.println("Sending " + msg.getOperation().name());
 
-        final Message wrapper = new Message(Message.Operation.ECHO);
-
-        wrapper.setIntentionToBuy(msg);
         for(final ProcessInfo serverInfo : servers) {
             final String host = serverInfo.getHost();
             final int port = serverInfo.getPort();
@@ -119,7 +166,7 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                 public Void call(){
                     try {
 
-                        AuthenticatedPerfectLinks.sendOneWayMessage(senderInfo, serverInfo, wrapper);
+                        AuthenticatedPerfectLinks.sendOneWayMessage(senderInfo, serverInfo, msg);
 
                     } catch (IOException | ClassNotFoundException |CryptoException e) {
                         e.printStackTrace();
