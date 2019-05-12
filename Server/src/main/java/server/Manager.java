@@ -65,6 +65,8 @@ public class Manager implements IMessageProcess {
 
     private List<ProcessInfo> serversInfo;
 
+    ProcessInfo server = null;
+
     /**
      *
      * @return
@@ -125,8 +127,6 @@ public class Manager implements IMessageProcess {
 
 
         //requestReceiver.initializeInNewThread(port, this);
-
-        ProcessInfo server = null;
 
         try {
             server = new ProcessInfo("localhost" + port, getPrivateKey());
@@ -472,7 +472,7 @@ public class Manager implements IMessageProcess {
             }
 
             if(response != null) {
-                response.setSender(message.getReceiver());
+                response.setSender(server.getID());
                 response.setReceiver(message.getSender());
                 //Add nonce and timestamp
                 addFreshness(response);

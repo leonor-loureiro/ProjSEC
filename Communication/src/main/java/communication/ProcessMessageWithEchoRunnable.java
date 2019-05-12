@@ -2,11 +2,9 @@ package communication;
 
 import communication.data.Message;
 import communication.data.ProcessInfo;
-import communication.exception.AuthenticationException;
-import communication.exception.NotFreshException;
-import communication.exception.SaveNonceException;
 import communication.interfaces.IMessageProcess;
 import crypto.CryptoException;
+import javafx.util.Pair;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,73 +24,129 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
     private final ExecutorService executor;
     private ProcessInfo senderInfo;
     private final int quorum;
+    private final int faults;
 
 
-    public ProcessMessageWithEchoRunnable(Socket clientSocket, IMessageProcess processMessage, List<ProcessInfo> servers, int faults, ProcessInfo serverInfo) {
+    public ProcessMessageWithEchoRunnable(Socket clientSocket, IMessageProcess processMessage,
+                                          List<ProcessInfo> servers, int faults, ProcessInfo serverInfo) {
         this.clientSocket = clientSocket;
         this.processMessage = processMessage;
         this.servers = servers;
         this.executor = Executors.newFixedThreadPool(servers.size());
         this.quorum = (int) Math.ceil(((double)servers.size() + faults) / 2);
         this.senderInfo = serverInfo;
+        this.faults = faults;
     }
 
-    /**
-     * @param msg the message to check if it's an echo
-     * @return true if the message was an ECHO message
-     */
-    public boolean isEcho(Message msg){
 
-        if(msg.getOperation().equals(Message.Operation.ECHO))
-            return true;
-//        for(ProcessInfo server : servers){
-//            if(server.getID().equals(msg.getSender()))
-//                return true;
-//        }
 
-        return false;
-    }
+
 
     @Override
     public void run() {
-        ObjectOutputStream out = null;
-
+        ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
-            Message request;
-
             // Parse received message
-            request = (Message) in.readObject();
+            Message request = (Message) in.readObject();
 
 
-            if (request != null){
+            if (request != null) {
                 Message response = null;
 
-                //Don't process echo messages
                 if (isEcho(request)) {
                     System.out.println("ECHO RECEIVED");
                     //System.out.println("Received echo from " + request.getSender()+ " with nonce " + request.getNonce());
-                    EchoHandler.addMessage(request.getIntentionToBuy().getNonce(), request.getIntentionToBuy());
+                    EchoHandler.addEchoMessage(request.getIntentionToBuy().getNonce(), request.getIntentionToBuy());
 
-                    out.writeObject(null);
+                    // Get number of equal ECHOs received
+                    Pair<Integer, Message> info = EchoHandler.countMajorityEchoes(request.getIntentionToBuy().getNonce());
+                    System.out.println("Echo count : " + info.getKey());
+                    if( info.getKey() >= quorum - 1 && !EchoHandler.wasReadySent(info.getValue().getNonce())){
 
-                } else { //non echo message
+                        EchoHandler.markReadySent((info.getValue().getNonce()));
 
-                    broadcast(request);
+                        Message wrapper = new Message(Message.Operation.READY);
+                        wrapper.setIntentionToBuy(info.getValue());
 
-                    if(validEchos(request.getNonce())){
-                        System.out.println("Got enough echos!!");
-                        response = processMessage.process(request);
-
-                        // write response
-                        out.writeObject(response);
+                        broadcast(wrapper);
                     }
-                    else
-                        System.out.println("Too many error receives in echo");
+
+                } else if (isReadyRequest(request)){
+                    System.out.println("READY received");
+
+                    EchoHandler.addReadyMessage(request.getIntentionToBuy().getNonce(), request.getIntentionToBuy());
+
+                    Pair<Integer, Message> info = EchoHandler.countMajorityReadys(request.getIntentionToBuy().getNonce());
+
+                    System.out.println("Ready count : " + info.getKey());
+
+                    // Amplification phase
+                    if( info.getKey() > faults && !EchoHandler.wasReadySent(info.getValue().getNonce())){
+
+                        EchoHandler.markReadySent((info.getValue().getNonce()));
+
+                        Message wrapper = new Message(Message.Operation.READY);
+                        wrapper.setIntentionToBuy(info.getValue());
+
+                        broadcast(wrapper);
+                    }
+
+                    // mark ready to deliver
+                    if(info.getValue()!= null && !EchoHandler.isReadyToDeliver(info.getValue().getNonce()) && info.getKey() >= quorum - 1){
+                        EchoHandler.markReadyToDeliver((info.getValue().getNonce()));
+                    }
+
+
+                    // in case the original request was not received
+                    if(info.getValue() != null && !EchoHandler.wasReceivedOriginalRequest(info.getValue().getNonce()) &&
+                            EchoHandler.isReadyToDeliver(info.getValue().getNonce())) {
+
+                        if (!EchoHandler.wasDelivered(info.getValue().getNonce())) {
+                            System.out.println("DELIVERING not originally received request");
+
+                            //Process message
+                            EchoHandler.markDelivered(info.getValue().getNonce());
+                            processMessage.process(info.getValue());
+                        }
+                    }
+                }else{ //non echo/ready message
+
+                    EchoHandler.markReceivedOriginalRequest(request.getNonce());
+
+                    // Retransmission Step
+                    if(!EchoHandler.wasEchoSent(request.getNonce())){
+
+                        EchoHandler.markEchoSent(request.getNonce());
+                        Message wrapper = new Message(Message.Operation.ECHO);
+                        wrapper.setIntentionToBuy(request);
+
+                        broadcast(wrapper);
+                    }
+
+                    // wait until ready to deliver message
+                    while(!EchoHandler.isReadyToDeliver(request.getNonce()))
+                        Thread.sleep(10);
+
+                    // Process
+                    if(!EchoHandler.wasDelivered(request.getNonce())){
+                        System.out.println("DELIVERING");
+
+                        //Process message
+                        EchoHandler.markDelivered(request.getNonce());
+                        Pair<Integer, Message> info = EchoHandler.countMajorityReadys(request.getNonce());
+
+                        response = processMessage.process(info.getValue());
+
+                    } else {
+                        System.out.println("Already Processed Request");
+                    }
 
                 }
+
+                out.writeObject(response);
             }
 
             System.out.println("Processed request, closing connection");
@@ -100,40 +154,19 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
 
     }
-
-    private boolean validEchos(String nonce) {
-        while(true){
-            try {
-
-                if (EchoHandler.getErrorCounter(nonce) >= quorum - 1)
-                    return false;
-
-                if (EchoHandler.getCounter(nonce) >= quorum - 1)
-                    return true;
-
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-    }
-
 
 
     private void broadcast(final Message msg){
+        System.out.println("Sending " + msg.getOperation().name());
 
-        final Message wrapper = new Message(Message.Operation.ECHO);
-
-        wrapper.setIntentionToBuy(msg);
         for(final ProcessInfo serverInfo : servers) {
             final String host = serverInfo.getHost();
             final int port = serverInfo.getPort();
@@ -147,14 +180,12 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                 public Void call(){
                     try {
 
-                        AuthenticatedPerfectLinks.sendOneWayMessage(senderInfo, serverInfo, wrapper);
+                        AuthenticatedPerfectLinks.sendOneWayMessage(senderInfo, serverInfo, msg);
 
-                    } catch (IOException | ClassNotFoundException e) {
+                    } catch (IOException | ClassNotFoundException |CryptoException e) {
+                        e.printStackTrace();
                         EchoHandler.incrementErrorCounter(msg.getNonce());
                         System.out.println("Failed to send message to " + host + ":" + port);
-
-                    } catch (CryptoException e) {
-                        e.printStackTrace();
                     }
 
                     return null;
@@ -162,4 +193,34 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
             });
         }
     }
+
+
+
+    /**
+     * @param msg the message to check if it's an echo
+     * @return true if the message was an ECHO message
+     */
+    private boolean isEcho(Message msg){
+        return msg != null && msg.getOperation().equals(Message.Operation.ECHO) && validServer(msg);
+    }
+
+
+    /**
+     *
+     * @param msg the message to check if it's an ready message
+     * @return true if the message was a READY message
+     */
+    private boolean isReadyRequest(Message msg) {
+        return msg != null && msg.getOperation().equals(Message.Operation.READY) && validServer(msg);
+    }
+
+    private boolean validServer(Message msg){
+        for(ProcessInfo server : servers){
+            if(server.getID().equals(msg.getSender()))
+                return true;
+        }
+        return false;
+    }
+
+
 }
