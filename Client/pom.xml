@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+
     <artifactId>Client</artifactId>
     <dependencies>
         <dependency>
@@ -45,6 +46,7 @@
         <mainclass>client.ClientApp</mainclass>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
+        <mode>false</mode>
     </properties>
 
     <parent>
@@ -70,6 +72,10 @@
                 </executions>
                 <configuration>
                     <mainClass>${mainclass}</mainClass>
+                    <arguments>
+                        <argument>${mode}</argument>
+                    </arguments>
+
                 </configuration>
             </plugin>
         </plugins>

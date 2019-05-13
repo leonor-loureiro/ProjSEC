@@ -45,7 +45,13 @@ public class ClientApp {
                         try {
                             ClientManager.getInstance().login(login);
                             System.out.println("Successful login");
-                            ClientManager.getInstance().startClient(login);
+                            System.out.println(args[0]);
+                            if(args[0].equals("true")){
+                                System.out.println("Byzantine Mode");
+                                ClientManager.getInstance().startClient(login,true);
+                            }
+                            else
+                                ClientManager.getInstance().startClient(login,false);
                         }catch (PasswordIsWrongException | UserNotExistException e){
                             System.out.println("Insert correct information");
                             login = null;

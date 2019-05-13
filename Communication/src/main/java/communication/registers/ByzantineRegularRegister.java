@@ -1,6 +1,7 @@
 package communication.registers;
 
 import commontypes.User;
+import commontypes.Utils;
 import communication.AuthenticatedPerfectLinks;
 import communication.data.Message;
 import communication.data.ProcessInfo;
@@ -59,9 +60,13 @@ public class ByzantineRegularRegister {
     //Failed requests counter
     private int error;
 
+    //byzantine mode
+
+    private Boolean mode;
 
 
-    public ByzantineRegularRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults) {
+
+    public ByzantineRegularRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults, Boolean mode) {
 
         ID = id;
         this.servers = servers;
@@ -72,6 +77,8 @@ public class ByzantineRegularRegister {
         this.executor = Executors.newFixedThreadPool(servers.size());
         System.out.println("Quorum = " + quorum + " serverCount: " + servers.size());
         senderInfo = new ProcessInfo(id, privateKey);
+        this.mode = mode;
+        System.out.println("Mode is " + mode);
     }
 
 
@@ -201,7 +208,7 @@ public class ByzantineRegularRegister {
      * Adds the message to the reads list
      * @param msg message received
      */
-    private synchronized void handleReadResponse(Message msg) throws CryptoException {
+    private synchronized void handleReadResponse(Message msg){
         msg.getBytesToSign();
         if(rid != msg.getRid())
             return;
@@ -215,22 +222,33 @@ public class ByzantineRegularRegister {
                     msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
             );
 
-            if(!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
-                System.out.println("Value = " + value);
-                System.out.println("Value read is invalid: " + msg.getSender());
-                System.out.println(msg.getValSignature());
+            try {
+                if(!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
+                    System.out.println("Value = " + value);
+                    System.out.println("Value read is invalid: " + msg.getSender());
+                    System.out.println(msg.getValSignature());
+                    error++;
+                    return;
+                }
+            } catch (CryptoException e) {
                 error++;
-                return;
             }
         }
 
         readList.add(msg);
     }
 
-    private void broadcast(final Message msg, final int type) throws CryptoException {
+    private void broadcast( Message msg1, final int type) throws CryptoException {
         error = 0;
-
+        int i = 0;
         for(final ProcessInfo serverInfo : servers) {
+            //byzantine testing
+            if(mode && ++i == servers.size()){
+                msg1 = (Message) Utils.deepCopy(msg1);
+                msg1.setGoodID("byzantineID");
+
+            }
+            final Message msg = msg1;
             final String host = serverInfo.getHost();
             final int port = serverInfo.getPort();
 
@@ -240,7 +258,7 @@ public class ByzantineRegularRegister {
 
                     Message response = null;
                     try {
-
+                        System.out.println(serverInfo.getID() + " » " + msg.getGoodID());
                         response = AuthenticatedPerfectLinks.sendMessage(senderInfo, serverInfo, msg);
 
                         if(type == WRITE)

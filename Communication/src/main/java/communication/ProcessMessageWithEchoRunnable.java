@@ -116,6 +116,7 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
                     EchoHandler.markReceivedOriginalRequest(request.getNonce());
 
+                    System.out.println(request.getGoodID());
                     // Retransmission Step
                     if(!EchoHandler.wasEchoSent(request.getNonce())){
 

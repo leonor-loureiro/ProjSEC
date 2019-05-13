@@ -74,7 +74,7 @@ public class ClientManager implements IMessageProcess {
     /**
      * initializes a client based on the login information
      */
-    void startClient(Login login) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
+    void startClient(Login login,Boolean mode) throws IOException, ClassNotFoundException, CertificateException, NoSuchAlgorithmException, KeyStoreException {
 
         //loads the goods from a file
         goods = ResourcesLoader.loadGoodsList();
@@ -93,7 +93,7 @@ public class ClientManager implements IMessageProcess {
         goodsRegisters = new HashMap<>();
 
         for(Good good: goods){
-            goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, users, user.getPrivateKey(), 1));
+            goodsRegisters.put(good.getGoodID(), new ByzantineAtomicRegister(user.getUserID(), servers, users, user.getPrivateKey(), 1,mode));
         }
 
 

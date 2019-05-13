@@ -113,7 +113,7 @@ public class Communication{
      * @throws IOException if an issue occurred while communicating with host
      * @throws ClassNotFoundException if the response wasn't a message
      */
-    public static void sendOneWayMessage(String host, int port, Message message) throws IOException, ClassNotFoundException {
+    public static void  sendOneWayMessage(String host, int port, Message message) throws IOException, ClassNotFoundException {
         Socket msgSocket = new Socket(host, port);
 
         if(host == null || port == 0 || message == null) {
