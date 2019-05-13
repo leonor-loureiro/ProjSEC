@@ -1,5 +1,6 @@
 package server.security;
 
+import communication.CitizenCardController;
 import crypto.Crypto;
 import crypto.CryptoException;
 import org.junit.After;
@@ -14,19 +15,17 @@ import java.util.Random;
 
 public class CitizenCardControllerTest {
 
-    private  CitizenCardController controller = new CitizenCardController();
     private byte[] data = new byte[20];
     private X509Certificate certificate;
     @Before
     public void setUp() throws Exception {
         (new Random()).nextBytes(data);
-        controller.init();
-        certificate = controller.getAuthenticationCertificate();
+        certificate = CitizenCardController.getInstance().getAuthenticationCertificate();
     }
 
     @Test
     public void signSuccess() throws PKCS11Exception, CryptoException {
-        String signature = Crypto.toString(controller.sign(data));
+        String signature = Crypto.toString(CitizenCardController.getInstance().sign(data));
         Assert.assertTrue(
             Crypto.verifySignature(signature, data, certificate.getPublicKey())
         );
@@ -35,7 +34,7 @@ public class CitizenCardControllerTest {
 
   @After
     public void cleanUp() throws PteidException {
-        controller.exit();
+        CitizenCardController.getInstance().exit();
     }
 
 }

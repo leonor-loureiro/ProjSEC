@@ -1,4 +1,4 @@
-package server.security;
+package communication;
 import pteidlib.PTEID_Certif;
 import pteidlib.PteidException;
 import pteidlib.pteid;
@@ -20,8 +20,22 @@ public class CitizenCardController {
     //Library for windows
     String libName = "pteidpkcs11.dll";
 
+    private static CitizenCardController ccc = null;
 
-    public CitizenCardController(){
+
+    private CitizenCardController(){
+    }
+
+    public static CitizenCardController getInstance(){
+        if(ccc == null){
+            ccc = new CitizenCardController();
+            try {
+                ccc.init();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return ccc;
     }
 
     public void init() throws Exception {

@@ -2,7 +2,6 @@ package communication;
 
 import commontypes.AtomicFileManager;
 import commontypes.Utils;
-import communication.Communication;
 import communication.data.Message;
 import communication.data.ProcessInfo;
 import communication.exception.AuthenticationException;
@@ -16,6 +15,9 @@ import java.security.Key;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import pteidlib.PteidException;
+import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -92,7 +94,18 @@ public class AuthenticatedPerfectLinks {
         message.setSender(sender.getID());
         message.setReceiver(receiver.getID());
         message.addFreshness(sender.getID());
-        message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
+        if(sender.getPrivateKey() != null)
+            message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
+        else{
+            try {
+
+                String signature = Crypto.toString(CitizenCardController.getInstance().sign(message.getBytesToSign()));
+                message.setSignature(signature);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     /**

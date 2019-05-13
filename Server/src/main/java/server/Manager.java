@@ -12,7 +12,7 @@ import crypto.CryptoException;
 import pteidlib.PteidException;
 import resourcesloader.ResourcesLoader;
 import commontypes.AtomicFileManager;
-import server.security.CitizenCardController;
+import communication.CitizenCardController;
 import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import java.io.File;
@@ -48,10 +48,9 @@ public class Manager implements IMessageProcess {
     private int wts;
 
     //Singleton instance
-    static Manager manager = null;
+    private static Manager manager = null;
 
-    //Handler for the cryptographic operations with the CC
-    CitizenCardController ccController;
+    private static boolean isNotary = false;
 
     //List of users
     private ArrayList<User> users;
@@ -88,24 +87,7 @@ public class Manager implements IMessageProcess {
 
 
     private Manager(){
-        ccController = new CitizenCardController();
-        try {
-            ccController.init();
-        } catch (Exception e) {
-            System.out.println("Failed to initialize Citizen Card Controller");
-            System.out.println(e.getMessage());
 
-            /*System.out.println("Shutting down...");
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
-            System.exit(0);*/ //Comment for tests
-
-            //If init failed, not CC available (for tests)
-            ccController = null;
-        }
     }
 
     public static void setByzantine(boolean mode) {
@@ -120,7 +102,11 @@ public class Manager implements IMessageProcess {
      * This method is responsible for launching the notary server
      * @param port the port the service runs on
      */
-    public void startServer(int port) throws IOException, ClassNotFoundException {
+    public void startServer(int port, boolean isNotary) throws IOException, ClassNotFoundException {
+        Manager.isNotary = isNotary;
+        //if(Manager.isNotary)
+        //    initCC();
+
         this.port = port;
         System.out.println("Starting server on port " + port + "...");
         loadResources();
@@ -142,8 +128,8 @@ public class Manager implements IMessageProcess {
     }
 
     public void closeServer() throws PteidException {
-        if(ccController != null)
-            ccController.exit();
+        if(isNotary)
+            CitizenCardController.getInstance().exit();
 
         // stops running thread that's receiving requests
         if(requestReceiver.isRunning()) {
@@ -531,7 +517,7 @@ public class Manager implements IMessageProcess {
     private Message signMessage(Message message) throws SignatureException {
 
         // Server's own key
-        if(ccController == null){
+        if(!isNotary){
             try {
                 String signature = Crypto.sign(message.getBytesToSign(), getPrivateKey());
                 message.setSignature(signature);
@@ -542,7 +528,7 @@ public class Manager implements IMessageProcess {
 
         }else{ // Notary's citizen card
             try {
-                String signature = Crypto.toString(ccController.sign(message.getBytesToSign()));
+                String signature = Crypto.toString(CitizenCardController.getInstance().sign(message.getBytesToSign()));
                 message.setSignature(signature);
             } catch (PKCS11Exception e) {
                 System.out.println("Failed to sign: " + e.getMessage());
@@ -616,7 +602,9 @@ public class Manager implements IMessageProcess {
 
 
     private PrivateKey getPrivateKey() throws CryptoException {
-        return (PrivateKey) ResourcesLoader.getPrivateKey(port);
+        if(!isNotary)
+            return (PrivateKey) ResourcesLoader.getPrivateKey(port);
+        return null;
     }
 
     private PublicKey getPublicKey(){

@@ -36,6 +36,13 @@
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>pteidlibj</groupId>
+            <artifactId>pteidlibj</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../Server/src/main/resources/lib/pteidlibj.jar</systemPath>
+        </dependency>
     </dependencies>
 
 

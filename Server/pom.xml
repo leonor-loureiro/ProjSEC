@@ -14,8 +14,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
 
-        <port>number</port>
-        <mode>mode</mode>
+        <port>8080</port>
+        <mode>false</mode>
+        <notary>0</notary>
 
     </properties>
     <artifactId>Server</artifactId>
@@ -45,6 +46,7 @@
                     <arguments>
 						<argument>${port}</argument>
                         <argument>${mode}</argument>
+                        <argument>${notary}</argument>
 					</arguments>
                 </configuration>
             </plugin>

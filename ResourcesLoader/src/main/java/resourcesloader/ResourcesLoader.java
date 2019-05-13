@@ -58,6 +58,9 @@ public class ResourcesLoader {
     private void createServers(int initialPort, int numberOfServers){
 
         try {
+            // one server is notary
+            if(userNotary)
+                numberOfServers--;
 
             for(int i = 0; i < numberOfServers; i++){
 
@@ -73,7 +76,7 @@ public class ResourcesLoader {
             }
 
             if(userNotary){
-                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary",("password"+notaryPort).toCharArray());
+                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary",("password").toCharArray());
 
                 ProcessInfo serverInf = new ProcessInfo(address, notaryPort, notaryPublicKey);
                 servers.add(serverInf);
@@ -409,12 +412,15 @@ public class ResourcesLoader {
         int itemNotForSaleCount = 3;
         int serverCount = 4;
 
+        if(args.length == 1)
+            userNotary = Integer.parseInt(args[0]) != 0;
 
-        if(args. length == 4){
-            usersCount = Integer.parseInt(args[0]);
-            itemForSaleCount = Integer.parseInt(args[1]);
-            itemNotForSaleCount = Integer.parseInt(args[2]);
-            serverCount = Integer.parseInt(args[3]);
+        if(args. length == 5){
+            userNotary = Integer.parseInt(args[0]) != 0;
+            usersCount = Integer.parseInt(args[1]);
+            itemForSaleCount = Integer.parseInt(args[2]);
+            itemNotForSaleCount = Integer.parseInt(args[3]);
+            serverCount = Integer.parseInt(args[4]);
         }
 
         // create all servers and the serverListInfo

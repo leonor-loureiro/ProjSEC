@@ -7,11 +7,7 @@ import java.util.*;
 
 public class EchoHandler {
 
-    private static Map<String, Integer> echoCounter = new HashMap<>();
-    private static Map<String, Integer> readyCounter = new HashMap<>();
-
     private static Map<String, Integer> errorEchoCounter = new HashMap<>();
-    private static Map<String, Integer> errorReadyCounter = new HashMap<>();
 
     private static Map<String, List<Message>> echoes = new HashMap<>();
     private static Map<String, List<Message>> readys = new HashMap<>();
@@ -79,17 +75,14 @@ public class EchoHandler {
      * @param msg message to be added
      */
     public static synchronized void addEchoMessage(String id, Message msg){
-
         List<Message> list = echoes.get(id);
 
         if(list != null) {
             list.add(msg);
-            echoCounter.put(id, echoCounter.get(id) + 1);
         }else{
             list = new ArrayList<Message>();
             list.add(msg);
             echoes.put(id, list);
-            echoCounter.put(id, 1);
         }
     }
 
@@ -104,12 +97,10 @@ public class EchoHandler {
 
         if(list != null) {
             list.add(msg);
-            readyCounter.put(id, readyCounter.get(id) + 1);
         }else{
             list = new ArrayList<Message>();
             list.add(msg);
             readys.put(id, list);
-            readyCounter.put(id, 1);
         }
     }
 
@@ -119,57 +110,39 @@ public class EchoHandler {
      */
     public synchronized static void incrementErrorCounter(String id){
         if(errorEchoCounter.containsKey(id))
-            errorEchoCounter.put(id, echoCounter.get(id) + 1);
+            errorEchoCounter.put(id, errorEchoCounter.get(id) + 1);
         else
-            echoCounter.put(id, 1);
+            errorEchoCounter.put(id, 1);
     }
+
 
     /**
-     * find the number of msgs received so far
-     * @param id of the message group
-     * @return the number of echoes received
+     * Finds the most occurred Ready Message with given nonce
+     * @param nonce message's unique identifier
+     * @return the occurrence and max occurred echo message
      */
-    public static synchronized int  getCounter(String id){
-        if(echoCounter.get(id) != null)
-            return echoCounter.get(id);
-        return 0;
-    }
-
-    /**
-     * find the number of error in a message
-     * @param id of the message group
-     * @return the number of errors
-     */
-    public static synchronized int  getErrorCounter(String id){
-        if(errorEchoCounter.get(id) != null)
-            return errorEchoCounter.get(id);
-        return 0;
-    }
-
-    /**
-     * clears given entrance on the maps
-     * @param id identifier of the message group
-     */
-    public static synchronized void removeById(String id){
-        echoes.remove(id);
-        echoCounter.remove(id);
-        errorEchoCounter.remove(id);
-    }
-
-
     public static synchronized Pair<Integer, Message> countMajorityEchoes (String nonce){
 
-        return getCountAndMessage(nonce, echoes);
+        return getCountAndMessage(echoes.get(nonce));
     }
 
+    /**
+     * Finds the most occurred Ready Message with given nonce
+     * @param nonce message's unique identifier
+     * @return the occurrence and max occurred ready message
+     */
     public static synchronized Pair<Integer, Message> countMajorityReadys (String nonce){
 
-        return getCountAndMessage(nonce, readys);
+        return getCountAndMessage(readys.get(nonce));
     }
 
-    private static Pair<Integer, Message> getCountAndMessage(String nonce, Map<String, List<Message>> msgMap) {
+    /**
+     * Finds the message with highest count in the given list and the number of this message's occurence
+     * @param list list of messages
+     * @return the occurrence and the max occurred message
+     */
+    private static Pair<Integer, Message> getCountAndMessage(List<Message> list) {
         try {
-            List<Message> list = msgMap.get(nonce);
 
             if (list == null) {
                 System.out.println("LIST was null");
@@ -184,7 +157,6 @@ public class EchoHandler {
 
             for (Message msg : list) {
                 counter = 0;
-
                 for (Message msg2 : list) {
                     if (msg.equals(msg2)) {
                         counter++;
@@ -198,6 +170,7 @@ public class EchoHandler {
 
             return new Pair<>(previousCounter, highestMessage);
         }catch (Exception e){
+            //TODO: stop catching exceptions
             e.printStackTrace();
             return new Pair<>(0, null);
 

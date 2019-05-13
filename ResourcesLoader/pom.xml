@@ -34,6 +34,8 @@
         <mainclass>resourcesloader.ResourcesLoader</mainclass>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
+
+        <notary>0</notary>
     </properties>
 
 
@@ -60,7 +62,10 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>${mainclass}</mainClass>
+                        <mainClass>${mainclass}</mainClass>
+                        <arguments>
+                            <argument>${notary}</argument>
+                        </arguments>
                 </configuration>
             </plugin>
         </plugins>

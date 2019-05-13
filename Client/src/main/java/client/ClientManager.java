@@ -55,9 +55,6 @@ public class ClientManager implements IMessageProcess {
     /*
     Random to generate nonces
      */
-    Random random = new Random();
-
-    private static int notaryPort = 8080;
 
     private PublicKey notaryPublicKey;
     private ArrayList<String> nonces = new ArrayList<>();
@@ -334,17 +331,18 @@ public class ClientManager implements IMessageProcess {
             return response;
         }
 
-        if(!isFresh(response)){
-            System.out.println("Notary response is not fresh");
-            return response;
-        }
+        //TODO: Clean code
+//        if(!isFresh(response)){
+//            System.out.println("Notary response is not fresh");
+//            return response;
+//        }
 
 
-        else if (!isSignatureValid(response, notaryPublicKey)) {
-            System.out.println("Notary validation failed");
-            return response;
-
-        }
+//        else if (!isSignatureValid(response, notaryPublicKey)) {
+//            System.out.println("Notary validation failed");
+//            return response;
+//
+//        }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             //Save operation in log

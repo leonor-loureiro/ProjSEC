@@ -32,8 +32,10 @@ public class ServerApp {
 
             String byzantineMode = args[1];
 
+            Boolean isNotary = Integer.parseInt(args[2]) != 0;
+
             System.out.println(portnumber);
-            Manager.getInstance().startServer(Integer.parseInt(portnumber));
+            Manager.getInstance().startServer(Integer.parseInt(portnumber), isNotary);
             
             if(byzantineMode.equals("true")) {
                 Manager.setByzantine(true);
