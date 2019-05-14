@@ -211,8 +211,7 @@ public class ByzantineRegularRegister {
 
         System.out.println("Writer = " + msg.getWriter());
 
-        //TODO remove != null after signing initial resources
-        if(msg.getOperation().equals(Message.Operation.ERROR) || msg.getWriter() != null) {
+        if(msg.getOperation().equals(Message.Operation.ERROR)) {
             PublicKey writerKey = getWriterPublicKey(msg.getWriter());
             String value = getValueToSign(
                     msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
