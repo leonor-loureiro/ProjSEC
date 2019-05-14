@@ -3,6 +3,7 @@ package communication;
 import commontypes.Utils;
 import communication.data.Message;
 import communication.data.ProcessInfo;
+import communication.exception.MultipleWritesException;
 import communication.interfaces.IMessageProcess;
 import crypto.CryptoException;
 import javafx.util.Pair;
@@ -114,7 +115,8 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                         }
                     }
                 }else{ //non echo/ready message
-
+                    
+                    EchoHandler.checkMultiWrites(request);
 
                     EchoHandler.markReceivedOriginalRequest(request.getNonce());
 
@@ -166,7 +168,10 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }catch (Exception e){
+        //TODO: remove after debug
+        //}catch (Exception e){
+        //    e.printStackTrace();
+        } catch (MultipleWritesException e) {
             e.printStackTrace();
         }
 
