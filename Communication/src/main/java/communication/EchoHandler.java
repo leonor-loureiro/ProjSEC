@@ -1,6 +1,7 @@
 package communication;
 
 import communication.data.Message;
+import communication.exception.MultipleWritesException;
 import javafx.util.Pair;
 
 import java.util.*;
@@ -18,6 +19,8 @@ public class EchoHandler {
     private static Set<String> readyToDeliver = new HashSet<>();
 
     private static Set<String> receivedOriginalRequest = new HashSet<>();
+
+    private static Map <String, String> writes = new HashMap<>();
 
     /*
      * TODO: Implement sort of a total order that doesn't allow conflicting messages to be ECHOED
@@ -69,13 +72,39 @@ public class EchoHandler {
     }
 
 
+    public static boolean isWriterOperation(Message msg){
+        return !(
+                msg.getOperation().equals(Message.Operation.TRANSFER_GOOD) ||
+                msg.getOperation().equals(Message.Operation.INTENTION_TO_SELL)
+        );
+    }
+
+
+    public static void checkMultiWrites(Message msg) throws MultipleWritesException {
+        // Prevents byzantine user from sending 2 concurrent writes to mess with execution order
+        if(isWriterOperation(msg)){
+            String msgID = writes.get(msg.getGoodID());
+
+            if(msgID == null){
+                writes.put(msg.getGoodID(), msg.getNonce());
+            }else{
+                if(!wasDelivered(msgID) && !msg.getNonce().equals(msgID)){
+                    System.out.println("Byzantine client detected, attempt to multiWrite!");
+                    throw new MultipleWritesException();
+                }
+            }
+        }
+    }
+
     /**
      * Add message to the list of echoes
      * @param id id of the message group
      * @param msg message to be added
      */
-    public static synchronized void addEchoMessage(String id, Message msg){
+    public static synchronized void addEchoMessage(String id, Message msg) throws MultipleWritesException {
         List<Message> list = echoes.get(id);
+
+        checkMultiWrites(msg);
 
         if(list != null) {
             list.add(msg);
