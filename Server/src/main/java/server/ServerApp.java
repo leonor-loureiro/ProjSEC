@@ -2,6 +2,7 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import communication.ByzantineSimulator;
 import resourcesloader.ResourcesLoader;
 
 import java.io.BufferedReader;
@@ -35,12 +36,14 @@ public class ServerApp {
             Boolean isNotary = Integer.parseInt(args[2]) != 0;
 
             System.out.println(portnumber);
-            Manager.getInstance().startServer(Integer.parseInt(portnumber), isNotary);
-            
+            System.out.println(byzantineMode);
             if(byzantineMode.equals("true")) {
                 Manager.setByzantine(true);
-                System.out.println(Manager.getByzantine());
+                System.out.println("Change to byzantine Mode");
+                ByzantineSimulator.setByzantine(true);
             }
+            Manager.getInstance().startServer(Integer.parseInt(portnumber), isNotary);
+
 
 
             BufferedReader reader =  new BufferedReader(new InputStreamReader(System.in));

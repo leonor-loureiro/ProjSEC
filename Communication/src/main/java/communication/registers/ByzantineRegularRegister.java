@@ -3,6 +3,7 @@ package communication.registers;
 import commontypes.User;
 import commontypes.Utils;
 import communication.AuthenticatedPerfectLinks;
+import communication.ByzantineSimulator;
 import communication.data.Message;
 import communication.data.ProcessInfo;
 import communication.exception.AuthenticationException;
@@ -60,13 +61,10 @@ public class ByzantineRegularRegister {
     //Failed requests counter
     private int error;
 
-    //byzantine mode
-
-    private Boolean mode;
 
 
 
-    public ByzantineRegularRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults, Boolean mode) {
+    public ByzantineRegularRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults) {
 
         ID = id;
         this.servers = servers;
@@ -77,8 +75,6 @@ public class ByzantineRegularRegister {
         this.executor = Executors.newFixedThreadPool(servers.size());
         System.out.println("Quorum = " + quorum + " serverCount: " + servers.size());
         senderInfo = new ProcessInfo(id, privateKey);
-        this.mode = mode;
-        System.out.println("Mode is " + mode);
     }
 
 
@@ -243,7 +239,8 @@ public class ByzantineRegularRegister {
         int i = 0;
         for(final ProcessInfo serverInfo : servers) {
             //byzantine testing
-            if(mode && ++i == servers.size()){
+
+            if(ByzantineSimulator.getByzantine() && ++i == servers.size()){
                 msg1 = (Message) Utils.deepCopy(msg1);
                 msg1.setGoodID("byzantineID");
 

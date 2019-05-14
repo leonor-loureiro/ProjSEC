@@ -3,6 +3,7 @@ package client;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import commontypes.exception.UserNotExistException;
+import communication.ByzantineSimulator;
 import crypto.CryptoException;
 
 import java.io.IOException;
@@ -45,13 +46,13 @@ public class ClientApp {
                         try {
                             ClientManager.getInstance().login(login);
                             System.out.println("Successful login");
-                            System.out.println(args[0]);
                             if(args[0].equals("true")){
-                                System.out.println("Byzantine Mode");
-                                ClientManager.getInstance().startClient(login,true);
+                                ClientManager.getInstance().startClient(login);
+                                ByzantineSimulator.setByzantine(true);
+                                System.out.println("Byzantine Mode is " + ByzantineSimulator.getByzantine());
                             }
                             else
-                                ClientManager.getInstance().startClient(login,false);
+                                ClientManager.getInstance().startClient(login);
                         }catch (PasswordIsWrongException | UserNotExistException e){
                             System.out.println("Insert correct information");
                             login = null;

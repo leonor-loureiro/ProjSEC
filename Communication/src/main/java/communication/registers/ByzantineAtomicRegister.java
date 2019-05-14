@@ -12,8 +12,8 @@ import java.util.List;
 public class ByzantineAtomicRegister extends ByzantineRegularRegister {
 
 
-    public ByzantineAtomicRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults, Boolean mode) {
-        super(id, servers, writers, privateKey, faults,mode);
+    public ByzantineAtomicRegister(String id, List<ProcessInfo> servers, List<User> writers, PrivateKey privateKey, int faults) {
+        super(id, servers, writers, privateKey, faults);
 
 
     }

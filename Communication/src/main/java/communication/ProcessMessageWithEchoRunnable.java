@@ -1,5 +1,6 @@
 package communication;
 
+import commontypes.Utils;
 import communication.data.Message;
 import communication.data.ProcessInfo;
 import communication.interfaces.IMessageProcess;
@@ -114,6 +115,7 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                     }
                 }else{ //non echo/ready message
 
+
                     EchoHandler.markReceivedOriginalRequest(request.getNonce());
 
                     System.out.println(request.getGoodID());
@@ -139,7 +141,14 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
                         EchoHandler.markDelivered(request.getNonce());
                         Pair<Integer, Message> info = EchoHandler.countMajorityReadys(request.getNonce());
 
-                        response = processMessage.process(info.getValue());
+                        if(ByzantineSimulator.getByzantine()) {
+                            System.out.println("Byzantining the message");
+                            info.getValue().setGoodID("byzantineID");
+                            response = processMessage.process(info.getValue());
+                        }
+                        else
+                            response = processMessage.process(info.getValue());
+
 
                     } else {
                         System.out.println("Already Processed Request");
@@ -166,11 +175,25 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
 
 
     private void broadcast(final Message msg){
-        System.out.println("Sending " + msg.getOperation().name());
+        //System.out.println("Sending " + msg1.getOperation().name());
 
+        int i = 0;
         for(final ProcessInfo serverInfo : servers) {
+
+         /*   if(!isEcho(msg1) && !isReadyRequest(msg1)&& ByzantineSimulator.getByzantine()) {
+                if (++i == servers.size())
+                {
+                    System.out.println("Byzanting this message");
+                    msg1 = (Message) Utils.deepCopy(msg1);
+                    msg1.setGoodID("byzantineID");
+
+                }
+
+            } */
             final String host = serverInfo.getHost();
             final int port = serverInfo.getPort();
+
+            //final Message msg = msg1;
 
 
             if(serverInfo.getID().equals(senderInfo.getID()))

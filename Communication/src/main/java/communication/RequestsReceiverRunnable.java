@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
  */
 public class RequestsReceiverRunnable implements Runnable {
 
+    private boolean byzantine;
     private int faults;
     private RequestsReceiver receiver;
     private int port;
@@ -54,7 +55,7 @@ public class RequestsReceiverRunnable implements Runnable {
     public void run() {
         try {
             if(echo){
-                receiver.initializeWithEchos(processor, servers, faults, serverInfo );
+                receiver.initializeWithEchos(processor, servers, faults, serverInfo);
                 System.out.println("Starting request receiver with echo mode on...");
             }
             else{

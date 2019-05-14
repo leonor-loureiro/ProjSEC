@@ -12,6 +12,7 @@ import java.util.*;
 public class Utils {
 
     public static Random random = new Random();
+
     /**
      * This function is responsible for serializing an array list
      * @param arrayList array list to be serialized

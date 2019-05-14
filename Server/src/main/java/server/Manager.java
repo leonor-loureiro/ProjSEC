@@ -419,7 +419,7 @@ public class Manager implements IMessageProcess {
      * @return response
      */
     public Message process(Message message) {
-        message.print();
+        //message.print();
         Message response = null;
 
         try{

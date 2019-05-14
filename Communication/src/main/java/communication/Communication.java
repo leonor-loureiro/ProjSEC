@@ -44,6 +44,7 @@ public class Communication{
      * Function that receives 1 message through socket and runs the method
      * process message according to the IMessageProcess's processMessage class
      * @param processMessage a class that implements a method to process the message
+     * @param byzantine
      * @throws IOException if an error happens during socket connection
      */
     public void listenAndProcessWithEcho(IMessageProcess processMessage, List<ProcessInfo> servers, int faults, ProcessInfo serverInfo) throws IOException {
