@@ -2,6 +2,7 @@ package server;
 
 import commontypes.Good;
 import commontypes.User;
+import commontypes.Utils;
 import communication.data.ProcessInfo;
 import communication.exception.SaveNonceException;
 import communication.interfaces.IMessageProcess;
@@ -17,6 +18,7 @@ import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureException;
@@ -246,6 +248,18 @@ public class Manager implements IMessageProcess {
      */
     private Message transferGood(Message message) throws CryptoException, SignatureException, SaveNonceException {
         Good good = findGood(message.getGoodID());
+
+        // check proof of work
+        try {
+            if(!Utils.validProofOfWork(Utils.defaultPrefix, message.getDataToChallenge(), message.getProofOfWork()))
+                return createErrorMessage("Invalid proof of work.",
+                        message.getSellerID(),
+                        message.getBuyerID(), message.getWts(), message.getRid());
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
         if(good == null)
             return createErrorMessage("Good does not exist.",
                     message.getSellerID(),

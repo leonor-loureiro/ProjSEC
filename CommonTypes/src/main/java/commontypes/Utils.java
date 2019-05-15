@@ -12,6 +12,7 @@ import java.util.*;
 public class Utils {
 
     public static Random random = new Random();
+    public static String defaultPrefix = "1234";
 
     /**
      * This function is responsible for serializing an array list
@@ -125,16 +126,21 @@ public class Utils {
      */
 
     public static int proofOfWork(String prefix, String data) throws NoSuchAlgorithmException {
-        String md5;
         int random = 0;
-        int end = prefix.length();
         while(true){
-            md5 = computeMD5(data + random);
-            System.out.println(random + " -- " + md5.substring(0, end));
-            if(md5.substring(0, end).equals(prefix))
+            if(validProofOfWork(prefix, data, random))
                 return random;
             random++;
         }
+    }
+
+    public static boolean validProofOfWork(String prefix, String data, int random) throws NoSuchAlgorithmException {
+        String md5;
+        int end = prefix.length();
+
+        md5 = computeMD5(data + random);
+        System.out.println(random + " -- " + md5.substring(0, end));
+        return md5.substring(0, end).equals(prefix);
     }
 
     /**

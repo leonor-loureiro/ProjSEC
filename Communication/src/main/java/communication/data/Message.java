@@ -14,6 +14,14 @@ public class Message implements Serializable, Comparable {
 
     private static final Random random = new Random();
 
+    public int getProofOfWork() {
+        return proofOfWork;
+    }
+
+    public void setProofOfWork(int proofOfWork) {
+        this.proofOfWork = proofOfWork;
+    }
+
     public enum Operation {
         INTENTION_TO_SELL,
         BUY_GOOD,
@@ -37,6 +45,7 @@ public class Message implements Serializable, Comparable {
     private Message intentionToBuy;
     private String sender;
     private String receiver;
+    private int proofOfWork;
 
     //Byzantine Registers Variables
     private int wts;
@@ -47,12 +56,16 @@ public class Message implements Serializable, Comparable {
     public Message() {
 
         this.setNonce(" "+random.nextInt());
+        this.setTimestamp(currentTimeMillis());
+
     }
 
     public Message(Operation operation){
         this.operation = operation;
 
         this.setNonce(operation.name() + random.nextInt());
+        this.setTimestamp(currentTimeMillis());
+
     }
 
     public Message(String errorMessage) {
@@ -60,6 +73,8 @@ public class Message implements Serializable, Comparable {
         this.operation = Operation.ERROR;
 
         this.setNonce("err" + random.nextInt());
+        this.setTimestamp(currentTimeMillis());
+
     }
 
     public Message(String errorMessage, String sellerID, String buyerID) {
@@ -67,6 +82,8 @@ public class Message implements Serializable, Comparable {
         setBuyerID(buyerID);
         setSellerID(sellerID);
         this.setNonce(sellerID + buyerID+ random.nextInt());
+        this.setTimestamp(currentTimeMillis());
+
     }
 
     public String getErrorMessage() {
@@ -206,7 +223,7 @@ public class Message implements Serializable, Comparable {
      */
 
     public void addFreshness(String ID) {
-        this.setTimestamp(currentTimeMillis());
+        //this.setTimestamp(currentTimeMillis());
         //this.setNonce(ID + random.nextInt());
     }
 
@@ -263,6 +280,10 @@ public class Message implements Serializable, Comparable {
 
     }
 
+
+    public String getChallenge(){
+        return getBuyerID() + getSellerID() + getGoodID() + getNonce() + getWriter() + getReceiver();
+    }
 
     public int compareTo(Object o) {
         if(!(o instanceof Message))
@@ -330,9 +351,8 @@ public class Message implements Serializable, Comparable {
         if(isForSale != msg.isForSale())
             return false;
 
-        //TODO: make it so that the same message has the same timestamp!!
-        //if(timestamp != msg.getTimestamp())
-        //    return false;
+        if(timestamp != msg.getTimestamp())
+            return false;
 
         if(wts != msg.getWts())
             return false;

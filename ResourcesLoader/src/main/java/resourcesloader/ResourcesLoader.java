@@ -72,17 +72,20 @@ public class ResourcesLoader {
                 ProcessInfo serverInf = new ProcessInfo(address, initialPort + i, keyPair.getPublic());
                 servers.add(serverInf);
 
-                CreateAndStoreCertificate(keyPair, resourcesPath + serverInf.getID(), alias, ("password"+serverInf.getPort()).toCharArray() );
+                CreateAndStoreCertificate(keyPair, resourcesPath + serverInf.getID(),
+                        alias, ("password"+serverInf.getPort()).toCharArray() );
             }
 
             if(userNotary){
-                PublicKey notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary",("password").toCharArray());
+                PublicKey notaryPublicKey = Crypto.
+                        getPublicKey("../Server/SEC-Keystore","notary",("password").toCharArray());
 
                 ProcessInfo serverInf = new ProcessInfo(address, notaryPort, notaryPublicKey);
                 servers.add(serverInf);
             }
 
-        } catch (CertificateException | OperatorCreationException | NoSuchAlgorithmException | KeyStoreException | IOException | CryptoException e) {
+        } catch (CertificateException | OperatorCreationException | NoSuchAlgorithmException | KeyStoreException |
+                IOException | CryptoException e) {
             e.printStackTrace();
         }
 
@@ -132,6 +135,7 @@ public class ResourcesLoader {
         try {
             keyPair = Crypto.generateRSAKeys();
             user.setPublicKey(keyPair.getPublic());
+            user.setPrivateKey(keyPair.getPrivate());
 
         } catch (CryptoException e) {
             e.printStackTrace();
@@ -146,14 +150,33 @@ public class ResourcesLoader {
         }
     }
 
+
+    private User getUser(String userID){
+        for(User usr : users){
+            if (usr.getUserID().equals(userID))
+                    return usr;
+        }
+        return null;
+    }
+
+    private String getValueToSign(String goodID, String userID, boolean isForSale, String writer, int wts) {
+        return "WRITE|brr|" + goodID + "|" + userID + "|" + isForSale + "|" + writer + "|" + wts;
+    }
+
     /**
      * adds an good/item to a user
      * @param goodID the id of the good to be added
      * @param userID the user who will own the good
      * @param onSale information of whether the good starts for sale or not
      */
-    private void addItemToUser(String goodID, String userID, boolean onSale){
+    private void addItemToUser(String goodID, String userID, boolean onSale) throws CryptoException {
         Good good = new Good(goodID, userID, onSale);
+
+        String value = getValueToSign(goodID, userID, onSale, userID, 0);
+        User user = getUser(userID);
+        good.setSignature(Crypto.sign(value.getBytes(), user.getPrivateKey()));
+        good.setWriter(userID);
+
         goods.add(good);
     }
 
@@ -405,56 +428,63 @@ public class ResourcesLoader {
 
 
     public static void main(String[] args) {
-        ResourcesLoader rsl = new ResourcesLoader();
-
-        int usersCount = 3;
-        int itemForSaleCount = 3;
-        int itemNotForSaleCount = 3;
-        int serverCount = 4;
-
-        if(args.length == 1)
-            userNotary = Integer.parseInt(args[0]) != 0;
-
-        if(args. length == 5){
-            userNotary = Integer.parseInt(args[0]) != 0;
-            usersCount = Integer.parseInt(args[1]);
-            itemForSaleCount = Integer.parseInt(args[2]);
-            itemNotForSaleCount = Integer.parseInt(args[3]);
-            serverCount = Integer.parseInt(args[4]);
-        }
-
-        // create all servers and the serverListInfo
-        rsl.createServers(startingServerPort, serverCount);
-
-
-        // create each user
-        for(int i = 0; i < usersCount; i++){
-            try {
-                rsl.createUser("user"+i, startingPort + i, address);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // give 3 items to each user
-        for(int j = 0;j<usersCount;j ++) {
-
-            for (int i = 0; i < itemForSaleCount; i++) {
-                rsl.addItemToUser("good" + i + j, rsl.users.get(j % usersCount).getUserID(), true);
-            }
-
-            for (int i = 0; i < itemNotForSaleCount; i++) {
-                rsl.addItemToUser("good" + (itemForSaleCount + i) + j, rsl.users.get((itemForSaleCount + j) % usersCount).getUserID(), false);
-            }
-
-        }
-
         try {
+            ResourcesLoader rsl = new ResourcesLoader();
+
+            int usersCount = 3;
+            int itemForSaleCount = 3;
+            int itemNotForSaleCount = 3;
+            int serverCount = 4;
+
+            if(args.length == 1)
+                userNotary = Integer.parseInt(args[0]) != 0;
+
+            if(args. length == 5){
+                userNotary = Integer.parseInt(args[0]) != 0;
+                usersCount = Integer.parseInt(args[1]);
+                itemForSaleCount = Integer.parseInt(args[2]);
+                itemNotForSaleCount = Integer.parseInt(args[3]);
+                serverCount = Integer.parseInt(args[4]);
+            }
+
+            // create all servers and the serverListInfo
+            rsl.createServers(startingServerPort, serverCount);
+
+
+            // create each user
+            for(int i = 0; i < usersCount; i++){
+                try {
+                    rsl.createUser("user"+i, startingPort + i, address);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // give 3 items to each user
+            for(int j = 0;j<usersCount;j ++) {
+
+                for (int i = 0; i < itemForSaleCount; i++) {
+                    rsl.addItemToUser("good" + i + j, rsl.users.get(j % usersCount).getUserID(), true);
+                }
+
+                for (int i = 0; i < itemNotForSaleCount; i++) {
+                    rsl.addItemToUser("good" + (itemForSaleCount + i) + j,
+                            rsl.users.get((itemForSaleCount + j) % usersCount).getUserID(), false);
+                }
+
+            }
+
+
+            // ensure user's private key is not passed
+            for(User usr : rsl.users)
+                usr.setPrivateKey(null);
+
             ResourcesLoader.storeUserList(rsl.users);
             ResourcesLoader.storeGoods(rsl.goods);
             ResourcesLoader.storeServers(rsl.servers);
-        } catch (IOException e) {
+        } catch (IOException | CryptoException e) {
             e.printStackTrace();
+            System.out.println("Unable to generate resources");
         }
 
 

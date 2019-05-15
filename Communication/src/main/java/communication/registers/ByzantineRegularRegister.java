@@ -205,38 +205,42 @@ public class ByzantineRegularRegister {
      * Adds the message to the reads list
      * @param msg message received
      */
-    private synchronized void handleReadResponse(Message msg){
+    private synchronized void handleReadResponse(Message msg) {
         msg.getBytesToSign();
-        if(rid != msg.getRid())
+        if (rid != msg.getRid())
             return;
 
         //TODO remove != null after signing initial resources
 
         //TODO remove msg.getwriter() != null
-        if(msg.getOperation().equals(Message.Operation.ERROR) || msg.getWriter() != null) {
-            PublicKey writerKey = getWriterPublicKey(msg.getWriter());
-            String value = getValueToSign(
-                    msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
-            );
+        if (msg.getOperation().equals(Message.Operation.ERROR) || msg.getWriter() != null) {
+            System.out.println("Writer = " + msg.getWriter());
 
-            try {
-                if(!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
-                    System.out.println("Value = " + value);
-                    System.out.println("Value read is invalid: " + msg.getSender());
-                    System.out.println(msg.getValSignature());
+            if (msg.getOperation().equals(Message.Operation.ERROR)) {
+                PublicKey writerKey = getWriterPublicKey(msg.getWriter());
+                String value = getValueToSign(
+                        msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
+                );
+
+                try {
+                    if (!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
+                        System.out.println("Value = " + value);
+                        System.out.println("Value read is invalid: " + msg.getSender());
+                        System.out.println(msg.getValSignature());
+                        error++;
+                        return;
+                    }
+                    //TODO readlist.add(msg)
+                } catch (CryptoException e) {
                     error++;
-                    return;
                 }
-                //TODO readlist.add(msg)
-            } catch (CryptoException e) {
-                error++;
             }
-        }
 
-        readList.add(msg);
+            readList.add(msg);
+        }
     }
 
-    private void broadcast( Message msg1, final int type) throws CryptoException {
+    private void broadcast(Message msg1, final int type) throws CryptoException {
         error = 0;
         int i = 0;
         for(final ProcessInfo serverInfo : servers) {
