@@ -25,6 +25,7 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.setOut;
 
 
 public class ClientManager implements IMessageProcess {
@@ -57,7 +58,8 @@ public class ClientManager implements IMessageProcess {
     Random to generate nonces
      */
 
-    private PublicKey notaryPublicKey;
+    private List<ProcessInfo> serversInfo;
+
     private ArrayList<String> nonces = new ArrayList<>();
     private String logFile;
 
@@ -79,9 +81,8 @@ public class ClientManager implements IMessageProcess {
 
         //loads the goods from a file
         goods = ResourcesLoader.loadGoodsList();
+        serversInfo = ResourcesLoader.loadServersInfo();
 
-
-        notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
 
         RequestsReceiver requestReceiver = new RequestsReceiver();
 
@@ -269,7 +270,7 @@ public class ClientManager implements IMessageProcess {
 
         //if the code is transfer good it means the operation was successfull
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
-            if (!isSignatureValid(response, notaryPublicKey)) {
+            if (!isSignatureValid(response)) {
                 System.out.println("Notary validation failed");
                 return;
             }
@@ -288,7 +289,7 @@ public class ClientManager implements IMessageProcess {
                 }
             }
             else{
-                if (!isSignatureValid(response, notaryPublicKey)) {
+                if (!isSignatureValid(response)) {
                     System.out.println("Notary validation failed");
                     return;
                 }
@@ -333,18 +334,6 @@ public class ClientManager implements IMessageProcess {
             return response;
         }
 
-        //TODO: Clean code
-//        if(!isFresh(response)){
-//            System.out.println("Notary response is not fresh");
-//            return response;
-//        }
-
-
-//        else if (!isSignatureValid(response, notaryPublicKey)) {
-//            System.out.println("Notary validation failed");
-//            return response;
-//
-//        }
 
         if(response.getOperation().equals(Message.Operation.TRANSFER_GOOD)){
             //Save operation in log
@@ -402,7 +391,6 @@ public class ClientManager implements IMessageProcess {
             System.out.println("Seller ID does not match my ID");
             return createErrorMessage("Seller ID does not match my ID", message.getBuyerID());
         }
-
         Good good = findGood(message.getGoodID());
         if(good == null) {
             System.out.println("Good does not exist");
@@ -536,20 +524,23 @@ public class ClientManager implements IMessageProcess {
     /**
      * This method is responsible for validating whether a message signature is valid
      * @param message signed message
-     * @param publicKey public key
      */
-
-    private boolean isSignatureValid(Message message, PublicKey  publicKey)
+    private boolean isSignatureValid(Message message)
             throws CryptoException {
 
-
-        if(publicKey.equals(notaryPublicKey)){
-            System.out.println("Ignoring notary signature for tests");
-            return true;
-        }
-        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+        PublicKey publicKey = getServerKey(message.getSender());
+        return isSignatureValid(message, publicKey);
     }
 
+    /**
+     * This method is responsible for validating whether a message signature is valid
+     * @param message signed message
+     */
+    private boolean isSignatureValid(Message message, PublicKey publicKey)
+            throws CryptoException {
+
+        return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
+    }
 
     /**
      * Creates an error message, adds freshness and signs it
@@ -635,16 +626,13 @@ public class ClientManager implements IMessageProcess {
         return user;
     }
 
-    /*
-    TODO: Delete if no longer needed
-    @Override
-    public void authenticate(Message message) throws CryptoException {
-        message.addFreshness(user.getUserID());
-        signMessage(message, user.getPrivateKey());
-    }
+    public PublicKey getServerKey(String id){
 
-    @Override
-    public synchronized boolean isValid(Message message) throws SaveNonceException, CryptoException {
-        return isFresh(message) && isSignatureValid(message, notaryPublicKey);
-    }*/
+        for(ProcessInfo p : serversInfo){
+            if(id.equals(p.getID())){
+                return p.getPublicKey();
+            }
+        }
+        return null;
+    }
 }

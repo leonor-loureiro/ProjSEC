@@ -12,7 +12,7 @@ import java.util.*;
 public class Utils {
 
     public static Random random = new Random();
-    public static String defaultPrefix = "1234";
+    public static String defaultPrefix = "111";
 
     /**
      * This function is responsible for serializing an array list

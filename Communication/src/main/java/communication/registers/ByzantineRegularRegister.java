@@ -133,8 +133,10 @@ public class ByzantineRegularRegister {
 
         //Send the message to all server replicas
 
+
         try {
-            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
+            if(msg.getOperation().equals(Message.Operation.TRANSFER_GOOD))
+                msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             System.out.println("Unable to generate challenge!");
