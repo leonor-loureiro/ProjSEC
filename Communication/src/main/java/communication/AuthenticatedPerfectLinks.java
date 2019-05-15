@@ -42,16 +42,42 @@ public class AuthenticatedPerfectLinks {
 
         message = (Message) Utils.deepCopy(message);
 
-        authenticateMessage(sender, receiver, message);
+        //DoubleBroadcast Byzantine
+        if(ByzantineSimulator.getIsDoubleBroadcast()) {
 
-        Message response = (Message) Utils.deepCopy(
-                            Communication.sendMessage(receiver.getHost(), receiver.getPort(), message)
-        );
-        System.out.println(response.getOperation() + " - " + response.getNonce() + " -> " + response.getErrorMessage());
+            Message messageToRepeat = (Message) Utils.deepCopy(message);
 
-        validateResponse(sender, receiver, response);
+            messageToRepeat.setNonce("ByzantineNonce");
 
-        return response;
+            authenticateMessage(sender, receiver, message);
+
+            authenticateMessage(sender,receiver,messageToRepeat);
+
+            Message response = (Message) Utils.deepCopy(
+                    Communication.sendMessage(receiver.getHost(), receiver.getPort(), message)
+            );
+            System.out.println(response.getOperation() + " - " + response.getNonce() + " -> " + response.getErrorMessage());
+
+            Message response2 = (Message) Utils.deepCopy(
+                    Communication.sendMessage(receiver.getHost(), receiver.getPort(), messageToRepeat)
+            );
+        }
+        else{
+            authenticateMessage(sender, receiver, message);
+
+            Message response = (Message) Utils.deepCopy(
+                    Communication.sendMessage(receiver.getHost(), receiver.getPort(), message)
+            );
+
+            System.out.println(response.getOperation() + " - " + response.getSender() + " " + response.getNonce() + " -> " + response.getErrorMessage());
+
+            validateResponse(sender, receiver, response);
+
+            return response;
+
+        }
+
+        return null;
     }
 
 

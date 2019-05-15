@@ -130,7 +130,8 @@ public class ByzantineRegularRegister {
 
 
         //Send the message to all server replicas
-        broadcast(msg, WRITE);
+
+        broadcast(msg,WRITE);
 
         //Wait until a majority servers have responded
         while(ackList.size() < quorum && error < quorum){
@@ -209,9 +210,9 @@ public class ByzantineRegularRegister {
         if(rid != msg.getRid())
             return;
 
-        System.out.println("Writer = " + msg.getWriter());
-
         //TODO remove != null after signing initial resources
+
+        //TODO remove msg.getwriter() != null
         if(msg.getOperation().equals(Message.Operation.ERROR) || msg.getWriter() != null) {
             PublicKey writerKey = getWriterPublicKey(msg.getWriter());
             String value = getValueToSign(
@@ -226,6 +227,7 @@ public class ByzantineRegularRegister {
                     error++;
                     return;
                 }
+                //TODO readlist.add(msg)
             } catch (CryptoException e) {
                 error++;
             }

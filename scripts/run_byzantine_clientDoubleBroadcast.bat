@@ -15,7 +15,7 @@ rem -- Start Server 3
 start cmd /c "title Server & cd .. & cd Server & mvn exec:java -Dport=8083"
 
 rem -- Start Client
-start cmd /c "title ClientByzantine & cd .. & cd Client & mvn exec:java -Dmode=true"
+start cmd /c "title ClientByzantine & cd .. & cd Client & mvn exec:java -Ddouble=true"
 
 rem -- Start Client
 start cmd /c "title Client & cd .. & cd Client & mvn exec:java"

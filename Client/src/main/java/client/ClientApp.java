@@ -51,6 +51,11 @@ public class ClientApp {
                                 ByzantineSimulator.setByzantine(true);
                                 System.out.println("Byzantine Mode is " + ByzantineSimulator.getByzantine());
                             }
+                            else if(args[1].equals("true")){
+                                ClientManager.getInstance().startClient(login);
+                                ByzantineSimulator.setIsDoubleBroadcast(true);
+                                System.out.println("DoubleBroadcast Byzantine Mode is " + ByzantineSimulator.getIsDoubleBroadcast());
+                            }
                             else
                                 ClientManager.getInstance().startClient(login);
                         }catch (PasswordIsWrongException | UserNotExistException e){
