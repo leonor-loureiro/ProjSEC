@@ -50,8 +50,4 @@ public class ByzantineAtomicRegister extends ByzantineRegularRegister {
         return response;
     }
 
-    @Override
-    protected String getValueToSign(String goodID, String userID, boolean isForSale, String writer, int wts) {
-        return "WRITE|arr|" + goodID + "|" + userID + "|" + isForSale + "|" + writer + "|" + wts;
-    }
 }

@@ -159,9 +159,7 @@ public class ResourcesLoader {
         return null;
     }
 
-    private String getValueToSign(String goodID, String userID, boolean isForSale, String writer, int wts) {
-        return "WRITE|brr|" + goodID + "|" + userID + "|" + isForSale + "|" + writer + "|" + wts;
-    }
+
 
     /**
      * adds an good/item to a user
@@ -172,10 +170,14 @@ public class ResourcesLoader {
     private void addItemToUser(String goodID, String userID, boolean onSale) throws CryptoException {
         Good good = new Good(goodID, userID, onSale);
 
-        String value = getValueToSign(goodID, userID, onSale, userID, 0);
         User user = getUser(userID);
-        good.setSignature(Crypto.sign(value.getBytes(), user.getPrivateKey()));
+
+
         good.setWriter(userID);
+        good.setTs(1);
+
+        String value = good.getValueToSign();
+        good.setSignature(Crypto.sign(value.getBytes(), user.getPrivateKey()));
 
         goods.add(good);
     }

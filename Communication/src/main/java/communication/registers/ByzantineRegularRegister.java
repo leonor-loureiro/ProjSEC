@@ -1,5 +1,6 @@
 package communication.registers;
 
+import commontypes.Good;
 import commontypes.User;
 import commontypes.Utils;
 import communication.AuthenticatedPerfectLinks;
@@ -50,7 +51,7 @@ public class ByzantineRegularRegister {
     private int rid = 0;
 
     //Write timestamp
-    private int wts = 0;
+    private int writeTS = 0;
 
     //Stores the write responses
     private List<Message> ackList = new ArrayList<Message>();
@@ -101,16 +102,16 @@ public class ByzantineRegularRegister {
 
 
         //Increment write timestamp
-        wts = getTsResp.getWts()+1;
+        writeTS = getTsResp.getWts()+1;
 
         System.out.println(msg.getOperation() + "  Seller: " + seller);
-        return writeImpl(msg, seller, wts);
+        return writeImpl(msg, seller, writeTS);
     }
 
 
     Message writeImpl(Message msg, String seller, int wts) throws CryptoException {
         //Update last write timestamp seen
-        this.wts = wts;
+        this.writeTS = wts;
         msg.setWts(wts);
 
         //Clear previous responses
@@ -118,13 +119,13 @@ public class ByzantineRegularRegister {
 
         //Sign the new value
         if(msg.getValSignature() == null) {
-            String value = getValueToSign(msg.getGoodID(), seller, msg.isForSale(), ID, wts);
+            String value = Good.getValueToSign(msg.getGoodID(), seller, msg.isForSale(), ID, wts);
             System.out.println(msg.getOperation() + "  -  Writing value: " + value);
 
-            msg.setValSignature(Crypto.sign(value.getBytes(), privateKey));
             msg.setWriter(ID);
+            msg.setValSignature(Crypto.sign(value.getBytes(), privateKey));
         }else{
-            System.out.println(msg.getOperation() + "  -  Writing value: " + getValueToSign(msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()));
+            System.out.println(msg.getOperation() + "  -  Writing value: " + Good.getValueToSign(msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()));
         }
 
 
@@ -137,6 +138,7 @@ public class ByzantineRegularRegister {
         while(ackList.size() < quorum && error < quorum){
             try {
                 Thread.sleep(1);
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -146,10 +148,6 @@ public class ByzantineRegularRegister {
             return null;
 
         return ackList.get(0);
-    }
-
-    protected String getValueToSign(String goodID, String userID, boolean isForSale, String writer, int wts) {
-        return "WRITE|brr|" + goodID + "|" + userID + "|" + isForSale + "|" + writer + "|" + wts;
     }
 
     public Message read(Message msg) throws CryptoException {
@@ -194,7 +192,7 @@ public class ByzantineRegularRegister {
      */
     private synchronized void handleWriteResponse(Message msg){
         msg.getBytesToSign();
-        if(wts != msg.getWts())
+        if(writeTS != msg.getWts())
             return;
         ackList.add(msg);
     }
@@ -210,34 +208,32 @@ public class ByzantineRegularRegister {
         if (rid != msg.getRid())
             return;
 
-        //TODO remove != null after signing initial resources
 
-        //TODO remove msg.getwriter() != null
-        if (msg.getOperation().equals(Message.Operation.ERROR) || msg.getWriter() != null) {
-            System.out.println("Writer = " + msg.getWriter());
+        if (!msg.getOperation().equals(Message.Operation.ERROR)) {
+            PublicKey writerKey = getWriterPublicKey(msg.getWriter());
 
-            if (msg.getOperation().equals(Message.Operation.ERROR)) {
-                PublicKey writerKey = getWriterPublicKey(msg.getWriter());
-                String value = getValueToSign(
-                        msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
-                );
+            String value = Good.getValueToSign(
+                    msg.getGoodID(), msg.getSellerID(), msg.isForSale(), msg.getWriter(), msg.getWts()
+            );
 
-                try {
-                    if (!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
-                        System.out.println("Value = " + value);
-                        System.out.println("Value read is invalid: " + msg.getSender());
-                        System.out.println(msg.getValSignature());
-                        error++;
-                        return;
-                    }
-                    //TODO readlist.add(msg)
-                } catch (CryptoException e) {
+            System.out.println("Validating read " + value + " from sender: " + msg.getWriter());
+
+            try {
+                if (!Crypto.verifySignature(msg.getValSignature(), value.getBytes(), writerKey)) {
+                    System.out.println("Value = " + value);
+                    System.out.println("Value read is invalid: " + msg.getSender());
+                    System.out.println(msg.getValSignature());
                     error++;
+                    return;
                 }
-            }
 
-            readList.add(msg);
+            } catch (CryptoException e) {
+                error++;
+            }
         }
+
+        readList.add(msg);
+
     }
 
     private void broadcast(Message msg1, final int type) throws CryptoException {
@@ -296,6 +292,8 @@ public class ByzantineRegularRegister {
         for(User u : writers)
             if(u.getUserID().equals(writerID))
                 return u.getPublicKey();
+
+        System.out.println("Couldn't find User " + writerID);
         return null;
     }
 

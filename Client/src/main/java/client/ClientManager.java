@@ -80,7 +80,7 @@ public class ClientManager implements IMessageProcess {
         //loads the goods from a file
         goods = ResourcesLoader.loadGoodsList();
 
-        //(sets the current privatekey of the user
+
         notaryPublicKey = Crypto.getPublicKey("../Server/SEC-Keystore","notary","password".toCharArray());
 
         RequestsReceiver requestReceiver = new RequestsReceiver();
@@ -238,12 +238,7 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.BUY_GOOD);
         Message response = null;
 
-        try {
-            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            System.out.println("Unable to generate challenge!");
-        }
+
         msg.addFreshness(user.getUserID());
 
         try {
@@ -324,7 +319,12 @@ public class ClientManager implements IMessageProcess {
         Message response = null;
 
 
-
+        try {
+            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.out.println("Unable to generate challenge!");
+        }
         //response = sendMessage(msg, HOST, notaryPort);
 
         response = getGoodRegister(good.getGoodID()).write(msg, message.getBuyerID());

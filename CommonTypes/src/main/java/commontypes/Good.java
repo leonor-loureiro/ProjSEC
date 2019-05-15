@@ -75,4 +75,12 @@ public class Good  implements Serializable {
         return goodID.equals(other.goodID) && userID.equals(other.userID) && forSale == other.isForSale();
     }
 
+    public String getValueToSign() {
+        return Good.getValueToSign( goodID, userID, forSale, writer, ts);
+    }
+
+    public static String getValueToSign(String goodID, String userID, boolean forSale, String writer, int ts){
+        return "WRITE|barr|" + goodID + "|" + userID + "|" + forSale + "|" + writer + "|" + ts;
+
+    }
 }
