@@ -3,6 +3,7 @@ package client;
 import commontypes.AtomicFileManager;
 import commontypes.Good;
 import commontypes.User;
+import commontypes.Utils;
 import commontypes.exception.GoodNotExistsException;
 import commontypes.exception.PasswordIsWrongException;
 import communication.*;
@@ -237,6 +238,12 @@ public class ClientManager implements IMessageProcess {
         msg.setOperation(Message.Operation.BUY_GOOD);
         Message response = null;
 
+        try {
+            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.out.println("Unable to generate challenge!");
+        }
         msg.addFreshness(user.getUserID());
 
         try {
