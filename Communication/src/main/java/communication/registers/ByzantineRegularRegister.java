@@ -14,6 +14,7 @@ import crypto.Crypto;
 import crypto.CryptoException;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -131,6 +132,13 @@ public class ByzantineRegularRegister {
 
 
         //Send the message to all server replicas
+
+        try {
+            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.out.println("Unable to generate challenge!");
+        }
 
         broadcast(msg,WRITE);
 

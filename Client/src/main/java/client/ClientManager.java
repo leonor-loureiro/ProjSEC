@@ -319,12 +319,7 @@ public class ClientManager implements IMessageProcess {
         Message response = null;
 
 
-        try {
-            msg.setProofOfWork(Utils.proofOfWork(Utils.defaultPrefix, msg.getDataToChallenge()));
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            System.out.println("Unable to generate challenge!");
-        }
+
         //response = sendMessage(msg, HOST, notaryPort);
 
         response = getGoodRegister(good.getGoodID()).write(msg, message.getBuyerID());

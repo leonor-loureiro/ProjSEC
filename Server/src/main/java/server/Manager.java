@@ -106,6 +106,7 @@ public class Manager implements IMessageProcess {
      */
     public void startServer(int port, boolean isNotary) throws IOException, ClassNotFoundException {
         Manager.isNotary = isNotary;
+        String host = "localhost";
         //if(Manager.isNotary)
         //    initCC();
 
@@ -117,9 +118,9 @@ public class Manager implements IMessageProcess {
         //requestReceiver.initializeInNewThread(port, this);
 
         try {
-            server = new ProcessInfo("localhost" + port, getPrivateKey());
+            server = new ProcessInfo(host + port, getPrivateKey());
             server.setPort(port);
-            server.setHost("localhost");
+            server.setHost(host);
 
             System.out.println(getPrivateKey());
         } catch (CryptoException e) {
