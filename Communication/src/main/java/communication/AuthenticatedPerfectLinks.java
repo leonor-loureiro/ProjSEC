@@ -146,8 +146,7 @@ public class AuthenticatedPerfectLinks {
 
         String nonce = message.getNonce();
         //Check freshness
-        if((currentTimeMillis() - message.getTimestamp()) > validity ||
-                nonces.contains(nonce))
+        if(nonces.contains(nonce))
             return false;
         nonces.add(nonce);
 

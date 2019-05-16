@@ -519,8 +519,7 @@ public class Manager implements IMessageProcess {
         String nonce = message.getNonce();
 
         //Check if request is fresh
-        if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
-                nonces.contains(nonce))
+        if(nonces.contains(nonce))
             return false;
 
         nonces.add(nonce);

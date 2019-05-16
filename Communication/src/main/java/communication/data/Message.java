@@ -57,7 +57,6 @@ public class Message implements Serializable, Comparable {
     private String sellerID;
     private boolean isForSale;
     private String buyerID;
-    private long timestamp;
     private String nonce;
     private String signature;
     private Message intentionToBuy;
@@ -78,16 +77,12 @@ public class Message implements Serializable, Comparable {
     public Message() {
 
         this.setNonce(" "+random.nextInt());
-        this.setTimestamp(currentTimeMillis());
-
     }
 
     public Message(Operation operation){
         this.operation = operation;
 
         this.setNonce(operation.name() + random.nextInt());
-        this.setTimestamp(currentTimeMillis());
-
     }
 
     public Message(String errorMessage) {
@@ -95,8 +90,6 @@ public class Message implements Serializable, Comparable {
         this.operation = Operation.ERROR;
 
         this.setNonce("err" + random.nextInt());
-        this.setTimestamp(currentTimeMillis());
-
     }
 
     public Message(String errorMessage, String sellerID, String buyerID) {
@@ -104,7 +97,6 @@ public class Message implements Serializable, Comparable {
         setBuyerID(buyerID);
         setSellerID(sellerID);
         this.setNonce(sellerID + buyerID+ random.nextInt());
-        this.setTimestamp(currentTimeMillis());
 
     }
 
@@ -170,14 +162,6 @@ public class Message implements Serializable, Comparable {
 
     public void setSignature(String signature) {
         this.signature = signature;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
     }
 
     public Operation getOperation() {
@@ -372,9 +356,6 @@ public class Message implements Serializable, Comparable {
 //            return false;
 
         if(isForSale != msg.isForSale())
-            return false;
-
-        if(timestamp != msg.getTimestamp())
             return false;
 
         if(wts != msg.getWts())

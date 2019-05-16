@@ -139,26 +139,6 @@ public class ReceiveBuyGoodTest extends ClientTests{
     }
 
     /**
-     * User sends a not fresh message and is refused by the other client.
-     */
-
-    @Test
-    public void NotFreshMessageBadTimestamp() {
-
-        Message message = generateBuyGoodMessage(seller, buyer,goodID);
-        message.addFreshness(buyer);
-
-        message.setTimestamp(0);
-
-        Message response = clientManager.process(message);
-
-
-        Assert.assertEquals(response.getOperation(),Message.Operation.ERROR);
-        Assert.assertEquals(response.getErrorMessage(),"Request is not fresh");
-
-    }
-
-    /**
      * Test where the user doesnt sign the message, so the other user refuses the message.
      */
     @Test

@@ -42,7 +42,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createIntentionToSellRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -75,7 +74,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         Message request = createIntentionToSellRequest();
 
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -106,7 +104,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         Message request = createIntentionToSellRequest();
 
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
 
         //Sign
@@ -145,7 +142,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createIntentionToSellRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -180,7 +176,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createIntentionToSellRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
 
 
@@ -216,7 +211,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createIntentionToSellRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -232,30 +226,7 @@ public class IntentionToSellTest extends NotaryServerTest {
 
     }
 
-    /**
-     * Send a request with a timestamp older than 15min
-     */
-    @Test
-    public void timestampIsOld() throws CryptoException {
-        notary.dummyPopulate(users, goods);
-        KeyPair keyPair = Crypto.generateRSAKeys();
-        // Create intention to sell request
-        Message request = createIntentionToSellRequest();
-        //Add freshness
-        request.setTimestamp(currentTimeMillis() - 1000000);
-        request.setNonce(userID + random.nextInt());
-        //Sign
-        request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
 
-        Message response = notary.process(request);
-
-        Assert.assertEquals(Message.Operation.ERROR, response.getOperation());
-        System.out.println(response.getErrorMessage());
-        Assert.assertTrue(
-                Crypto.verifySignature(response.getSignature(), response.getBytesToSign(), notaryPublicKey)
-        );
-
-    }
 
     /**
      * Send same request twice
@@ -267,7 +238,6 @@ public class IntentionToSellTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createIntentionToSellRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));

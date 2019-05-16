@@ -127,16 +127,8 @@ public class ClientManager implements IMessageProcess {
 
         msg.setOperation(Message.Operation.INTENTION_TO_SELL);
 
-
         msg.addFreshness(user.getUserID());
 
-        /*try {
-            signMessage(msg, user.getPrivateKey());
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }*/
-
-        //Message response = sendMessage(msg, HOST, notaryPort);
         Message response = null;
         response = getGoodRegister(goodID).write(msg, user.getUserID());
         if(response == null) {
@@ -183,14 +175,6 @@ public class ClientManager implements IMessageProcess {
         msg.addFreshness(user.getUserID());
 
         Message response = null;
-
-
-        /*try {
-            signMessage(msg, user.getPrivateKey());
-            System.out.println(Crypto.verifySignature(msg.getSignature(), msg.getBytesToSign(), user.getPublicKey()));
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        }*/
 
 
         //response = sendMessage(msg, HOST, notaryPort);
@@ -299,7 +283,7 @@ public class ClientManager implements IMessageProcess {
     }
 
     /**
-     * executes the transfergood operation based on a previous buygood
+     * executes the transfer good operation based on a previous buygood
      * @param message the received buygood
      * @return the response from the server, or a error message generated in the client.
      */
@@ -475,8 +459,7 @@ public class ClientManager implements IMessageProcess {
     private boolean isFresh(Message message) throws SaveNonceException {
         String nonce = message.getNonce();
         //Check freshness
-        if((currentTimeMillis() - message.getTimestamp()) > VALIDITY ||
-                nonces.contains(nonce))
+        if(nonces.contains(nonce))
             return false;
         nonces.add(nonce);
 

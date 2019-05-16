@@ -34,7 +34,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -43,7 +42,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -74,7 +72,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -83,7 +80,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -108,7 +104,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -117,7 +112,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -145,7 +139,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -154,7 +147,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -184,7 +176,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         //sign with key of the seller
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair.getPrivate()));
@@ -194,7 +185,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -225,7 +215,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
         //Change nonce after signing
@@ -236,7 +225,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -266,7 +254,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -275,7 +262,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -305,7 +291,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -314,7 +299,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -344,7 +328,6 @@ public class TransferGoodTest extends NotaryServerTest {
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
         intentionToBuy.setNonce(buyerID + random.nextInt());
-        intentionToBuy.setTimestamp(currentTimeMillis());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
         // Create transfer good request
@@ -352,7 +335,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair2.getPrivate()));
@@ -383,7 +365,6 @@ public class TransferGoodTest extends NotaryServerTest {
 
         // Create intention to buy request
         Message intentionToBuy = createIntentionToBuy();
-        intentionToBuy.setTimestamp(currentTimeMillis() - 1000000);
         intentionToBuy.setNonce(buyerID + random.nextInt());
         intentionToBuy.setSignature(Crypto.sign(intentionToBuy.getBytesToSign(), keyPair2.getPrivate()));
 
@@ -392,7 +373,6 @@ public class TransferGoodTest extends NotaryServerTest {
         //Add intention to buy
         request.setIntentionToBuy(intentionToBuy);
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));

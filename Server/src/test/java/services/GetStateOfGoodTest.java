@@ -34,7 +34,6 @@ public class GetStateOfGoodTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createGetStateOfGoodRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -64,7 +63,6 @@ public class GetStateOfGoodTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createGetStateOfGoodRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -89,7 +87,6 @@ public class GetStateOfGoodTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createGetStateOfGoodRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
@@ -117,7 +114,6 @@ public class GetStateOfGoodTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createGetStateOfGoodRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
 
         Message response = notary.process(request);
@@ -146,7 +142,6 @@ public class GetStateOfGoodTest extends NotaryServerTest {
         // Create intention to sell request
         Message request = createGetStateOfGoodRequest();
         //Add freshness
-        request.setTimestamp(currentTimeMillis());
         request.setNonce(userID + random.nextInt());
         //Sign
         request.setSignature(Crypto.sign(request.getBytesToSign(), keyPair.getPrivate()));
