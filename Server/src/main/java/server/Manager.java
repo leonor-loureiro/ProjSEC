@@ -18,10 +18,7 @@ import sun.security.pkcs11.wrapper.PKCS11Exception;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SignatureException;
+import java.security.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -67,6 +64,9 @@ public class Manager implements IMessageProcess {
     private List<ProcessInfo> serversInfo;
 
     ProcessInfo server = null;
+
+    private KeyPair tempKeyPair = null;
+    private String tempKeySignature = null;
 
     /**
      *
@@ -128,6 +128,24 @@ public class Manager implements IMessageProcess {
         }
         requestReceiver.initializeInNewThreadWithEcho(this, serversInfo, 1, server);
 
+
+        if(isNotary){
+            try {
+                // generate tempKeyPair to prevent multiple pin requests
+                tempKeyPair = Crypto.generateRSAKeys();
+
+                // signed tempPublicKey
+                tempKeySignature = Crypto.toString(CitizenCardController.getInstance().sign(tempKeyPair.getPublic().getEncoded()));
+                server.setPrivateKey(tempKeyPair.getPrivate());
+                server.setTempPubKey(tempKeyPair.getPublic());
+                server.setTempKeySignature(tempKeySignature);
+
+            } catch (CryptoException e) {
+                e.printStackTrace();
+            } catch (PKCS11Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void closeServer() throws PteidException {

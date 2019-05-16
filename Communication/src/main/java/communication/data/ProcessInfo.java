@@ -15,6 +15,26 @@ public class ProcessInfo implements Serializable {
     private PublicKey publicKey;
     private PrivateKey privateKey;
 
+
+    private PublicKey tempPubKey;
+    private String tempKeySignature;
+
+    public PublicKey getTempPubKey() {
+        return tempPubKey;
+    }
+
+    public void setTempPubKey(PublicKey tempPubKey) {
+        this.tempPubKey = tempPubKey;
+    }
+
+    public String getTempKeySignature() {
+        return tempKeySignature;
+    }
+
+    public void setTempKeySignature(String tempKeySignature) {
+        this.tempKeySignature = tempKeySignature;
+    }
+
     public ProcessInfo(String host, int port, PublicKey publicKey) {
         this.ID = host + port;
         this.port = port;

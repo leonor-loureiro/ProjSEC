@@ -22,13 +22,6 @@ public class EchoHandler {
 
     private static Map <String, String> writes = new HashMap<>();
 
-    /*
-     * TODO: Implement sort of a total order that doesn't allow conflicting messages to be ECHOED
-     * it's different from total order because there's no need to guarantee liveness
-     * this can be achieved by locking or blocking a certain good as a punishment of byzantine client
-     */
-
-
     public static synchronized void markEchoSent(String id){
         sentEcho.add(id);
     }

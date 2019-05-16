@@ -539,6 +539,10 @@ public class ClientManager implements IMessageProcess {
     private boolean isSignatureValid(Message message, PublicKey publicKey)
             throws CryptoException {
 
+        if(message.getTempPubKey() != null)
+            return Crypto.verifySignature(message.getTempKeySignature(), message.getTempPubKey().getEncoded(), publicKey) &&
+                    Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), message.getTempPubKey());
+
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 

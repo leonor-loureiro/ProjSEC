@@ -120,17 +120,19 @@ public class AuthenticatedPerfectLinks {
         message.setSender(sender.getID());
         message.setReceiver(receiver.getID());
         message.addFreshness(sender.getID());
-        if(sender.getPrivateKey() != null)
-            message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
-        else{
-            try {
 
-                String signature = Crypto.toString(CitizenCardController.getInstance().sign(message.getBytesToSign()));
-                message.setSignature(signature);
+        // if it's notary
+        if(sender.getTempKeySignature() != null){
+            try {
+                message.setTempPubKey(sender.getTempPubKey());
+                message.setTempKeySignature(sender.getTempKeySignature());
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
+        message.setSignature(Crypto.sign(message.getBytesToSign(), sender.getPrivateKey()));
 
     }
 
@@ -176,6 +178,11 @@ public class AuthenticatedPerfectLinks {
             System.out.println("Null signature");
             return false;
         }
+
+        if(message.getTempPubKey() != null)
+            return Crypto.verifySignature(message.getTempKeySignature(), message.getTempPubKey().getEncoded(), publicKey) &&
+                    Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), message.getTempPubKey());
+
         return Crypto.verifySignature(message.getSignature(), message.getBytesToSign(), publicKey);
     }
 }

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Random;
 
 import static java.lang.System.currentTimeMillis;
@@ -20,6 +22,22 @@ public class Message implements Serializable, Comparable {
 
     public void setProofOfWork(int proofOfWork) {
         this.proofOfWork = proofOfWork;
+    }
+
+    public PublicKey getTempPubKey() {
+        return tempPubKey;
+    }
+
+    public void setTempPubKey(PublicKey tempPubKey) {
+        this.tempPubKey = tempPubKey;
+    }
+
+    public String getTempKeySignature() {
+        return tempKeySignature;
+    }
+
+    public void setTempKeySignature(String tempKeySignature) {
+        this.tempKeySignature = tempKeySignature;
     }
 
     public enum Operation {
@@ -52,6 +70,10 @@ public class Message implements Serializable, Comparable {
     private int rid;
     private String valSignature;
     private String writer;
+
+
+    private PublicKey tempPubKey;
+    private String tempKeySignature;
 
     public Message() {
 
@@ -218,6 +240,7 @@ public class Message implements Serializable, Comparable {
         return goodID + "|" + buyerID + "|" + sellerID + "|" + wts + "|" + nonce;
     }
 
+
     /**
      * Responsible for adding a nonce and a timestamp to the message
      */
@@ -364,6 +387,14 @@ public class Message implements Serializable, Comparable {
            return false;
 
         if(!equalsStrings(writer, msg.getWriter()))
+            return false;
+
+        if(!equalsStrings(tempKeySignature, msg.getTempKeySignature()))
+            return false;
+
+        if(tempPubKey != null && msg.getTempPubKey()!= null &&
+                tempPubKey != msg.getTempPubKey() &&
+                tempPubKey.equals(msg.getTempPubKey()))
             return false;
 
         return true;
