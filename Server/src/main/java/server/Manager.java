@@ -562,9 +562,12 @@ public class Manager implements IMessageProcess {
 
         }else{ // Notary's citizen card
             try {
-                String signature = Crypto.toString(CitizenCardController.getInstance().sign(message.getBytesToSign()));
+                message.setTempPubKey(server.getTempPubKey());
+                message.setTempKeySignature(server.getTempKeySignature());
+
+                String signature = Crypto.sign(message.getBytesToSign(), tempKeyPair.getPrivate());
                 message.setSignature(signature);
-            } catch (PKCS11Exception e) {
+            } catch (CryptoException e) {
                 System.out.println("Failed to sign: " + e.getMessage());
                 e.printStackTrace();
                 throw new SignatureException();
