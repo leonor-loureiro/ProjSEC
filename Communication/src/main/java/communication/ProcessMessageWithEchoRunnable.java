@@ -164,14 +164,7 @@ public class ProcessMessageWithEchoRunnable implements Runnable{
             System.out.println("Processed request, closing connection");
             clientSocket.close();
 
-        } catch (ClassNotFoundException | IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        //TODO: remove after debug
-        //}catch (Exception e){
-        //    e.printStackTrace();
-        } catch (MultipleWritesException e) {
+        } catch (ClassNotFoundException | IOException | InterruptedException | MultipleWritesException e) {
             e.printStackTrace();
         }
 
